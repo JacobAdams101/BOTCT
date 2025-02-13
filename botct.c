@@ -43,10 +43,42 @@ void setup(int *numPlayers, int *numMinions, int *numDemons, int *baseOutsiders)
     scanf("%d", baseOutsiders);
 }
 
+int getRoleIdFromString(char* roleName)
+{
+    for (int roleID = 0; roleID < NUM_BOTCT_ROLES; roleID++)
+    {
+        if (strcmp(roleName,ROLE_NAMES[roleID]) == 0)
+        {
+            return roleID;
+        }
+    }
+    return -1;
+}
+
+int getRoleIDInput(char* message)
+{
+    char input[STRING_BUFF_SIZE]; // Declare a character array to hold the string
+    int roleID = -1;
+    printf("%s:\n", message);
+    for (int i = 0; i < NUM_BOTCT_ROLES; i++)
+    {
+        printf("%s\n", ROLE_NAMES[i]);
+    }
+    while (roleID == -1)
+    {
+        scanf("%255s", input); // Read a string (up to 99 characters to leave space for the null terminator)
+        roleID = getRoleIdFromString(input);
+        if (roleID == -1)
+        {
+            printf("ERROR: Invalid string!\n");
+        }
+    }
+    return roleID;
+}
+
 void shown_role(KnowledgeBase* kb)
 {
     int playerID;
-    char input[STRING_BUFF_SIZE]; // Declare a character array to hold the string 
     char buff[STRING_BUFF_SIZE]; // Declare a character array to hold the string 
     int roleID = -1;
 
@@ -55,26 +87,7 @@ void shown_role(KnowledgeBase* kb)
     printf("For player?:\n");
     scanf("%d", &playerID); // Read player ID
 
-    printf("Role?:\n");
-    for (int i = 0; i < NUM_BOTCT_ROLES; i++)
-    {
-        printf("%s\n", ROLE_NAMES[i]);
-    }
-    while (roleID == -1)
-    {
-        scanf("%255s", input); // Read a string (up to 99 characters to leave space for the null terminator)
-        for (int i = 0; i < NUM_BOTCT_ROLES; i++)
-        {
-            if (strcmp(input,ROLE_NAMES[i]) == 0)
-            {
-                roleID = i;
-            }
-        }
-        if (roleID == -1)
-        {
-            printf("ERROR: Invalid string!\n");
-        }
-    }
+    roleID = getRoleIDInput("Role?");
 
     if (roleID < 5) //If role ID is on evil team, we're certain that they're not drunk
     {
@@ -99,33 +112,12 @@ void shown_role(KnowledgeBase* kb)
 
 void roleNotInGame(KnowledgeBase* kb)
 {
-    char input[STRING_BUFF_SIZE]; // Declare a character array to hold the string 
     char buff[STRING_BUFF_SIZE]; // Declare a character array to hold the string 
     int roleID = -1;
 
     printf("ENERTING: ROLE NOT IN GAME\n");
 
-
-    printf("Role not in game?:\n");
-    for (int i = 0; i < NUM_BOTCT_ROLES; i++)
-    {
-        printf("%s\n", ROLE_NAMES[i]);
-    }
-    while (roleID == -1)
-    {
-        scanf("%255s", input); // Read a string (up to 99 characters to leave space for the null terminator)
-        for (int i = 0; i < NUM_BOTCT_ROLES; i++)
-        {
-            if (strcmp(input,ROLE_NAMES[i]) == 0)
-            {
-                roleID = i;
-            }
-        }
-        if (roleID == -1)
-        {
-            printf("ERROR: Invalid string!\n");
-        }
-    }
+    roleID = getRoleIDInput("Role not in game?");
 
     snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s_in_PLAY", ROLE_NAMES[roleID]);
     addKnowledgeName(kb, "METADATA", 0, buff);
@@ -166,13 +158,7 @@ void noptions(KnowledgeBase* kb)
         while (roleIDs[j] == -1)
         {
             scanf("%255s", input); // Read a string (up to 99 characters to leave space for the null terminator)
-            for (int i = 0; i < NUM_BOTCT_ROLES; i++)
-            {
-                if (strcmp(input,ROLE_NAMES[i]) == 0)
-                {
-                    roleIDs[j] = i;
-                }
-            }
+            roleIDs[j] = getRoleIdFromString(input);
             if (roleIDs[j] == -1)
             {
                 printf("ERROR: Invalid string!\n");
@@ -224,14 +210,14 @@ void poisoned(KnowledgeBase* kb)
     addKnowledgeName(kb, "PLAYERS", playerID, buff);
 }
 
-void died(KnowledgeBase* kb)
+void diedInNight(KnowledgeBase* kb)
 {
     char buff[STRING_BUFF_SIZE]; // Declare a character array to hold the string 
 
     int playerID;
     int night;
 
-    printf("ENERTING: PLAYER DIED\n");
+    printf("ENERTING: PLAYER DIED IN NIGHT\n");
 
     printf("For player?:\n");
     scanf("%d", &playerID); // Read player ID
@@ -241,9 +227,30 @@ void died(KnowledgeBase* kb)
 
     snprintf(buff, STRING_BUFF_SIZE, "died_NIGHT%d", night);
     addKnowledgeName(kb, "PLAYERS", playerID, buff);
+    addKnowledgeName(kb, "PLAYERS", playerID, "died_in_NIGHT");
 }
 
-void addPingRule(KnowledgeBase* kb)
+void hung(KnowledgeBase* kb)
+{
+    char buff[STRING_BUFF_SIZE]; // Declare a character array to hold the string 
+
+    int playerID;
+    int night;
+
+    printf("ENERTING: PLAYER HUNG\n");
+
+    printf("For player?:\n");
+    scanf("%d", &playerID); // Read player ID
+
+    printf("On night?:\n");
+    scanf("%d", &night); // Read player ID
+
+    snprintf(buff, STRING_BUFF_SIZE, "died_NIGHT%d", night);
+    addKnowledgeName(kb, "PLAYERS", playerID, buff);
+    addKnowledgeName(kb, "PLAYERS", playerID, "died_by_HANGING");
+}
+
+void addPingRule(KnowledgeBase* kb, RuleSet* rs)
 {
     char inputPingType[STRING_BUFF_SIZE]; // Declare a character array to hold the string 
     char buff[STRING_BUFF_SIZE]; // Declare a character array to hold the string 
@@ -316,23 +323,46 @@ void addPingRule(KnowledgeBase* kb)
         Start knowing one of two players is a particular townsfolk
         */
 
-        //If <PLAYER_INFO>is_WASHERWOMAN AND <PLAYER_INFO>is_NOT_poisonedNIGHT0 AND <METADATA>is_NOT_SPY_in_PLAY => <METADATA>is_<ROLE>_in_PLAY
-        //If <PLAYER_INFO>is_WASHERWOMAN AND <PLAYER_INFO>is_NOT_poisonedNIGHT0 AND <METADATA>is_NOT_SPY_in_PLAY => <PLAYER_H>is_NOT_<ROLE> [where H is not X or Y]
-        /*
         int selectedRole = -1;
-        
-        RULES[NUM_RULES]->varCount = 2;
-        RULES[NUM_RULES]->varsMutuallyExclusive=0;
+        int playerX = -1;
+        int playerY = -1;
 
+        selectedRole = getRoleIDInput("Role Shown?");
+
+        printf("For player 1?:\n");
+        scanf("%d", &playerX); // Read player ID
+
+        printf("For player 2?:\n");
+        scanf("%d", &playerY); // Read player ID
+
+        //If <PLAYER_INFO>is_WASHERWOMAN AND <PLAYER_INFO>is_NOT_poisonedNIGHT0 AND <METADATA>is_NOT_SPY_in_PLAY => <METADATA>is_<ROLE>_in_PLAY
+        setTempRuleParams(rs, 2,0);
         snprintf(buff, STRING_BUFF_SIZE, "is_%s_in_PLAY", ROLE_NAMES[selectedRole]);
-        setRuleResultName(RULES[NUM_RULES], 1, "METADATA", buff);
-        addFixedConditionToRuleName(RULES[NUM_RULES], 0, "PLAYERS", "is_WASHERWOMAN", 0);
-        addFixedConditionToRuleName(RULES[NUM_RULES], 0, "PLAYERS", "is_NOT_poisonedNIGHT0", 0);
-        addFixedConditionToRuleName(RULES[NUM_RULES], 1, "METADATA", "is_NOT_SPY_in_PLAY", 0);
-        NUM_RULES++;
-        */
-        
-        
+        setTempRuleResultName(rs, kb, 0, "METADATA", buff);
+        addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", "is_WASHERWOMAN", playerIDinfoFrom);
+        addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", "is_NOT_poisoned_NIGHT0", playerIDinfoFrom);
+        addFixedConditionToTempRuleName(rs,kb, 1, "METADATA", "is_NOT_SPY_in_PLAY", 0);
+        pushTempRule(rs);
+
+        //If <PLAYER_INFO>is_WASHERWOMAN AND <PLAYER_INFO>is_NOT_poisonedNIGHT0 AND <METADATA>is_NOT_SPY_in_PLAY => <PLAYER_H>is_NOT_<ROLE> [where H is not X or Y]
+        for (int i = 0; i < kb->SET_SIZES[0]; i++)
+        {
+            if (i == playerX || i == playerY)
+            {
+
+            }
+            else
+            {
+                setTempRuleParams(rs, 2,0);
+                snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s", ROLE_NAMES[selectedRole]);
+                setTempRuleResultName(rs, kb, -i-1000, "PLAYERS", buff); //iterate over players not X or Y
+                addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", "is_WASHERWOMAN", playerIDinfoFrom);
+                addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", "is_NOT_poisoned_NIGHT0", playerIDinfoFrom);
+                addFixedConditionToTempRuleName(rs,kb, 1, "METADATA", "is_NOT_SPY_in_PLAY", 0);
+                pushTempRule(rs);
+            }
+        }
+
     }
     else if (pingTypeID == 1)
     { //LIBRARIAN_PING
@@ -405,6 +435,7 @@ void add_info(KnowledgeBase* kb, RuleSet* rs)
         char N_POSSIBILITIES[] = "TFT";
         char POISONED[] = "PS";
         char DIED[] = "D";
+        char HUNG[] = "H";
         char FINISH[] = "FINISH";
         printf("ADD INFORMATION:\n");
         printf("- Type '%s' to enter what role a player was shown:\n", SHOWN_ROLE);
@@ -412,7 +443,8 @@ void add_info(KnowledgeBase* kb, RuleSet* rs)
         printf("- Type '%s' to submit a ping:\n", PING);
         printf("- Type '%s' to submit n possibilities for a player:\n", N_POSSIBILITIES);
         printf("- Type '%s' to submit that a player that is confirmed poisoned:\n", POISONED);
-        printf("- Type '%s' to submit that a player died:\n", DIED);
+        printf("- Type '%s' to submit that a player died :\n", DIED);
+        printf("- Type '%s' to submit that a player was hung:\n", HUNG);
         printf("\n");
         printf("- Type '%s' to finish entering data:\n", FINISH);
 
@@ -430,7 +462,7 @@ void add_info(KnowledgeBase* kb, RuleSet* rs)
         }
         else if (strcmp(buff,PING) == 0)
         {
-            addPingRule(kb);
+            addPingRule(kb, rs);
         }
         else if (strcmp(buff,N_POSSIBILITIES) == 0)
         {
@@ -442,7 +474,11 @@ void add_info(KnowledgeBase* kb, RuleSet* rs)
         }
         else if (strcmp(buff,DIED) == 0)
         {
-            died(kb);
+            diedInNight(kb);
+        }
+        else if (strcmp(buff,HUNG) == 0)
+        {
+            hung(kb);
         }
         else if (strcmp(buff,FINISH) == 0)
         {
@@ -455,15 +491,6 @@ void add_info(KnowledgeBase* kb, RuleSet* rs)
         }
 
     }
-
-    
-    /*
-    addKnowledgeName(knowledgeBase, "PLAYERS", 0, "is_IMP");
-    addKnowledgeName(knowledgeBase, "PLAYERS", 1, "is_POISONER");
-    addKnowledgeName(knowledgeBase, "PLAYERS", 2, "is_SPY");
-    addKnowledgeName(knowledgeBase, "PLAYERS", 3, "is_DRUNK");
-    addKnowledgeName(knowledgeBase, "PLAYERS", 4, "is_SAINT");
-    */
 }
 
 int main()

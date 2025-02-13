@@ -22,6 +22,7 @@ typedef struct
     int resultVarName; //[0...MAX_VARS_IN_RULE] - same as in implication
                        //-1 -anything NOT in the conditions
                        //-2 -anything IN the conditions
+                       //-10XX force substitue element XX
  
     long result[FUNCTION_RESULT_SIZE];
     int resultFromSet; 

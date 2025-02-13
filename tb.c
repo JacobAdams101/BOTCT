@@ -809,11 +809,11 @@ void buildRules(RuleSet* rs, KnowledgeBase* kb, int numPlayers, int numMinions, 
     // ===========================================
     //  Dead rules
     // ===========================================
-    //<PLAYER>is_DEAD AND <METADATA>is_NOT_SCARLET_WOMAN_in_PLAY=> <PLAYER>is_NOT_DEMON
+    //<PLAYER>died_by_HANGING AND <METADATA>is_NOT_SCARLET_WOMAN_in_PLAY=> <PLAYER>is_NOT_DEMON
     setTempRuleParams(rs, 2,0);
     
     setTempRuleResultName(rs, kb, 0, "PLAYERS", "is_NOT_DEMON");
-    addConditionToTempRuleName(rs,kb, 0, "PLAYERS", "is_DEAD");
+    addConditionToTempRuleName(rs,kb, 0, "PLAYERS", "died_by_HANGING");
     addConditionToTempRuleName(rs,kb, 1, "METADATA", "is_NOT_SCARLET_WOMAN_in_PLAY");
     pushTempRule(rs);
 

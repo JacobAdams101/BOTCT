@@ -126,7 +126,7 @@ void addConditionToRule(Rule* rule, int varName, int set, int function, int forc
     
     rule->varConditions[varName][index] |= mask;
     rule->varConditionFromSet[varName] = set;
-    rule->varsForcedSubstitutions[varName] = -1;
+    rule->varsForcedSubstitutions[varName] = forcedSubstitution;
 }
 
 void addConditionToTempRule(RuleSet* rs, int varName, int set, int function, int forcedSubstitution)
@@ -191,7 +191,6 @@ void printRule(Rule* rule, KnowledgeBase* kb)
             if (((rule->varConditions[var][index] >> bit) & 1) == 1)
             {
                 //printf("PR-2C\n"); //Remove
-                int dgufgd = rule->varConditionFromSet[var];
                 //printf("PR-2CA %d\n", dgufgd); //Remove
                 printf("%s(%d:%s)", kb->FUNCTION_NAME[rule->varConditionFromSet[var]][function], var, kb->SET_NAMES[rule->varConditionFromSet[var]]);
                 count++;
@@ -358,6 +357,32 @@ int satisfiesRule(Rule* rule, KnowledgeBase* kb)
         }
     }
 
+    //Look for forced substitutions
+    for (int var = 0; var < rule->varCount; var++)
+    {
+        int forcedSub = rule->varsForcedSubstitutions[var];
+        if (forcedSub != -1)
+        {
+            //Loop through all variables that satisfy this variable
+            //Check if the variable that has the forced substitution appears
+            //Remove every variable
+            //IF the forced sub appears re add it at index 0
+            int forcedSubValid = 0;
+            for (int i = 0; i < MAX_SET_ELEMENTS; i++)
+            {
+                if (satisfied[var][i] == forcedSub)
+                {
+                    forcedSubValid = 1;
+                }
+                satisfied[var][i] = -1;
+            }
+            if (forcedSubValid == 1)
+            {
+                satisfied[var][0] = forcedSub;
+            }
+        }
+    }
+
     //Check if there are trivial ways of showing no solutions to the rule
     for (int var = 0; var < rule->varCount; var++)
     {
@@ -474,6 +499,30 @@ int satisfiesRule(Rule* rule, KnowledgeBase* kb)
             else if (rule->resultVarName == -2)
             { //Result can be anything IN condition
 
+            }
+            else if (rule->resultVarName <= -1000)
+            { //Result can be ONLY -1XXX where XXX is the element ID
+                int varToSub = (-rule->resultVarName)-1000;
+
+                int novelInformation = 0;
+                for(int function = 0; function < FUNCTION_RESULT_SIZE*INT_LENGTH; function++)
+                {
+                    int index = function / INT_LENGTH;
+                    int bit = function - (index * INT_LENGTH);
+                    
+                    if (((rule->result[index] >> bit) & 1) == 1)
+                    {
+                        if (isKnown(kb, rule->resultFromSet, varToSub, function) == 0)
+                        {
+                            novelInformation = 1;
+                        }
+                        addKnowledge(kb, rule->resultFromSet, varToSub, function);
+                    }
+                }
+                if (novelInformation == 1)
+                {
+                    printRuleAssignment(rule, kb, assignement, varToSub);
+                }
             }
         }
     }
