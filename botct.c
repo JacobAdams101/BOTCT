@@ -334,17 +334,20 @@ void addPingRule(KnowledgeBase* kb, RuleSet* rs)
 
         printf("For player 2?:\n");
         scanf("%d", &playerY); // Read player ID
-
+        //Originally this but converted to the stronger argument
         //If <PLAYER_INFO>is_WASHERWOMAN AND <PLAYER_INFO>is_NOT_poisonedNIGHT0 AND <METADATA>is_NOT_SPY_in_PLAY => <METADATA>is_<ROLE>_in_PLAY
-        setTempRuleParams(rs, 2,0);
+        //It was converted to this as <METADATA>is_NOT_SPY_in_PLAY => <PLAYER_X>is_NOT_SPY
+        //If <PLAYER_INFO>is_WASHERWOMAN AND <PLAYER_INFO>is_NOT_poisonedNIGHT0 AND <PLAYER_X>is_NOT_SPY AND <PLAYER_Y>is_NOT_SPY => <METADATA>is_<ROLE>_in_PLAY
+        setTempRuleParams(rs, 3,0);
         snprintf(buff, STRING_BUFF_SIZE, "is_%s_in_PLAY", ROLE_NAMES[selectedRole]);
         setTempRuleResultName(rs, kb, 0, "METADATA", buff);
         addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", "is_WASHERWOMAN", playerIDinfoFrom);
         addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", "is_NOT_poisoned_NIGHT0", playerIDinfoFrom);
-        addFixedConditionToTempRuleName(rs,kb, 1, "METADATA", "is_NOT_SPY_in_PLAY", 0);
+        addFixedConditionToTempRuleName(rs,kb, 1, "PLAYERS", "is_NOT_SPY", playerX);
+        addFixedConditionToTempRuleName(rs,kb, 2, "PLAYERS", "is_NOT_SPY", playerY);
         pushTempRule(rs);
 
-        //If <PLAYER_INFO>is_WASHERWOMAN AND <PLAYER_INFO>is_NOT_poisonedNIGHT0 AND <METADATA>is_NOT_SPY_in_PLAY => <PLAYER_H>is_NOT_<ROLE> [where H is not X or Y]
+        //If <PLAYER_INFO>is_WASHERWOMAN AND <PLAYER_INFO>is_NOT_poisonedNIGHT0 AND <PLAYER_X>is_NOT_SPY AND <PLAYER_Y>is_NOT_SPY => <PLAYER_H>is_NOT_<ROLE> [where H is not X or Y]
         for (int i = 0; i < kb->SET_SIZES[0]; i++)
         {
             if (i == playerX || i == playerY)
@@ -358,7 +361,8 @@ void addPingRule(KnowledgeBase* kb, RuleSet* rs)
                 setTempRuleResultName(rs, kb, -i-1000, "PLAYERS", buff); //iterate over players not X or Y
                 addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", "is_WASHERWOMAN", playerIDinfoFrom);
                 addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", "is_NOT_poisoned_NIGHT0", playerIDinfoFrom);
-                addFixedConditionToTempRuleName(rs,kb, 1, "METADATA", "is_NOT_SPY_in_PLAY", 0);
+                addFixedConditionToTempRuleName(rs,kb, 1, "PLAYERS", "is_NOT_SPY", playerX);
+                addFixedConditionToTempRuleName(rs,kb, 2, "PLAYERS", "is_NOT_SPY", playerY);
                 pushTempRule(rs);
             }
         }
@@ -370,9 +374,49 @@ void addPingRule(KnowledgeBase* kb, RuleSet* rs)
         Start knowing one of two players is a particular outsider
         */
 
-        //If <PLAYER_INFO>is_LIBRARIAN AND <PLAYER_INFO>is_NOT_poisonedNIGHT0 AND <METADATA>is_NOT_SPY_in_PLAY => <METADATA>is_<ROLE>_in_PLAY
-        //If <PLAYER_INFO>is_LIBRARIAN AND <PLAYER_INFO>is_NOT_poisonedNIGHT0 AND <METADATA>is_NOT_SPY_in_PLAY => <PLAYER_H>is_NOT_<ROLE> [where H is not X or Y]
+        int selectedRole = -1;
+        int playerX = -1;
+        int playerY = -1;
 
+        selectedRole = getRoleIDInput("Role Shown?");
+
+        printf("For player 1?:\n");
+        scanf("%d", &playerX); // Read player ID
+
+        printf("For player 2?:\n");
+        scanf("%d", &playerY); // Read player ID
+        //Originally this but converted to the stronger argument
+        //If <PLAYER_INFO>is_LIBRARIAN AND <PLAYER_INFO>is_NOT_poisonedNIGHT0 AND <METADATA>is_NOT_SPY_in_PLAY => <METADATA>is_<ROLE>_in_PLAY
+        //It was converted to this as <METADATA>is_NOT_SPY_in_PLAY => <PLAYER_X>is_NOT_SPY
+        //If <PLAYER_INFO>is_LIBRARIAN AND <PLAYER_INFO>is_NOT_poisonedNIGHT0 AND <PLAYER_X>is_NOT_SPY AND <PLAYER_Y>is_NOT_SPY => <METADATA>is_<ROLE>_in_PLAY
+        setTempRuleParams(rs, 3,0);
+        snprintf(buff, STRING_BUFF_SIZE, "is_%s_in_PLAY", ROLE_NAMES[selectedRole]);
+        setTempRuleResultName(rs, kb, 0, "METADATA", buff);
+        addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", "is_LIBRARIAN", playerIDinfoFrom);
+        addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", "is_NOT_poisoned_NIGHT0", playerIDinfoFrom);
+        addFixedConditionToTempRuleName(rs,kb, 1, "PLAYERS", "is_NOT_SPY", playerX);
+        addFixedConditionToTempRuleName(rs,kb, 2, "PLAYERS", "is_NOT_SPY", playerY);
+        pushTempRule(rs);
+
+        //If <PLAYER_INFO>is_LIBRARIAN AND <PLAYER_INFO>is_NOT_poisonedNIGHT0 AND <PLAYER_X>is_NOT_SPY AND <PLAYER_Y>is_NOT_SPY=> <PLAYER_H>is_NOT_<ROLE> [where H is not X or Y]
+        for (int i = 0; i < kb->SET_SIZES[0]; i++)
+        {
+            if (i == playerX || i == playerY)
+            {
+
+            }
+            else
+            {
+                setTempRuleParams(rs, 2,0);
+                snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s", ROLE_NAMES[selectedRole]);
+                setTempRuleResultName(rs, kb, -i-1000, "PLAYERS", buff); //iterate over players not X or Y
+                addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", "is_LIBRARIAN", playerIDinfoFrom);
+                addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", "is_NOT_poisoned_NIGHT0", playerIDinfoFrom);
+                addFixedConditionToTempRuleName(rs,kb, 1, "PLAYERS", "is_NOT_SPY", playerX);
+                addFixedConditionToTempRuleName(rs,kb, 2, "PLAYERS", "is_NOT_SPY", playerY);
+                pushTempRule(rs);
+            }
+        }
     }
     else if (pingTypeID == 2)
     { //INVESTIGATOR_PING
@@ -380,9 +424,49 @@ void addPingRule(KnowledgeBase* kb, RuleSet* rs)
         Start knowing one of two players is a particular minion
         */
 
-        //If <PLAYER_INFO>is_INVESTIGATOR AND <PLAYER_INFO>is_NOT_poisonedNIGHT0 AND <METADATA>is_NOT_RECLUSE_in_PLAY => <METADATA>is_<ROLE>_in_PLAY
-        //If <PLAYER_INFO>is_INVESTIGATOR AND <PLAYER_INFO>is_NOT_poisonedNIGHT0 AND <METADATA>is_NOT_RECLUSE_in_PLAY => <PLAYER_H>is_NOT_<ROLE> [where H is not X or Y]
+        int selectedRole = -1;
+        int playerX = -1;
+        int playerY = -1;
 
+        selectedRole = getRoleIDInput("Role Shown?");
+
+        printf("For player 1?:\n");
+        scanf("%d", &playerX); // Read player ID
+
+        printf("For player 2?:\n");
+        scanf("%d", &playerY); // Read player ID
+        //Originally this but converted to the stronger argument
+        //If <PLAYER_INFO>is_INVESTIGATOR AND <PLAYER_INFO>is_NOT_poisonedNIGHT0 AND <METADATA>is_NOT_RECLUSE_in_PLAY => <METADATA>is_<ROLE>_in_PLAY
+        //It was converted to this as <METADATA>is_NOT_SPY_in_PLAY => <PLAYER_X>is_NOT_SPY
+        //If <PLAYER_INFO>is_INVESTIGATOR AND <PLAYER_INFO>is_NOT_poisonedNIGHT0 AND <PLAYER_X>is_NOT_RECLUSE AND <PLAYER_Y>is_NOT_RECLUSE => <METADATA>is_<ROLE>_in_PLAY
+        setTempRuleParams(rs, 3,0);
+        snprintf(buff, STRING_BUFF_SIZE, "is_%s_in_PLAY", ROLE_NAMES[selectedRole]);
+        setTempRuleResultName(rs, kb, 0, "METADATA", buff);
+        addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", "is_INVESTIGATOR", playerIDinfoFrom);
+        addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", "is_NOT_poisoned_NIGHT0", playerIDinfoFrom);
+        addFixedConditionToTempRuleName(rs,kb, 1, "PLAYERS", "is_NOT_RECLUSE", playerX);
+        addFixedConditionToTempRuleName(rs,kb, 2, "PLAYERS", "is_NOT_RECLUSE", playerY);
+        pushTempRule(rs);
+
+        //If <PLAYER_INFO>is_INVESTIGATOR AND <PLAYER_INFO>is_NOT_poisonedNIGHT0 AND <PLAYER_X>is_NOT_RECLUSE AND <PLAYER_Y>is_NOT_RECLUSE=> <PLAYER_H>is_NOT_<ROLE> [where H is not X or Y]
+        for (int i = 0; i < kb->SET_SIZES[0]; i++)
+        {
+            if (i == playerX || i == playerY)
+            {
+
+            }
+            else
+            {
+                setTempRuleParams(rs, 2,0);
+                snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s", ROLE_NAMES[selectedRole]);
+                setTempRuleResultName(rs, kb, -i-1000, "PLAYERS", buff); //iterate over players not X or Y
+                addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", "is_INVESTIGATOR", playerIDinfoFrom);
+                addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", "is_NOT_poisoned_NIGHT0", playerIDinfoFrom);
+                addFixedConditionToTempRuleName(rs,kb, 1, "PLAYERS", "is_NOT_RECLUSE", playerX);
+                addFixedConditionToTempRuleName(rs,kb, 2, "PLAYERS", "is_NOT_RECLUSE", playerY);
+                pushTempRule(rs);
+            }
+        }
     }
     else if (pingTypeID == 3)
     { //CHEF_PING
@@ -415,8 +499,8 @@ void addPingRule(KnowledgeBase* kb, RuleSet* rs)
     { //RAVENKEEPER_PING
 
     }
-    printf("On night?:\n");
-    scanf("%d", &night); // Read player ID
+    //printf("On night?:\n");
+    //scanf("%d", &night); // Read player ID
 
     
 }
