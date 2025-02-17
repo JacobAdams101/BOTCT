@@ -7,6 +7,7 @@
 #include "tb.h"
 
 
+
 void initStrings(char *funcName[NUM_SETS][FUNCTION_RESULT_SIZE*INT_LENGTH], int maxLen)
 {
     int SIZE = maxLen*sizeof(char);
@@ -32,10 +33,8 @@ void writeRoleInGameFunc(char *funcName[NUM_SETS][FUNCTION_RESULT_SIZE*INT_LENGT
 {
     int SIZE = maxLen*sizeof(char);
     snprintf(funcName[set][index[set]], SIZE, "is_%s_in_PLAY", name);
-    printf("Adding: is_%s_in_PLAY\n", name);
     index[set] += 1;
     snprintf(funcName[set][index[set]], SIZE, "is_NOT_%s_in_PLAY", name);
-    printf("Adding: is_NOT_%s_in_PLAY\n", name);
     index[set] += 1;
 }
 
@@ -141,6 +140,26 @@ KnowledgeBase* initKB(int NUM_PLAYERS, int NUM_DAYS)
     return kb;
 }
 
+void copyTo(KnowledgeBase* dest, KnowledgeBase* src)
+{
+    //Deep copy knowlegde base (these might change)
+    memcpy(dest->KNOWLEDGE_BASE, src->KNOWLEDGE_BASE, sizeof(long)*NUM_SETS*MAX_SET_ELEMENTS*FUNCTION_RESULT_SIZE);
+    memcpy(dest->SET_SIZES, src->SET_SIZES, sizeof(int)*NUM_SETS);
+    for (int i = 0; i < NUM_SETS; i++)
+    {
+        //Shallow copy names (these will not change)
+        dest->SET_NAMES[i] = src->SET_NAMES[i];
+        //strcpy(dest->SET_NAMES[i], src->SET_NAMES[i]); //Deep copy version
+
+        for (int j = 0; j < FUNCTION_RESULT_SIZE*INT_LENGTH; j++)
+        {
+            //Shallow copy names (these will not change)
+            dest->FUNCTION_NAME[i][j] = src->FUNCTION_NAME[i][j];
+           //strcpy(dest->FUNCTION_NAME[i][j], src->FUNCTION_NAME[i][j]); //Deep copy version
+        }
+    }
+}
+
 int getSetIDWithName(KnowledgeBase* kb, char* set)
 {
     for (int i = 0; i < NUM_SETS; i++)
@@ -231,6 +250,28 @@ void addKnowledgeName(KnowledgeBase* kb, char* set, int element, char* function)
 
     addKnowledge(kb, setID, element, functionID);
 }
+
+
+int hasExplicitContradiction(KnowledgeBase* kb)
+{
+    //[NUM_SETS][MAX_SET_ELEMENTS][FUNCTION_RESULT_SIZE];
+    for (int set = 0; set < NUM_SETS; set++)
+    {
+        for (int element = 0; element < MAX_SET_ELEMENTS; element++)
+        {
+            for (int function = 0; function < FUNCTION_RESULT_SIZE*INT_LENGTH; function += 2)
+            {
+                //Using the fact that for any statement A stored at an even index i NOT(A) is stored at the odd index i+1 
+                if ((isKnown(kb, set, element, function) == 1) && (isKnown(kb, set, element, function+1) == 1))
+                { //If A AND NOT(A) -> we have a contradiction
+                    return 1; 
+                }
+            }
+        }
+    }
+    return 0;
+}
+
 
 
 void printKnowledgeBase(KnowledgeBase* kb)

@@ -267,7 +267,6 @@ void addPingRule(KnowledgeBase* kb, RuleSet* rs)
     int pingTypeID = -1;
 
     int playerIDinfoFrom;
-    int night;
 
     printf("ENERTING: PLAYER PING (Unreliable information)\n");
 
@@ -474,6 +473,8 @@ void addPingRule(KnowledgeBase* kb, RuleSet* rs)
         Start knowing how many pairs of evil players there are
         */
 
+        //0 - implies two adjancent players cant be bad 
+
     }
     else if (pingTypeID == 4)
     { //EMPATH_PING
@@ -488,15 +489,93 @@ void addPingRule(KnowledgeBase* kb, RuleSet* rs)
     }
     else if (pingTypeID == 5)
     { //FORTUNE_TELLER_PING
+        /*
+        Each night, choose 2 players: you learn if either is a Demon. There is 1 good player that registers falsely to you.
+        */
+        int count = -1;
+        int playerX = -1;
+        int playerY = -1;
+        int night = -1;
 
+        printf("What was ping? (0 - NO, 1 - YES):\n");
+        scanf("%d", &count); // Read player ID
+
+        printf("For player 1?:\n");
+        scanf("%d", &playerX); // Read player ID
+
+        printf("For player 2?:\n");
+        scanf("%d", &playerY); // Read player ID
+
+        printf("On night?:\n");
+        scanf("%d", &night); // Read night
+
+        if (count == 0)
+        {
+            //If 0 Ping
+            //If <PLAYER_INFO>is_FORTUNE_TELLER AND <PLAYER_INFO>is_NOT_poisonedNIGHT<night> => <PLAYER_X>is_NOT_DEMON
+            //If <PLAYER_INFO>is_FORTUNE_TELLER AND <PLAYER_INFO>is_NOT_poisonedNIGHT<night> => <PLAYER_Y>is_NOT_DEMON
+        }
+        else
+        {
+            //If 1 Ping
+            
+        }
     }
     else if (pingTypeID == 6)
     { //UNDERTAKER_PING
-        //For 2 good 0 evil 
-        //If <PLAYER_INFO>is_UNDERTAKER AND <PLAYER_INFO>is_NOT_poisonedNIGHT<night> AND <METADATA>is_NOT_RECLUSE_in_PLAY AND <METADATA>is_NOT_SPY_in_PLAY => <PLAYER_X>is_<ROLE>
+        /*
+        Each night*, you learn which character died by execution today.
+        */
+        int selectedRole = -1;
+        int playerX = -1;
+        int night = -1;
+
+        selectedRole = getRoleIDInput("Role Shown?");
+
+        printf("For player?:\n");
+        scanf("%d", &playerX); // Read player ID
+
+        printf("On night?:\n");
+        scanf("%d", &night); // Read night
+
+        //If <PLAYER_INFO>is_UNDERTAKER AND <PLAYER_INFO>is_NOT_poisonedNIGHT<night> AND <PLAYER_X>is_NOT_RECLUSE AND <PLAYER_X>is_NOT_SPY => <PLAYER_X>is_<ROLE>
+        setTempRuleParams(rs, 3,0);
+        snprintf(buff, STRING_BUFF_SIZE, "is_%s", ROLE_NAMES[selectedRole]);
+        setTempRuleResultName(rs, kb, 0, "PLAYERS", buff);
+        addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", "is_UNDERTAKER", playerIDinfoFrom);
+        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_poisoned_NIGHT%d", night);
+        addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff, playerIDinfoFrom);
+        addFixedConditionToTempRuleName(rs,kb, 1, "PLAYERS", "is_NOT_RECLUSE", playerX);
+        addFixedConditionToTempRuleName(rs,kb, 1, "PLAYERS", "is_NOT_SPY", playerX);
+        pushTempRule(rs);
     }
     else if (pingTypeID == 7)
     { //RAVENKEEPER_PING
+        /*
+        If you die at night, you are woken to choose a player: you learn their character.
+        */
+        int selectedRole = -1;
+        int playerX = -1;
+        int night = -1;
+
+        selectedRole = getRoleIDInput("Role Shown?");
+
+        printf("For player?:\n");
+        scanf("%d", &playerX); // Read player ID
+
+        printf("On night?:\n");
+        scanf("%d", &night); // Read night
+
+        //If <PLAYER_INFO>is_RAVENKEEPER AND <PLAYER_INFO>is_NOT_poisonedNIGHT<night> AND <PLAYER_X>is_NOT_RECLUSE AND <PLAYER_X>is_NOT_SPY => <PLAYER_X>is_<ROLE>
+        setTempRuleParams(rs, 3,0);
+        snprintf(buff, STRING_BUFF_SIZE, "is_%s", ROLE_NAMES[selectedRole]);
+        setTempRuleResultName(rs, kb, 0, "PLAYERS", buff);
+        addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", "is_RAVENKEEPER", playerIDinfoFrom);
+        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_poisoned_NIGHT%d", night);
+        addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff, playerIDinfoFrom);
+        addFixedConditionToTempRuleName(rs,kb, 1, "PLAYERS", "is_NOT_RECLUSE", playerX);
+        addFixedConditionToTempRuleName(rs,kb, 1, "PLAYERS", "is_NOT_SPY", playerX);
+        pushTempRule(rs);
 
     }
     //printf("On night?:\n");
@@ -596,7 +675,7 @@ int main()
     int NUM_DAYS = 10;
     setup(&NUM_PLAYERS, &NUM_MINIONS, &NUM_DEMONS, &BASE_OUTSIDERS);
 
-    printHeading("CREATING GAME...");
+    printHeading("CREATING GAME..."); //UI HEADING
     printf("There are %d players in the game\n", NUM_PLAYERS);
     printf("There are %d minions in the game\n", NUM_MINIONS);
     printf("There are %d demons in the game\n", NUM_DEMONS);
@@ -610,26 +689,49 @@ int main()
 
     printRules(rs, kb);
 
+    KnowledgeBase* temp_kb = initKB(NUM_PLAYERS, NUM_DAYS);
+
     printf("BEGIN GAME LOOP...\n");
+
+    int contradiction = 0;
     
     while (1)
     {
+        
 
+        //Create copy as backup incase of contradictions
+        copyTo(temp_kb, kb);
         add_info(kb, rs);
 
-        printHeading("INFER FACTS");
+        
+        printHeading("INFER FACTS"); //UI HEADING
+        
         for (int i = 0; i < 4; i++)
         {
             printf("INFER FACTS [ROUND%d]:\n",i);
             inferknowledgeBaseFromRules(rs, kb);
         }
+        //Check for contradictions
+        contradiction = hasExplicitContradiction(kb);
 
-        printHeading("KNOWLEDGE BASE");
-        printKnowledgeBase(kb);
-        printHeading("PLAYER TABLE");
-        printPlayerTable(kb);
-        printHeading("ROLE TABLE");
-        printRoleTable(kb);
+        if (contradiction == 0)
+        {
+            printHeading("KNOWLEDGE BASE"); //UI HEADING
+            printKnowledgeBase(kb);
+            printHeading("PLAYER TABLE"); //UI HEADING
+            printPlayerTable(kb);
+            printHeading("ROLE TABLE"); //UI HEADING
+            printRoleTable(kb);
+        }
+
+        if (contradiction == 1)
+        {
+            printHeading("CONTRADICTION FOUND"); //UI HEADING
+            printf("Rolling back Knowledge base\n");
+            //Roll back knowledge base
+            copyTo(kb, temp_kb);
+        }
+
     }
 
     return 0;

@@ -16,6 +16,8 @@ typedef struct {
 
 KnowledgeBase* initKB(int NUM_PLAYERS, int NUM_DAYS);
 
+void copyTo(KnowledgeBase* dest, KnowledgeBase* src);
+
 void resetKnowledgeBase(long knowledgeBase[NUM_SETS][MAX_SET_ELEMENTS][FUNCTION_RESULT_SIZE]);
 
 int getSetIDWithName(KnowledgeBase* kb, char* set);
@@ -27,6 +29,8 @@ void addKnowledge(KnowledgeBase* kb,  int set, int element, int function);
 void addKnowledgeName(KnowledgeBase* kb,  char* set, int element, char* function);
 
 int isKnown(KnowledgeBase* kb,  int set, int element, int function);
+
+int hasExplicitContradiction(KnowledgeBase* kb);
 
 void printKnowledgeBase(KnowledgeBase* kb);
 void printPlayerTable(KnowledgeBase* kb);
