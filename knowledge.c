@@ -20,6 +20,17 @@ void initStrings(char *funcName[NUM_SETS][FUNCTION_RESULT_SIZE*INT_LENGTH], int 
     }
 }
 
+void initElementStrings(char *elementName[NUM_SETS][MAX_SET_ELEMENTS], int maxLen)
+{
+    int SIZE = maxLen*sizeof(char);
+    for (int i = 0; i < NUM_SETS; i++)
+    {
+        for (int j = 0; j < MAX_SET_ELEMENTS; j++)
+        {
+            elementName[i][j] = (char*) malloc(SIZE);
+        }
+    }
+}
 void writeRoleFunc(char *funcName[NUM_SETS][FUNCTION_RESULT_SIZE*INT_LENGTH], int set, int index[], char *name, int maxLen)
 {
     int SIZE = maxLen*sizeof(char);
@@ -89,6 +100,7 @@ KnowledgeBase* initKB(int NUM_PLAYERS, int NUM_DAYS)
 
 
     initStrings(kb->FUNCTION_NAME, 64);
+    initElementStrings(kb->ELEMENT_NAMES, 255);
     // ===========================================
     //  PLAYER FUNCTIONS
     // ===========================================
@@ -150,6 +162,12 @@ void copyTo(KnowledgeBase* dest, KnowledgeBase* src)
         //Shallow copy names (these will not change)
         dest->SET_NAMES[i] = src->SET_NAMES[i];
         //strcpy(dest->SET_NAMES[i], src->SET_NAMES[i]); //Deep copy version
+
+        for (int j = 0; j < MAX_SET_ELEMENTS; j++)
+        {
+            //Shallow copy names (these will not change)
+            dest->ELEMENT_NAMES[i][j] = src->ELEMENT_NAMES[i][j];
+        }
 
         for (int j = 0; j < FUNCTION_RESULT_SIZE*INT_LENGTH; j++)
         {
@@ -297,6 +315,22 @@ void printKnowledgeBase(KnowledgeBase* kb)
     printf("\n");
 }
 
+
+void printPlayerName(char* name, int maxLen)
+{
+    for (int c = 0; c < maxLen; c++)
+    {
+        if (c < strlen(name))
+        {
+            printf("%c", name[c]);
+        }
+        else
+        {
+            printf(" ");
+        }
+    }
+}
+
 void printPlayerTable(KnowledgeBase* kb)
 {
     printf("         |");
@@ -327,7 +361,10 @@ void printPlayerTable(KnowledgeBase* kb)
         int isGood = isKnownName(kb, "PLAYERS", element, "is_GOOD"); //((kb->KNOWLEDGE_BASE[set][element][0] >> 54) & 1);
         int isEvil = isKnownName(kb, "PLAYERS", element, "is_EVIL"); //((kb->KNOWLEDGE_BASE[set][element][0] >> 55) & 1);
 
-        printf("PLAYER %d |", element);
+        //printf("PLAYER %d |", element);
+        //printf("%s |", kb->ELEMENT_NAMES[0][element]);
+        printPlayerName(kb->ELEMENT_NAMES[0][element], 9);
+        printf("|");
         for (int role = 0; role < NUM_BOTCT_ROLES; role++)
         {
             int function1 = role*2;

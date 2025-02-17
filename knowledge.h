@@ -12,6 +12,7 @@ typedef struct {
 
     char *FUNCTION_NAME[NUM_SETS][FUNCTION_RESULT_SIZE*INT_LENGTH];
     char *SET_NAMES[NUM_SETS];
+    char *ELEMENT_NAMES[NUM_SETS][MAX_SET_ELEMENTS];
 } KnowledgeBase;
 
 KnowledgeBase* initKB(int NUM_PLAYERS, int NUM_DAYS);

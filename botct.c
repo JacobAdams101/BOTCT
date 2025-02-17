@@ -43,6 +43,20 @@ void setup(int *numPlayers, int *numMinions, int *numDemons, int *baseOutsiders)
     scanf("%d", baseOutsiders);
 }
 
+void getNames(char* names[NUM_SETS][MAX_SET_ELEMENTS], int numPlayers)
+{
+    char input[STRING_BUFF_SIZE]; // Declare a character array to hold the string
+    int set = 0;
+
+    for (int player = 0; player < numPlayers; player++)
+    {
+        printf("Player %d name:\n", player);
+        scanf("%255s", input); // Read a string (up to 99 characters to leave space for the null terminator)
+        snprintf(names[set][player], STRING_BUFF_SIZE, "%s", input);
+    }
+    
+}
+
 int getRoleIdFromString(char* roleName)
 {
     for (int roleID = 0; roleID < NUM_BOTCT_ROLES; roleID++)
@@ -812,9 +826,13 @@ int main()
 
     initTB(&rs, &kb, NUM_PLAYERS, NUM_MINIONS, NUM_DEMONS, BASE_OUTSIDERS, NUM_DAYS);
 
+    getNames(kb->ELEMENT_NAMES, NUM_PLAYERS);
+
     printRules(rs, kb);
 
     KnowledgeBase* temp_kb = initKB(NUM_PLAYERS, NUM_DAYS);
+
+    
 
     printf("BEGIN GAME LOOP...\n");
 
