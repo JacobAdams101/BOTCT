@@ -87,7 +87,7 @@ void initTB(RuleSet** rs, KnowledgeBase** kb, int NUM_PLAYERS, int NUM_MINIONS, 
 
     ROLE_NAMES[17] = "MAYOR";
     ROLE_TEAMS[17] = "GOOD";
-    ROLE_CLASSES[17] = "OUTSIDER";
+    ROLE_CLASSES[17] = "TOWNSFOLK";
 
     //Outsiders
     ROLE_NAMES[18] = "BUTLER";
