@@ -513,12 +513,113 @@ void addPingRule(KnowledgeBase* kb, RuleSet* rs)
         {
             //If 0 Ping
             //If <PLAYER_INFO>is_FORTUNE_TELLER AND <PLAYER_INFO>is_NOT_poisonedNIGHT<night> => <PLAYER_X>is_NOT_DEMON
+            setTempRuleParams(rs, 3,0);
+            setTempRuleResultName(rs, kb, -playerX-1000, "PLAYERS", "is_NOT_DEMON");
+            addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", "is_FORTUNE_TELLER", playerIDinfoFrom);
+            addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", "is_NOT_poisoned_NIGHT0", playerIDinfoFrom);
+            pushTempRule(rs);
+
             //If <PLAYER_INFO>is_FORTUNE_TELLER AND <PLAYER_INFO>is_NOT_poisonedNIGHT<night> => <PLAYER_Y>is_NOT_DEMON
+            setTempRuleParams(rs, 3,0);
+            setTempRuleResultName(rs, kb, -playerY-1000, "PLAYERS", "is_NOT_DEMON");
+            addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", "is_FORTUNE_TELLER", playerIDinfoFrom);
+            addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", "is_NOT_poisoned_NIGHT0", playerIDinfoFrom);
+            pushTempRule(rs);
         }
         else
         {
             //If 1 Ping
-            
+            //If <PLAYER_INFO>is_FORTUNE_TELLER AND <PLAYER_INFO>is_NOT_poisonedNIGHT<night> AND <PLAYER_X>is_NOT_DEMON AND <PLAYER_X>is_NOT_RECLUSE AND <PLAYER_Y>is_NOT_DEMON AND <PLAYER_Y>is_NOT_REDHERRING AND <PLAYER_Y>is_NOT_RECLUSE => <PLAYER_X>is_REDHERRING
+            setTempRuleParams(rs, 3,0);
+            setTempRuleResultName(rs, kb, -playerX-1000, "PLAYERS", "is_REDHERRING");
+            addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", "is_FORTUNE_TELLER", playerIDinfoFrom);
+            addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", "is_NOT_poisoned_NIGHT0", playerIDinfoFrom);
+
+            addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", "is_NOT_DEMON", playerX);
+
+            addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", "is_NOT_RECLUSE", playerX);
+
+            addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", "is_NOT_DEMON", playerY);
+            addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", "is_NOT_REDHERRING", playerY);
+            addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", "is_NOT_RECLUSE", playerY);
+            pushTempRule(rs);
+
+            //If <PLAYER_INFO>is_FORTUNE_TELLER AND <PLAYER_INFO>is_NOT_poisonedNIGHT<night> AND <PLAYER_X>is_NOT_REDHERRING AND <PLAYER_X>is_NOT_RECLUSE AND <PLAYER_Y>is_NOT_DEMON AND <PLAYER_Y>is_NOT_REDHERRING AND <PLAYER_Y>is_NOT_RECLUSE => <PLAYER_X>is_DEMON
+            setTempRuleParams(rs, 3,0);
+            setTempRuleResultName(rs, kb, -playerX-1000, "PLAYERS", "is_DEMON");
+            addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", "is_FORTUNE_TELLER", playerIDinfoFrom);
+            addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", "is_NOT_poisoned_NIGHT0", playerIDinfoFrom);
+
+
+            addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", "is_NOT_REDHERRING", playerX);
+            addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", "is_NOT_RECLUSE", playerX);
+
+            addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", "is_NOT_DEMON", playerY);
+            addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", "is_NOT_REDHERRING", playerY);
+            addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", "is_NOT_RECLUSE", playerY);
+            pushTempRule(rs);
+
+            //If <PLAYER_INFO>is_FORTUNE_TELLER AND <PLAYER_INFO>is_NOT_poisonedNIGHT<night> AND <PLAYER_X>is_NOT_DEMON AND <PLAYER_X>is_NOT_REDHERRING AND <PLAYER_Y>is_NOT_DEMON AND <PLAYER_Y>is_NOT_REDHERRING AND <PLAYER_Y>is_NOT_RECLUSE => <PLAYER_X>is_RECLUSE
+            setTempRuleParams(rs, 3,0);
+            setTempRuleResultName(rs, kb, -playerX-1000, "PLAYERS", "is_RECLUSE");
+            addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", "is_FORTUNE_TELLER", playerIDinfoFrom);
+            addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", "is_NOT_poisoned_NIGHT0", playerIDinfoFrom);
+
+            addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", "is_NOT_DEMON", playerX);
+            addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", "is_NOT_REDHERRING", playerX);
+
+
+            addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", "is_NOT_DEMON", playerY);
+            addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", "is_NOT_REDHERRING", playerY);
+            addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", "is_NOT_RECLUSE", playerY);
+            pushTempRule(rs);
+
+
+
+            //If <PLAYER_INFO>is_FORTUNE_TELLER AND <PLAYER_INFO>is_NOT_poisonedNIGHT<night> AND <PLAYER_X>is_NOT_DEMON AND <PLAYER_X>is_NOT_REDHERRING AND <PLAYER_X>is_NOT_RECLUSE AND <PLAYER_Y>is_NOT_DEMON AND <PLAYER_Y>is_NOT_RECLUSE => <PLAYER_Y>is_REDHERRING
+            setTempRuleParams(rs, 3,0);
+            setTempRuleResultName(rs, kb, -playerY-1000, "PLAYERS", "is_REDHERRING");
+            addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", "is_FORTUNE_TELLER", playerIDinfoFrom);
+            addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", "is_NOT_poisoned_NIGHT0", playerIDinfoFrom);
+
+            addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", "is_NOT_DEMON", playerX);
+            addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", "is_NOT_REDHERRING", playerX);
+            addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", "is_NOT_RECLUSE", playerX);
+
+            addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", "is_NOT_DEMON", playerY);
+
+            addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", "is_NOT_RECLUSE", playerY);
+            pushTempRule(rs);
+
+            //If <PLAYER_INFO>is_FORTUNE_TELLER AND <PLAYER_INFO>is_NOT_poisonedNIGHT<night> AND <PLAYER_X>is_NOT_DEMON AND <PLAYER_X>is_NOT_REDHERRING AND <PLAYER_X>is_NOT_RECLUSE AND <PLAYER_Y>is_NOT_REDHERRING AND <PLAYER_Y>is_NOT_RECLUSE => <PLAYER_Y>is_DEMON
+            setTempRuleParams(rs, 3,0);
+            setTempRuleResultName(rs, kb, -playerY-1000, "PLAYERS", "is_DEMON");
+            addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", "is_FORTUNE_TELLER", playerIDinfoFrom);
+            addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", "is_NOT_poisoned_NIGHT0", playerIDinfoFrom);
+
+            addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", "is_NOT_DEMON", playerX);
+            addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", "is_NOT_REDHERRING", playerX);
+            addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", "is_NOT_RECLUSE", playerX);
+
+
+            addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", "is_NOT_REDHERRING", playerY);
+            addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", "is_NOT_RECLUSE", playerY);
+            pushTempRule(rs);
+
+            //If <PLAYER_INFO>is_FORTUNE_TELLER AND <PLAYER_INFO>is_NOT_poisonedNIGHT<night> AND <PLAYER_X>is_NOT_DEMON AND <PLAYER_X>is_NOT_REDHERRING AND <PLAYER_X>is_NOT_RECLUSE AND <PLAYER_Y>is_NOT_DEMON AND <PLAYER_Y>is_NOT_REDHERRING => <PLAYER_Y>is_RECLUSE
+            setTempRuleParams(rs, 3,0);
+            setTempRuleResultName(rs, kb, -playerY-1000, "PLAYERS", "is_RECLUSE");
+            addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", "is_FORTUNE_TELLER", playerIDinfoFrom);
+            addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", "is_NOT_poisoned_NIGHT0", playerIDinfoFrom);
+
+            addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", "is_NOT_DEMON", playerX);
+            addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", "is_NOT_REDHERRING", playerX);
+            addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", "is_NOT_RECLUSE", playerX);
+
+            addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", "is_NOT_DEMON", playerY);
+            addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", "is_NOT_REDHERRING", playerY);
+
+            pushTempRule(rs);
         }
     }
     else if (pingTypeID == 6)
