@@ -120,7 +120,8 @@ KnowledgeBase* initKB(int NUM_PLAYERS, int NUM_DAYS)
 
     //Deaths  
     writeFunc(kb->FUNCTION_NAME, 0, index, "is_DEAD", "is_ALIVE", 64);
-    writeFunc(kb->FUNCTION_NAME, 0, index, "died_in_NIGHT", "died_by_HANGING", 64);
+    writeFunc(kb->FUNCTION_NAME, 0, index, "died_in_NIGHT", "died_NOT_in_NIGHT", 64);
+    writeFunc(kb->FUNCTION_NAME, 0, index, "died_by_HANGING", "died_NOT_by_HANGING", 64);
     //Death on night
     for (int night = 0; night < NUM_DAYS; night++)
     {
