@@ -361,7 +361,7 @@ void getAssignment(int satisfied[MAX_VARS_IN_RULE][MAX_SET_ELEMENTS], int length
     
 }
 
-void applyRule(Rule* rule, KnowledgeBase* kb, int assignement[MAX_VARS_IN_RULE])
+void applyRule(Rule* rule, KnowledgeBase* kb, int assignement[MAX_VARS_IN_RULE], int verbose)
 {
     if (rule->resultVarName >= 0)
     { //Result found in condition
@@ -381,7 +381,7 @@ void applyRule(Rule* rule, KnowledgeBase* kb, int assignement[MAX_VARS_IN_RULE])
                 addKnowledge(kb, rule->resultFromSet, assignement[rule->resultVarName], function);
             }
         }
-        if (novelInformation == 1)
+        if (novelInformation == 1 && verbose == 1)
         {
             printRuleAssignment(rule, kb, assignement, assignement[rule->resultVarName]);
         }
@@ -417,7 +417,7 @@ void applyRule(Rule* rule, KnowledgeBase* kb, int assignement[MAX_VARS_IN_RULE])
                     }
                 }
             }
-            if (novelInformation == 1)
+            if (novelInformation == 1 && verbose == 1)
             {
                 printRuleAssignment(rule, kb, assignement, setElement);
             }
@@ -447,14 +447,14 @@ void applyRule(Rule* rule, KnowledgeBase* kb, int assignement[MAX_VARS_IN_RULE])
                 addKnowledge(kb, rule->resultFromSet, varToSub, function);
             }
         }
-        if (novelInformation == 1)
+        if (novelInformation == 1 && verbose == 1)
         {
             printRuleAssignment(rule, kb, assignement, varToSub);
         }
     }
 }
 
-int satisfiesRule(Rule* rule, KnowledgeBase* kb)
+int satisfiesRule(Rule* rule, KnowledgeBase* kb, int verbose)
 {
 
     int satisfied[MAX_VARS_IN_RULE][MAX_SET_ELEMENTS];
@@ -574,7 +574,7 @@ int satisfiesRule(Rule* rule, KnowledgeBase* kb)
         if (validAssignment == 1)
         { //If the assignement is valid
             //Update Knowledge Base
-            applyRule(rule, kb, assignement);
+            applyRule(rule, kb, assignement, verbose);
         }
     }
     else
@@ -605,7 +605,7 @@ int satisfiesRule(Rule* rule, KnowledgeBase* kb)
             if (validAssignment == 1)
             { //If the assignement is valid
                 //Update Knowledge Base
-                applyRule(rule, kb, assignement);
+                applyRule(rule, kb, assignement, verbose);
             }
         }
     }
@@ -613,11 +613,11 @@ int satisfiesRule(Rule* rule, KnowledgeBase* kb)
     return 1;
 }
 
-void inferknowledgeBaseFromRules(RuleSet* rs, KnowledgeBase* kb)
+void inferknowledgeBaseFromRules(RuleSet* rs, KnowledgeBase* kb, int verbose)
 {
     for (int i = 0; i < rs->NUM_RULES; i++)
     {
-        int result = satisfiesRule(rs->RULES[i], kb);
+        int result = satisfiesRule(rs->RULES[i], kb, verbose);
     }
 }
 
