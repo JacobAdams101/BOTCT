@@ -10,101 +10,67 @@ char *ROLE_NAMES[NUM_BOTCT_ROLES];
 char *ROLE_TEAMS[NUM_BOTCT_ROLES];
 char *ROLE_CLASSES[NUM_BOTCT_ROLES];
 
+void initRoleStrings(int maxLen)
+{
+    int SIZE = maxLen*sizeof(char);
+    for (int i = 0; i < NUM_BOTCT_ROLES; i++)
+    {
+        ROLE_NAMES[i] = (char*) malloc(SIZE);
+        ROLE_TEAMS[i] = (char*) malloc(SIZE);
+        ROLE_CLASSES[i] = (char*) malloc(SIZE);
+    }
+}
+
+void addRole(int *index, char* name, char* team, char* class, int maxLen)
+{
+    int SIZE = maxLen*sizeof(char);
+    snprintf(ROLE_NAMES[*index], SIZE, "%s", name);
+    snprintf(ROLE_TEAMS[*index], SIZE, "%s", team);
+    snprintf(ROLE_CLASSES[*index], SIZE, "%s", class);
+    
+    *index = *index + 1;
+}
+
 void initTB(RuleSet** rs, KnowledgeBase** kb, int NUM_PLAYERS, int NUM_MINIONS, int NUM_DEMONS, int BASE_OUTSIDERS, int NUM_DAYS)
 {
     printf("NAME THINGS...\n");
+    int count = 0;
+    initRoleStrings(64);
+
+    
     //Roles
     //Demons
-    ROLE_NAMES[0] = "IMP";
-    ROLE_TEAMS[0] = "EVIL";
-    ROLE_CLASSES[0] = "DEMON";
+    addRole(&count, "IMP", "EVIL", "DEMON", 64);
 
     //Minions
-    ROLE_NAMES[1] = "BARON";
-    ROLE_TEAMS[1] = "EVIL";
-    ROLE_CLASSES[1] = "MINION";
-
-    ROLE_NAMES[2] = "SCARLET_WOMAN";
-    ROLE_TEAMS[2] = "EVIL";
-    ROLE_CLASSES[2] = "MINION";
-
-    ROLE_NAMES[3] = "SPY";
-    ROLE_TEAMS[3] = "EVIL";
-    ROLE_CLASSES[3] = "MINION";
-
-    ROLE_NAMES[4] = "POISONER";
-    ROLE_TEAMS[4] = "EVIL";
-    ROLE_CLASSES[4] = "MINION";
+    addRole(&count, "BARON", "EVIL", "MINION", 64);
+    addRole(&count, "SCARLET_WOMAN", "EVIL", "MINION", 64);
+    addRole(&count, "SPY", "EVIL", "MINION", 64);
+    addRole(&count, "POISONER", "EVIL", "MINION", 64);
 
     //Townsfolk
-    ROLE_NAMES[5] = "WASHERWOMAN";
-    ROLE_TEAMS[5] = "GOOD";
-    ROLE_CLASSES[5] = "TOWNSFOLK";
+    addRole(&count, "WASHERWOMAN", "GOOD", "TOWNSFOLK", 64);
+    addRole(&count, "LIBRARIAN", "GOOD", "TOWNSFOLK", 64);
+    addRole(&count, "INVESTIGATOR", "GOOD", "TOWNSFOLK", 64);
+    addRole(&count, "CHEF", "GOOD", "TOWNSFOLK", 64);
 
-    ROLE_NAMES[6] = "LIBRARIAN";
-    ROLE_TEAMS[6] = "GOOD";
-    ROLE_CLASSES[6] = "TOWNSFOLK";
+    addRole(&count, "EMPATH", "GOOD", "TOWNSFOLK", 64);
+    addRole(&count, "FORTUNE_TELLER", "GOOD", "TOWNSFOLK", 64);
+    addRole(&count, "UNDERTAKER", "GOOD", "TOWNSFOLK", 64);
+    addRole(&count, "MONK", "GOOD", "TOWNSFOLK", 64);
 
-    ROLE_NAMES[7] = "INVESTIGATOR";
-    ROLE_TEAMS[7] = "GOOD";
-    ROLE_CLASSES[7] = "TOWNSFOLK";
+    addRole(&count, "RAVENKEEPER", "GOOD", "TOWNSFOLK", 64);
+    addRole(&count, "VIRGIN", "GOOD", "TOWNSFOLK", 64);
+    addRole(&count, "SLAYER", "GOOD", "TOWNSFOLK", 64);
+    addRole(&count, "SOLDIER", "GOOD", "TOWNSFOLK", 64);
 
-    ROLE_NAMES[8] = "CHEF";
-    ROLE_TEAMS[8] = "GOOD";
-    ROLE_CLASSES[8] = "TOWNSFOLK";
-
-    ROLE_NAMES[9] = "EMPATH";
-    ROLE_TEAMS[9] = "GOOD";
-    ROLE_CLASSES[9] = "TOWNSFOLK";
-
-    ROLE_NAMES[10] = "FORTUNE_TELLER";
-    ROLE_TEAMS[10] = "GOOD";
-    ROLE_CLASSES[10] = "TOWNSFOLK";
-
-    ROLE_NAMES[11] = "UNDERTAKER";
-    ROLE_TEAMS[11] = "GOOD";
-    ROLE_CLASSES[11] = "TOWNSFOLK";
-
-    ROLE_NAMES[12] = "MONK";
-    ROLE_TEAMS[12] = "GOOD";
-    ROLE_CLASSES[12] = "TOWNSFOLK";
-
-    ROLE_NAMES[13] = "RAVENKEEPER";
-    ROLE_TEAMS[13] = "GOOD";
-    ROLE_CLASSES[13] = "TOWNSFOLK";
-
-    ROLE_NAMES[14] = "VIRGIN";
-    ROLE_TEAMS[14] = "GOOD";
-    ROLE_CLASSES[14] = "TOWNSFOLK";
-
-    ROLE_NAMES[15] = "SLAYER";
-    ROLE_TEAMS[15] = "GOOD";
-    ROLE_CLASSES[15] = "TOWNSFOLK";
-
-    ROLE_NAMES[16] = "SOLDIER";
-    ROLE_TEAMS[16] = "GOOD";
-    ROLE_CLASSES[16] = "TOWNSFOLK";
-
-    ROLE_NAMES[17] = "MAYOR";
-    ROLE_TEAMS[17] = "GOOD";
-    ROLE_CLASSES[17] = "TOWNSFOLK";
+    addRole(&count, "MAYOR", "GOOD", "TOWNSFOLK", 64);
 
     //Outsiders
-    ROLE_NAMES[18] = "BUTLER";
-    ROLE_TEAMS[18] = "GOOD";
-    ROLE_CLASSES[18] = "OUTSIDER";
-
-    ROLE_NAMES[19] = "DRUNK";
-    ROLE_TEAMS[19] = "GOOD";
-    ROLE_CLASSES[19] = "OUTSIDER";
-
-    ROLE_NAMES[20] = "RECLUSE";
-    ROLE_TEAMS[20] = "GOOD";
-    ROLE_CLASSES[20] = "OUTSIDER";
-
-    ROLE_NAMES[21] = "SAINT";
-    ROLE_TEAMS[21] = "GOOD";
-    ROLE_CLASSES[21] = "OUTSIDER";
+    addRole(&count, "BUTLER", "GOOD", "OUTSIDER", 64);
+    addRole(&count, "DRUNK", "GOOD", "OUTSIDER", 64);
+    addRole(&count, "RECLUSE", "GOOD", "OUTSIDER", 64);
+    addRole(&count, "SAINT", "GOOD", "OUTSIDER", 64);
 
     printf("INIT DATA STRUCTURES...\n");
     //Init data structures
@@ -256,16 +222,18 @@ void buildRules(RuleSet* rs, KnowledgeBase* kb, int numPlayers, int numMinions, 
         addConditionToTempRuleName(rs,kb, 0, "METADATA", buff);
         pushTempRule(rs);
     }
-    //return;
+    int FIRST_MINION_INDEX = 1;
+    int TOTAL_MINIONS = 4;
     //Counting arguments for role metadata 
     //If found all minions in play set all unused minions to is_NOT_<MINION>_in_PLAY
-    if (0 < numMinions && numMinions < 4)
+    int numUnusedMinions = TOTAL_MINIONS-numMinions;
+    if (0 < numMinions && numMinions < TOTAL_MINIONS)
     {
         for (int i = 0; i < 16; i++)
         {
             //Permute all subsets of size 4
             int count = 0;
-            for (int j = 0; j < 4; j++)
+            for (int j = 0; j < TOTAL_MINIONS; j++)
             {
                 if (((i >> j) & 1) == 1)
                 {
@@ -274,38 +242,24 @@ void buildRules(RuleSet* rs, KnowledgeBase* kb, int numPlayers, int numMinions, 
             }
             if (count == numMinions)
             {
-                //<PLAYER>is_NOT_<MINION>_in_PLAY => <METADATA>is_<MINION>_in_PLAY
+                //<METADATA>is_NOT_<MINION>_in_PLAY => <METADATA>is_<MINION>_in_PLAY
                 setTempRuleParams(rs, 1,0);
                 
 
-                for (int j = 0; j < 4; j++)
+                for (int j = 0; j < TOTAL_MINIONS; j++)
                 {
                     if (((i >> j) & 1) == 1)
                     {
-                        addConditionToTempRuleName(rs,kb, 0, "METADATA", kb->FUNCTION_NAME[2][j*2+2]);
+                        snprintf(buff, STRING_BUFF_SIZE, "is_%s_in_PLAY", ROLE_NAMES[j+FIRST_MINION_INDEX]);
+                        addConditionToTempRuleName(rs,kb, 0, "METADATA", buff);
                     }
                     else
                     {
-                        setTempRuleResultName(rs, kb, 0, "METADATA", kb->FUNCTION_NAME[2][j*2+3]);
+                        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s_in_PLAY", ROLE_NAMES[j+FIRST_MINION_INDEX]);
+                        setTempRuleResultName(rs, kb, 0, "METADATA", buff);
                     }
                 }
                 pushTempRule(rs);
-            }
-        }
-    }
-    int numUnusedMinions = 4-numMinions;
-    if (0 < numUnusedMinions && numUnusedMinions < 4)
-    {
-        for (int i = 0; i < 16; i++)
-        {
-            //Permute all subsets of size 4
-            int count = 0;
-            for (int j = 0; j < 4; j++)
-            {
-                if (((i >> j) & 1) == 1)
-                {
-                    count++;
-                }
             }
             if (count == numUnusedMinions)
             {
@@ -313,22 +267,29 @@ void buildRules(RuleSet* rs, KnowledgeBase* kb, int numPlayers, int numMinions, 
                 setTempRuleParams(rs, 1,0);
                 
 
-                for (int j = 0; j < 4; j++)
+                for (int j = 0; j < TOTAL_MINIONS; j++)
                 {
                     if (((i >> j) & 1) == 1)
                     {
-                        addConditionToTempRuleName(rs,kb, 0, "METADATA", kb->FUNCTION_NAME[2][j*2+3]);
+                        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s_in_PLAY", ROLE_NAMES[j+FIRST_MINION_INDEX]);
+                        addConditionToTempRuleName(rs,kb, 0, "METADATA", buff);
                     }
                     else
                     {
-                        setTempRuleResultName(rs, kb, 0, "METADATA", kb->FUNCTION_NAME[2][j*2+2]);
+                        snprintf(buff, STRING_BUFF_SIZE, "is_%s_in_PLAY", ROLE_NAMES[j+FIRST_MINION_INDEX]);
+                        setTempRuleResultName(rs, kb, 0, "METADATA", buff);
                     }
                 }
                 pushTempRule(rs);
             }
         }
     }
+    
+ 
+    int TOTAL_OUTSIDERS = 4;
+    int FIRST_OUTSIDER_INDEX = 18;
 
+    int numUnusedOutsiders = TOTAL_OUTSIDERS-numMinions;
 
     //If found all outsiders (either with or without baron) in play set all unused outsiders to is_NOT_<OUTSIDER>_in_PLAY
 
@@ -341,19 +302,20 @@ void buildRules(RuleSet* rs, KnowledgeBase* kb, int numPlayers, int numMinions, 
 
         //The baron can't be in play for this
         addConditionToTempRuleName(rs,kb, 0, "METADATA", "is_NOT_BARON_in_PLAY");
-        for (int j = 0; j < 4; j++)
+        for (int j = 0; j < TOTAL_OUTSIDERS; j++)
         {
-            setTempRuleResultName(rs, kb, 0, "METADATA", kb->FUNCTION_NAME[2][j*2+37]);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s_in_PLAY", ROLE_NAMES[j+FIRST_OUTSIDER_INDEX]);
+            setTempRuleResultName(rs, kb, 0, "METADATA", buff);
         }
         pushTempRule(rs);
     }
-    else if (0 < baseOutsiders && baseOutsiders < 4)
+    else if (0 < baseOutsiders && baseOutsiders < TOTAL_OUTSIDERS)
     {
         for (int i = 0; i < 16; i++)
         {
             //Permute all subsets of size 4
             int count = 0;
-            for (int j = 0; j < 4; j++)
+            for (int j = 0; j < TOTAL_OUTSIDERS; j++)
             {
                 if (((i >> j) & 1) == 1)
                 {
@@ -369,35 +331,20 @@ void buildRules(RuleSet* rs, KnowledgeBase* kb, int numPlayers, int numMinions, 
                 //The baron can't be in play for this
                 addConditionToTempRuleName(rs,kb, 0, "METADATA", "is_NOT_BARON_in_PLAY");
 
-                for (int j = 0; j < 4; j++)
+                for (int j = 0; j < TOTAL_OUTSIDERS; j++)
                 {
                     if (((i >> j) & 1) == 1)
                     {
-                        addConditionToTempRuleName(rs,kb, 0, "METADATA", kb->FUNCTION_NAME[2][j*2+36]);
+                        snprintf(buff, STRING_BUFF_SIZE, "is_%s_in_PLAY", ROLE_NAMES[j+FIRST_OUTSIDER_INDEX]);
+                        addConditionToTempRuleName(rs,kb, 0, "METADATA", buff);
                     }
                     else
                     {
-                        setTempRuleResultName(rs, kb, 0, "METADATA", kb->FUNCTION_NAME[2][j*2+37]);
+                        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s_in_PLAY", ROLE_NAMES[j+FIRST_OUTSIDER_INDEX]);
+                        setTempRuleResultName(rs, kb, 0, "METADATA", buff);
                     }
                 }
                 pushTempRule(rs);
-            }
-        }
-    }
-    
-    int numUnusedOutsiders = 4-numMinions;
-    if (0 < numUnusedOutsiders && numUnusedOutsiders < 4)
-    {
-        for (int i = 0; i < 16; i++)
-        {
-            //Permute all subsets of size 4
-            int count = 0;
-            for (int j = 0; j < 4; j++)
-            {
-                if (((i >> j) & 1) == 1)
-                {
-                    count++;
-                }
             }
             if (count == numUnusedOutsiders)
             {
@@ -408,24 +355,29 @@ void buildRules(RuleSet* rs, KnowledgeBase* kb, int numPlayers, int numMinions, 
                 //The baron can't be in play for this
                 addConditionToTempRuleName(rs,kb, 0, "METADATA", "is_NOT_BARON_in_PLAY");
 
-                for (int j = 0; j < 4; j++)
+                for (int j = 0; j < TOTAL_OUTSIDERS; j++)
                 {
                     if (((i >> j) & 1) == 1)
                     {
-                        addConditionToTempRuleName(rs,kb, 0, "METADATA", kb->FUNCTION_NAME[2][j*2+37]);
+                        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s_in_PLAY", ROLE_NAMES[j+FIRST_OUTSIDER_INDEX]);
+                        addConditionToTempRuleName(rs,kb, 0, "METADATA", buff);
                     }
                     else
                     {
-                        setTempRuleResultName(rs, kb, 0, "METADATA", kb->FUNCTION_NAME[2][j*2+36]);
+                        snprintf(buff, STRING_BUFF_SIZE, "is_%s_in_PLAY", ROLE_NAMES[j+FIRST_OUTSIDER_INDEX]);
+                        setTempRuleResultName(rs, kb, 0, "METADATA", buff);
                     }
                 }
                 pushTempRule(rs);
             }
         }
     }
+
     //Extended outsiders outsiders (requires knowing there is a baron)
     int numOutsidersWithBaron = baseOutsiders+2;
-    if (numOutsidersWithBaron == 4)
+    int numUnusedOutsidersWithBaron = TOTAL_OUTSIDERS-numMinions;
+
+    if (numOutsidersWithBaron == TOTAL_OUTSIDERS)
     {
         //<METADATA>is_BARON_in_PLAY => <METADATA>is_<OUTSIDER>_in_PLAY (x4)
         setTempRuleParams(rs, 1,0);
@@ -435,7 +387,8 @@ void buildRules(RuleSet* rs, KnowledgeBase* kb, int numPlayers, int numMinions, 
         addConditionToTempRuleName(rs,kb, 0, "METADATA", "is_BARON_in_PLAY");
         for (int j = 0; j < 4; j++)
         {
-            setTempRuleResultName(rs, kb, 0, "METADATA", kb->FUNCTION_NAME[2][j*2+36]);
+            snprintf(buff, STRING_BUFF_SIZE, "is_%s_in_PLAY", ROLE_NAMES[j+FIRST_OUTSIDER_INDEX]);
+            setTempRuleResultName(rs, kb, 0, "METADATA", buff);
         }
         pushTempRule(rs);
     }
@@ -445,7 +398,7 @@ void buildRules(RuleSet* rs, KnowledgeBase* kb, int numPlayers, int numMinions, 
         {
             //Permute all subsets of size 4
             int count = 0;
-            for (int j = 0; j < 4; j++)
+            for (int j = 0; j < TOTAL_OUTSIDERS; j++)
             {
                 if (((i >> j) & 1) == 1)
                 {
@@ -461,35 +414,20 @@ void buildRules(RuleSet* rs, KnowledgeBase* kb, int numPlayers, int numMinions, 
                 //The baron can't be in play for this
                 addConditionToTempRuleName(rs,kb, 0, "METADATA", "is_BARON_in_PLAY");
 
-                for (int j = 0; j < 4; j++)
+                for (int j = 0; j < TOTAL_OUTSIDERS; j++)
                 {
                     if (((i >> j) & 1) == 1)
                     {
-                        addConditionToTempRuleName(rs,kb, 0, "METADATA", kb->FUNCTION_NAME[2][j*2+36]);
+                        snprintf(buff, STRING_BUFF_SIZE, "is_%s_in_PLAY", ROLE_NAMES[j+FIRST_OUTSIDER_INDEX]);
+                        addConditionToTempRuleName(rs,kb, 0, "METADATA", buff);
                     }
                     else
                     {
-                        setTempRuleResultName(rs, kb, 0, "METADATA", kb->FUNCTION_NAME[2][j*2+37]);
+                        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s_in_PLAY", ROLE_NAMES[j+FIRST_OUTSIDER_INDEX]);
+                        setTempRuleResultName(rs, kb, 0, "METADATA", buff);
                     }
                 }
                 pushTempRule(rs);
-            }
-        }
-    }
-    
-    int numUnusedOutsidersWithBaron = 4-numMinions;
-    if (0 < numUnusedOutsidersWithBaron && numUnusedOutsidersWithBaron < 4)
-    {
-        for (int i = 0; i < 16; i++)
-        {
-            //Permute all subsets of size 4
-            int count = 0;
-            for (int j = 0; j < 4; j++)
-            {
-                if (((i >> j) & 1) == 1)
-                {
-                    count++;
-                }
             }
             if (count == numUnusedOutsidersWithBaron)
             {
@@ -500,21 +438,24 @@ void buildRules(RuleSet* rs, KnowledgeBase* kb, int numPlayers, int numMinions, 
                 //The baron can't be in play for this
                 addConditionToTempRuleName(rs,kb, 0, "METADATA", "is_BARON_in_PLAY");
 
-                for (int j = 0; j < 4; j++)
+                for (int j = 0; j < TOTAL_OUTSIDERS; j++)
                 {
                     if (((i >> j) & 1) == 1)
                     {
-                        addConditionToTempRuleName(rs,kb, 0, "METADATA", kb->FUNCTION_NAME[2][j*2+37]);
+                        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s_in_PLAY", ROLE_NAMES[j+FIRST_OUTSIDER_INDEX]);
+                        addConditionToTempRuleName(rs,kb, 0, "METADATA", buff);
                     }
                     else
                     {
-                        setTempRuleResultName(rs, kb, 0, "METADATA", kb->FUNCTION_NAME[2][j*2+36]);
+                        snprintf(buff, STRING_BUFF_SIZE, "is_%s_in_PLAY", ROLE_NAMES[j+FIRST_OUTSIDER_INDEX]);
+                        setTempRuleResultName(rs, kb, 0, "METADATA", buff);
                     }
                 }
                 pushTempRule(rs);
             }
         }
     }
+
 
     // ===========================================
     //  Team Deduction argument rules

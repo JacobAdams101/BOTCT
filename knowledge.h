@@ -32,6 +32,7 @@ void addKnowledge(KnowledgeBase* kb,  int set, int element, int function);
 void addKnowledgeName(KnowledgeBase* kb,  char* set, int element, char* function);
 
 int isKnown(KnowledgeBase* kb,  int set, int element, int function);
+int isKnownName(KnowledgeBase* kb,  int set, int element, char* function);
 
 int hasExplicitContradiction(KnowledgeBase* kb);
 

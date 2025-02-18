@@ -69,16 +69,7 @@ void pushTempRule(RuleSet* ruleSet)
 {
     //See if LHS is symmetric for an optimisation to checker
     ruleSet->temp_rule->LHSSymmetric = LHSSymmetric(ruleSet->temp_rule);
-    /*
-    if (ruleSet->temp_rule->LHSSymmetricAndIndependant == 1)
-    {
-        printf("YAY\n");
-    }
-    else
-    {
-        printf("NOT YAY\n");
-    }
-        */
+
     //Copy temp rule
     memcpy(ruleSet->RULES[ruleSet->NUM_RULES], ruleSet->temp_rule, sizeof(Rule));
     //added one more rule
@@ -394,7 +385,7 @@ void applyRule(Rule* rule, KnowledgeBase* kb, int assignement[MAX_VARS_IN_RULE],
                 if (((rule->result[index] >> bit) & 1) == 1)
                 {
                     int inAssignment = 0;
-                    for (int i = 0; i < MAX_VARS_IN_RULE; i++)
+                    for (int i = 0; i < rule->varCount; i++)
                     {
                         if (assignement[i] == setElement && rule->varConditionFromSet[i] == rule->resultFromSet)
                         {
@@ -570,11 +561,12 @@ int satisfiesRule(Rule* rule, KnowledgeBase* kb, int verbose)
                         {
                             count++;
                         }
-                        assignement[var] = satisfied[var][count];
+                        assignement[var] = satisfied[0][count];
                         count++;
                     }
                     //If the assignement is valid
                     //Update Knowledge Base
+                    
                     applyRule(rule, kb, assignement, verbose);
                 }
             }

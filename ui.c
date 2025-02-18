@@ -316,6 +316,11 @@ void reset(KnowledgeBase* kb)
     resetElement(kb, 0, playerID);
 }
 
+void resetMetaData(KnowledgeBase* kb)
+{
+    resetElement(kb, 2, 0);
+}
+
 void addPingRule(KnowledgeBase* kb, RuleSet* rs)
 {
     char inputPingType[STRING_BUFF_SIZE]; // Declare a character array to hold the string 
@@ -566,16 +571,61 @@ void addPingRule(KnowledgeBase* kb, RuleSet* rs)
         printf("What was ping? (0, 1, 2 evil):\n");
         scanf("%d", &countEvil); // Read player ID
 
-        playerX = getPlayerIDInput(kb, "For player 1?"); // Read player ID 
+        //playerX = getPlayerIDInput(kb, "For player 1?"); // Read player ID 
         //printf("For player 1?:\n");
         //scanf("%d", &playerX); // Read player ID
 
-        playerY = getPlayerIDInput(kb, "For player 2?"); // Read player ID 
+        //playerY = getPlayerIDInput(kb, "For player 2?"); // Read player ID 
         //printf("For player 2?:\n");
         //scanf("%d", &playerY); // Read player ID
 
         printf("On night?:\n");
         scanf("%d", &night); // Read night
+
+        playerX = playerIDinfoFrom;
+        playerY = playerIDinfoFrom;
+
+        int isDead = 0;
+        do
+        {
+            playerX--;
+            if (playerX < 0)
+            {
+                playerX = kb->SET_SIZES[0]-1;
+            }
+            
+            for (int tempNight = 0; tempNight <= night; night++)
+            {
+                snprintf(buff, STRING_BUFF_SIZE, "died_NIGHT%d", night);
+                if (isKnownName(kb, 0, playerX, buff) == 1)
+                {
+                    isDead = 1;
+                }
+            }
+            
+        } while (isDead == 1);
+        isDead = 0;
+        do
+        {
+            playerY++;
+            if (playerY > kb->SET_SIZES[0]-1)
+            {
+                playerY = 0;
+            }
+            
+            for (int tempNight = 0; tempNight <= night; night++)
+            {
+                snprintf(buff, STRING_BUFF_SIZE, "died_NIGHT%d", night);
+                if (isKnownName(kb, 0, playerY, buff) == 1)
+                {
+                    isDead = 1;
+                }
+            }
+            
+        } while (isDead == 1);
+
+        printf("Empath ping on %s and %s", kb->ELEMENT_NAMES[0][playerX], kb->ELEMENT_NAMES[0][playerY]);
+        
         /*
         if (countEvil == 0)
         {
