@@ -27,7 +27,7 @@ typedef struct
     long result[FUNCTION_RESULT_SIZE];
     int resultFromSet; 
 
-    int LHSSymmetricAndIndependant;
+    int LHSSymmetric;
 } Rule;
 
 typedef struct

@@ -24,7 +24,7 @@ void resetRule(Rule* rule)
     rule->varCount = 0;
     rule->resultVarName = 0;
     rule->resultFromSet = 0;
-    rule->LHSSymmetricAndIndependant = 0;
+    rule->LHSSymmetric = 0;
     for (int i = 0; i < MAX_VARS_IN_RULE; i++)
     {
         rule->varConditionFromSet[i] = 0;
@@ -41,7 +41,7 @@ void resetRule(Rule* rule)
 
 }
 
-int LHSSymmetricAndIndependant(Rule* rule)
+int LHSSymmetric(Rule* rule)
 {
     //Check LHS Symmetric
     for (int var = 1; var < rule->varCount; var++)
@@ -62,19 +62,13 @@ int LHSSymmetricAndIndependant(Rule* rule)
             }
         }
     }
-    //The LHS is Symmetric, now check if it's independant
-    if (rule->resultVarName >= 0)
-    { //Not independant some permutation required
-        return 0;
-    }
-    //Is independant
     return 1;
 }
 
 void pushTempRule(RuleSet* ruleSet)
 {
     //See if LHS is symmetric for an optimisation to checker
-    ruleSet->temp_rule->LHSSymmetricAndIndependant = LHSSymmetricAndIndependant(ruleSet->temp_rule);
+    ruleSet->temp_rule->LHSSymmetric = LHSSymmetric(ruleSet->temp_rule);
     /*
     if (ruleSet->temp_rule->LHSSymmetricAndIndependant == 1)
     {
@@ -149,8 +143,8 @@ void setTempRuleResult(RuleSet* rs, int resultVarName, int set, int function)
 
 void setRuleResultName(Rule* rule, KnowledgeBase* kb, int resultVarName, char* set, char* function)
 {
-    int setID = getSetIDWithName(kb, set);
-    int functionID = getSetFunctionIDWithName(kb, setID, function);
+    int setID = getSetIDWithName(kb, set, 1);
+    int functionID = getSetFunctionIDWithName(kb, setID, function, 1);
 
     setRuleResult(rule, resultVarName, setID, functionID);
 }
@@ -179,8 +173,8 @@ void addConditionToTempRule(RuleSet* rs, int varName, int set, int function, int
 
 void addConditionToRuleName(Rule* rule, KnowledgeBase* kb, int varName, char* set, char* function)
 {
-    int setID = getSetIDWithName(kb, set);
-    int functionID = getSetFunctionIDWithName(kb, setID, function);
+    int setID = getSetIDWithName(kb, set, 1);
+    int functionID = getSetFunctionIDWithName(kb, setID, function, 1);
 
     addConditionToRule(rule, varName, setID, functionID, -1);
 }
@@ -192,8 +186,8 @@ void addConditionToTempRuleName(RuleSet* rs, KnowledgeBase* kb, int varName, cha
 
 void addFixedConditionToRuleName(Rule* rule, KnowledgeBase* kb, int varName, char* set, char* function, int forcedSubstitution)
 {
-    int setID = getSetIDWithName(kb, set);
-    int functionID = getSetFunctionIDWithName(kb, setID, function);
+    int setID = getSetIDWithName(kb, set, 1);
+    int functionID = getSetFunctionIDWithName(kb, setID, function, 1);
 
     addConditionToRule(rule, varName, setID, functionID, forcedSubstitution);
 }
@@ -545,37 +539,61 @@ int satisfiesRule(Rule* rule, KnowledgeBase* kb, int verbose)
         numCombinations *= lengths[var];
     }
 
-    if (rule->LHSSymmetricAndIndependant == 1)
+    if (rule->LHSSymmetric == 1)
     { //If it is symmetric and independant we dont
-        int validAssignment = 1;
+
         //Test If Assignement is valid
         if (rule->varsMutuallyExclusive == 1)
         {
             if (lengths[0] < rule->varCount)
-            {
-                validAssignment = 0;
+            { //Lengths < rule->varCount   ---> no valid substitutions
+
             }
-            else
-            {
+            else if (lengths[0] == rule->varCount)
+            { //Lengths == rule->varCount   ---> One valid substitution
                 for (int var = 0; var < rule->varCount; var++)
                 {
                     assignement[var] = satisfied[var][var];
                 }
+                //If the assignement is valid
+                //Update Knowledge Base
+                applyRule(rule, kb, assignement, verbose);
             }
+            else
+            { //Lengths > rule->varCount   ---> Multiple valid substitutions
+                for (int potentialSub = 0; potentialSub < lengths[0]; potentialSub++)
+                { //Use potential sub as the variable to ignore
+                    int count = 0;
+                    for (int var = 0; var < rule->varCount; var++)
+                    {
+                        if (count == potentialSub)
+                        {
+                            count++;
+                        }
+                        assignement[var] = satisfied[var][count];
+                        count++;
+                    }
+                    //If the assignement is valid
+                    //Update Knowledge Base
+                    applyRule(rule, kb, assignement, verbose);
+                }
+            }
+
         }
         else
         {
-            for (int var = 0; var < rule->varCount; var++)
+            for (int potentialSub = 0; potentialSub < lengths[0]; potentialSub++)
             {
-                assignement[var] = satisfied[var][0];
+                for (int var = 0; var < rule->varCount; var++)
+                {
+                    assignement[var] = satisfied[var][potentialSub];
+                }
+                //If the assignement is valid
+                //Update Knowledge Base
+                applyRule(rule, kb, assignement, verbose);
             }
         }
-
-        if (validAssignment == 1)
-        { //If the assignement is valid
-            //Update Knowledge Base
-            applyRule(rule, kb, assignement, verbose);
-        }
+        
     }
     else
     { //If not symmetric and independant we need to permute it

@@ -737,20 +737,21 @@ void buildRules(RuleSet* rs, KnowledgeBase* kb, int numPlayers, int numMinions, 
     //  Team Counting argument rules
     // ===========================================
     //RULE DISABLED DUE TO BAD PERFORMANCE
-    /*
+    //EDIT: new optimisation reduces this from O(n!) down to O(n) ish ish runing so re enabled
+
     //If all good players have been found the rest are evil
     //<PLAYER_1>is_GOOD AND ... <PLAYER_[num good players]>is_GOOD => <PLAYER_A>is_EVIL
-    RULES[NUM_RULES]->varCount = numGood;
-    RULES[NUM_RULES]->varsMutuallyExclusive=1;
+    setTempRuleParams(rs, numGood,1);
     
     setTempRuleResultName(rs, kb, -1, "PLAYERS", "is_EVIL"); 
-    
     for (int j = 0; j < numGood; j++)
     {
         addConditionToTempRuleName(rs,kb, j, "PLAYERS", "is_GOOD");
     }
     pushTempRule(rs);
-    */
+    
+
+
     //If all evil players have been found the rest are good
     //<PLAYER_1>is_EVIL AND ... <PLAYER_[num evil players]>is_EVIL => <PLAYER_A>is_GOOD
     setTempRuleParams(rs, numEvil,1);
