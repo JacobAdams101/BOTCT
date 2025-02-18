@@ -24,6 +24,7 @@ void resetRule(Rule* rule)
     rule->varCount = 0;
     rule->resultVarName = 0;
     rule->resultFromSet = 0;
+    rule->LHSSymmetricAndIndependant = 0;
     for (int i = 0; i < MAX_VARS_IN_RULE; i++)
     {
         rule->varConditionFromSet[i] = 0;
@@ -40,8 +41,50 @@ void resetRule(Rule* rule)
 
 }
 
+int LHSSymmetricAndIndependant(Rule* rule)
+{
+    //Check LHS Symmetric
+    for (int var = 1; var < rule->varCount; var++)
+    {
+        if (rule->varConditionFromSet[0] != rule->varConditionFromSet[var])
+        {
+            return 0;
+        }
+        if (rule->varsForcedSubstitutions[0] != rule->varsForcedSubstitutions[var])
+        {
+            return 0;
+        }
+        for (int i = 0; i < FUNCTION_RESULT_SIZE; i++)
+        {
+            if (rule->varConditions[0][i] != rule->varConditions[var][i])
+            {
+                return 0;
+            }
+        }
+    }
+    //The LHS is Symmetric, now check if it's independant
+    if (rule->resultVarName >= 0)
+    { //Not independant some permutation required
+        return 0;
+    }
+    //Is independant
+    return 1;
+}
+
 void pushTempRule(RuleSet* ruleSet)
 {
+    //See if LHS is symmetric for an optimisation to checker
+    ruleSet->temp_rule->LHSSymmetricAndIndependant = LHSSymmetricAndIndependant(ruleSet->temp_rule);
+    /*
+    if (ruleSet->temp_rule->LHSSymmetricAndIndependant == 1)
+    {
+        printf("YAY\n");
+    }
+    else
+    {
+        printf("NOT YAY\n");
+    }
+        */
     //Copy temp rule
     memcpy(ruleSet->RULES[ruleSet->NUM_RULES], ruleSet->temp_rule, sizeof(Rule));
     //added one more rule
@@ -318,6 +361,99 @@ void getAssignment(int satisfied[MAX_VARS_IN_RULE][MAX_SET_ELEMENTS], int length
     
 }
 
+void applyRule(Rule* rule, KnowledgeBase* kb, int assignement[MAX_VARS_IN_RULE])
+{
+    if (rule->resultVarName >= 0)
+    { //Result found in condition
+        
+        int novelInformation = 0;
+        for(int function = 0; function < FUNCTION_RESULT_SIZE*INT_LENGTH; function++)
+        {
+            int index = function / INT_LENGTH;
+            int bit = function - (index * INT_LENGTH);
+            
+            if (((rule->result[index] >> bit) & 1) == 1)
+            {
+                if (isKnown(kb, rule->resultFromSet, assignement[rule->resultVarName], function) == 0)
+                {
+                    novelInformation = 1;
+                }
+                addKnowledge(kb, rule->resultFromSet, assignement[rule->resultVarName], function);
+            }
+        }
+        if (novelInformation == 1)
+        {
+            printRuleAssignment(rule, kb, assignement, assignement[rule->resultVarName]);
+        }
+        
+    }
+    else if (rule->resultVarName == -1)
+    { //Result can be anything NOT in condition
+        for (int setElement = 0; setElement < kb->SET_SIZES[rule->resultFromSet]; setElement++)
+        {
+            int novelInformation = 0;
+            for(int function = 0; function < FUNCTION_RESULT_SIZE*INT_LENGTH; function++)
+            {
+                int index = function / INT_LENGTH;
+                int bit = function - (index * INT_LENGTH);
+                
+                if (((rule->result[index] >> bit) & 1) == 1)
+                {
+                    int inAssignment = 0;
+                    for (int i = 0; i < MAX_VARS_IN_RULE; i++)
+                    {
+                        if (assignement[i] == setElement && rule->varConditionFromSet[i] == rule->resultFromSet)
+                        {
+                            inAssignment = 1;
+                        }
+                    }
+                    if (inAssignment == 0)
+                    { //If not in assignment
+                        if (isKnown(kb, rule->resultFromSet, setElement, function) == 0)
+                        {
+                            novelInformation = 1;
+                        }
+                        addKnowledge(kb, rule->resultFromSet, setElement, function);
+                    }
+                }
+            }
+            if (novelInformation == 1)
+            {
+                printRuleAssignment(rule, kb, assignement, setElement);
+            }
+        }
+        
+    }
+    else if (rule->resultVarName == -2)
+    { //Result can be anything IN condition
+
+    }
+    else if (rule->resultVarName <= -1000)
+    { //Result can be ONLY -1XXX where XXX is the element ID
+        int varToSub = (-rule->resultVarName)-1000;
+
+        int novelInformation = 0;
+        for(int function = 0; function < FUNCTION_RESULT_SIZE*INT_LENGTH; function++)
+        {
+            int index = function / INT_LENGTH;
+            int bit = function - (index * INT_LENGTH);
+            
+            if (((rule->result[index] >> bit) & 1) == 1)
+            {
+                if (isKnown(kb, rule->resultFromSet, varToSub, function) == 0)
+                {
+                    novelInformation = 1;
+                }
+                addKnowledge(kb, rule->resultFromSet, varToSub, function);
+            }
+        }
+        if (novelInformation == 1)
+        {
+            printRuleAssignment(rule, kb, assignement, varToSub);
+        }
+    }
+}
+
 int satisfiesRule(Rule* rule, KnowledgeBase* kb)
 {
 
@@ -409,120 +545,67 @@ int satisfiesRule(Rule* rule, KnowledgeBase* kb)
         numCombinations *= lengths[var];
     }
 
-    for(long count = 0; count < numCombinations; count++)
-    {
-        //Generate Assignement
-        getAssignment(satisfied, lengths, assignement, 0, count);
-
+    if (rule->LHSSymmetricAndIndependant == 1)
+    { //If it is symmetric and independant we dont
         int validAssignment = 1;
-
         //Test If Assignement is valid
         if (rule->varsMutuallyExclusive == 1)
         {
-            //Check that there are no duplicate assignements
-            for(int var1 = 0; var1 < rule->varCount-1; var1++)
+            if (lengths[0] < rule->varCount)
             {
-                for(int var2 = var1+1; var2 < rule->varCount; var2++)
+                validAssignment = 0;
+            }
+            else
+            {
+                for (int var = 0; var < rule->varCount; var++)
                 {
-                    if (assignement[var1] == assignement[var2])
-                    {
-                        validAssignment = 0;
-                    }
+                    assignement[var] = satisfied[var][var];
                 }
+            }
+        }
+        else
+        {
+            for (int var = 0; var < rule->varCount; var++)
+            {
+                assignement[var] = satisfied[var][0];
             }
         }
 
         if (validAssignment == 1)
         { //If the assignement is valid
             //Update Knowledge Base
-            if (rule->resultVarName >= 0)
-            { //Result found in condition
-                
-                int novelInformation = 0;
-                for(int function = 0; function < FUNCTION_RESULT_SIZE*INT_LENGTH; function++)
-                {
-                    int index = function / INT_LENGTH;
-                    int bit = function - (index * INT_LENGTH);
-                    
-                    if (((rule->result[index] >> bit) & 1) == 1)
-                    {
-                        if (isKnown(kb, rule->resultFromSet, assignement[rule->resultVarName], function) == 0)
-                        {
-                            novelInformation = 1;
-                        }
-                        addKnowledge(kb, rule->resultFromSet, assignement[rule->resultVarName], function);
-                    }
-                }
-                if (novelInformation == 1)
-                {
-                    printRuleAssignment(rule, kb, assignement, assignement[rule->resultVarName]);
-                }
-                
-            }
-            else if (rule->resultVarName == -1)
-            { //Result can be anything NOT in condition
-                for (int setElement = 0; setElement < kb->SET_SIZES[rule->resultFromSet]; setElement++)
-                {
-                    int novelInformation = 0;
-                    for(int function = 0; function < FUNCTION_RESULT_SIZE*INT_LENGTH; function++)
-                    {
-                        int index = function / INT_LENGTH;
-                        int bit = function - (index * INT_LENGTH);
-                        
-                        if (((rule->result[index] >> bit) & 1) == 1)
-                        {
-                            int inAssignment = 0;
-                            for (int i = 0; i < MAX_VARS_IN_RULE; i++)
-                            {
-                                if (assignement[i] == setElement && rule->varConditionFromSet[i] == rule->resultFromSet)
-                                {
-                                    inAssignment = 1;
-                                }
-                            }
-                            if (inAssignment == 0)
-                            { //If not in assignment
-                                if (isKnown(kb, rule->resultFromSet, setElement, function) == 0)
-                                {
-                                    novelInformation = 1;
-                                }
-                                addKnowledge(kb, rule->resultFromSet, setElement, function);
-                            }
-                        }
-                    }
-                    if (novelInformation == 1)
-                    {
-                        printRuleAssignment(rule, kb, assignement, setElement);
-                    }
-                }
-                
-            }
-            else if (rule->resultVarName == -2)
-            { //Result can be anything IN condition
+            applyRule(rule, kb, assignement);
+        }
+    }
+    else
+    { //If not symmetric and independant we need to permute it
+        for(long count = 0; count < numCombinations; count++)
+        {
+            //Generate Assignement
+            getAssignment(satisfied, lengths, assignement, 0, count);
 
-            }
-            else if (rule->resultVarName <= -1000)
-            { //Result can be ONLY -1XXX where XXX is the element ID
-                int varToSub = (-rule->resultVarName)-1000;
+            int validAssignment = 1;
 
-                int novelInformation = 0;
-                for(int function = 0; function < FUNCTION_RESULT_SIZE*INT_LENGTH; function++)
+            //Test If Assignement is valid
+            if (rule->varsMutuallyExclusive == 1)
+            {
+                //Check that there are no duplicate assignements
+                for(int var1 = 0; var1 < rule->varCount-1; var1++)
                 {
-                    int index = function / INT_LENGTH;
-                    int bit = function - (index * INT_LENGTH);
-                    
-                    if (((rule->result[index] >> bit) & 1) == 1)
+                    for(int var2 = var1+1; var2 < rule->varCount; var2++)
                     {
-                        if (isKnown(kb, rule->resultFromSet, varToSub, function) == 0)
+                        if (assignement[var1] == assignement[var2])
                         {
-                            novelInformation = 1;
+                            validAssignment = 0;
                         }
-                        addKnowledge(kb, rule->resultFromSet, varToSub, function);
                     }
                 }
-                if (novelInformation == 1)
-                {
-                    printRuleAssignment(rule, kb, assignement, varToSub);
-                }
+            }
+
+            if (validAssignment == 1)
+            { //If the assignement is valid
+                //Update Knowledge Base
+                applyRule(rule, kb, assignement);
             }
         }
     }

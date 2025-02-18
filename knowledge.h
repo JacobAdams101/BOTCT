@@ -26,6 +26,7 @@ int getSetFunctionIDWithName(KnowledgeBase* kb, int setID, char* function);
 
 void getIndexAndBit(int* index, int* bit, int functionID);
 
+void resetElement(KnowledgeBase* kb, int set, int element);
 void addKnowledge(KnowledgeBase* kb,  int set, int element, int function);
 void addKnowledgeName(KnowledgeBase* kb,  char* set, int element, char* function);
 

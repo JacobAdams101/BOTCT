@@ -276,6 +276,18 @@ void hung(KnowledgeBase* kb)
     addKnowledgeName(kb, "PLAYERS", playerID, "died_by_HANGING");
 }
 
+void reset(KnowledgeBase* kb)
+{
+    int playerID;
+
+    printf("ENERTING: PLAYER RESET\n");
+
+    printf("For player?:\n");
+    scanf("%d", &playerID); // Read player ID
+
+    resetElement(kb, 0, playerID);
+}
+
 void addPingRule(KnowledgeBase* kb, RuleSet* rs)
 {
     char inputPingType[STRING_BUFF_SIZE]; // Declare a character array to hold the string 
@@ -733,6 +745,7 @@ void add_info(KnowledgeBase* kb, RuleSet* rs)
         char RED_HERRING[] = "RH";
         char DIED[] = "D";
         char HUNG[] = "H";
+        char RESET[] = "RST";
         char FINISH[] = "FINISH";
         printf("ADD INFORMATION:\n");
         printf("- Type '%s' to enter what role a player was shown:\n", SHOWN_ROLE);
@@ -743,6 +756,8 @@ void add_info(KnowledgeBase* kb, RuleSet* rs)
         printf("- Type '%s' to submit that a player that is confirmed red herring:\n", RED_HERRING);
         printf("- Type '%s' to submit that a player died :\n", DIED);
         printf("- Type '%s' to submit that a player was hung:\n", HUNG);
+        printf("\n");
+        printf("- Type '%s' to reset a players data:\n", RESET);
         printf("\n");
         printf("- Type '%s' to finish entering data:\n", FINISH);
 
@@ -781,6 +796,10 @@ void add_info(KnowledgeBase* kb, RuleSet* rs)
         else if (strcmp(buff,HUNG) == 0)
         {
             hung(kb);
+        }
+        else if (strcmp(buff,RESET) == 0)
+        {
+            reset(kb);
         }
         else if (strcmp(buff,FINISH) == 0)
         {
@@ -849,7 +868,7 @@ int main()
         
         printHeading("INFER FACTS"); //UI HEADING
         
-        for (int i = 0; i < 4; i++)
+        for (int i = 0; i < 5; i++)
         {
             printf("INFER FACTS [ROUND%d]:\n",i);
             inferknowledgeBaseFromRules(rs, kb);

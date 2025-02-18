@@ -26,6 +26,8 @@ typedef struct
  
     long result[FUNCTION_RESULT_SIZE];
     int resultFromSet; 
+
+    int LHSSymmetricAndIndependant;
 } Rule;
 
 typedef struct
@@ -53,7 +55,7 @@ void addConditionToRule(Rule* rule, int varName, int set, int function, int forc
 void addConditionToRuleName(Rule* rule, KnowledgeBase* kb, int varName, char* set, char* function);
 void addFixedConditionToRuleName(Rule* rule, KnowledgeBase* kb, int varName, char* set, char* function, int forcedSubstitution);
 */
-
+int LHSSymmetricAndIndependant(Rule* rule);
 void resetTempRule(RuleSet* rs);
 void setTempRuleParams(RuleSet* rs, int varCount, int varsMutuallyExclusive);
 void setTempRuleResult(RuleSet* rs, int resultVarName, int set, int function);

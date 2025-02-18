@@ -217,6 +217,23 @@ void buildRules(RuleSet* rs, KnowledgeBase* kb, int numPlayers, int numMinions, 
     // ===========================================
     //  Role Metadata implications
     // ===========================================
+    
+    for (int i = 0; i < NUM_BOTCT_ROLES; i++)
+    {
+        //<PLAYER_i>is_NOT_<ROLE> => <METADATA>is_NOT_ROLE_in_PLAY
+        setTempRuleParams(rs, numPlayers,1);
+        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s_in_PLAY", ROLE_NAMES[i]);
+        setTempRuleResultName(rs, kb, -1, "METADATA", buff);
+        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s", ROLE_NAMES[i]);
+        for (int j = 0; j < numPlayers; j++)
+        {
+            addConditionToTempRuleName(rs,kb, j, "PLAYERS", buff);
+        }
+        pushTempRule(rs);
+    }
+    
+    
+
     printf("-METADATA RULES...\n");
     for (int i = 0; i < NUM_BOTCT_ROLES; i++)
     {

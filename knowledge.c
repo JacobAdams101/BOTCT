@@ -233,7 +233,13 @@ void resetKnowledgeBase(long knowledgeBase[NUM_SETS][MAX_SET_ELEMENTS][FUNCTION_
     }
 }
 
-
+void resetElement(KnowledgeBase* kb, int set, int element)
+{
+    for (int i = 0; i < FUNCTION_RESULT_SIZE; i++)
+    {
+        kb->KNOWLEDGE_BASE[set][element][i] = 0;
+    }
+}
 
 void addKnowledge(KnowledgeBase* kb, int set, int element, int function)
 {
