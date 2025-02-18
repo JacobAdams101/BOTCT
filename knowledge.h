@@ -21,8 +21,9 @@ void copyTo(KnowledgeBase* dest, KnowledgeBase* src);
 
 void resetKnowledgeBase(long knowledgeBase[NUM_SETS][MAX_SET_ELEMENTS][FUNCTION_RESULT_SIZE]);
 
-int getSetIDWithName(KnowledgeBase* kb, char* set);
-int getSetFunctionIDWithName(KnowledgeBase* kb, int setID, char* function);
+int getSetIDWithName(KnowledgeBase* kb, char* set, int validate);
+int getSetFunctionIDWithName(KnowledgeBase* kb, int setID, char* function, int validate);
+int getSetElementIDWithName(KnowledgeBase* kb, int setID, char* element, int validate);
 
 void getIndexAndBit(int* index, int* bit, int functionID);
 

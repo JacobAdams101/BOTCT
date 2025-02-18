@@ -178,7 +178,7 @@ void copyTo(KnowledgeBase* dest, KnowledgeBase* src)
     }
 }
 
-int getSetIDWithName(KnowledgeBase* kb, char* set)
+int getSetIDWithName(KnowledgeBase* kb, char* set, int validate)
 {
     for (int i = 0; i < NUM_SETS; i++)
     {
@@ -187,12 +187,15 @@ int getSetIDWithName(KnowledgeBase* kb, char* set)
             return i;
         }
     }
-    printf("ERROR: WRONG SET NAME '%s'\n", set);
-    exit(1);
+    if (validate == 1)
+    {
+        printf("ERROR: WRONG SET NAME '%s'\n", set);
+        exit(1);
+    }
     return -1;
 }
 
-int getSetFunctionIDWithName(KnowledgeBase* kb, int setID, char* function)
+int getSetFunctionIDWithName(KnowledgeBase* kb, int setID, char* function, int validate)
 {
     for (int i = 0; i < FUNCTION_RESULT_SIZE*INT_LENGTH; i++)
     {
@@ -202,12 +205,37 @@ int getSetFunctionIDWithName(KnowledgeBase* kb, int setID, char* function)
             return i;
         }
     }
-    printf("ERROR: WRONG FUNCTION (set='%d') NAME '%s' set contains=\n", setID, function);
-    for (int i = 0; i < FUNCTION_RESULT_SIZE*INT_LENGTH; i++)
+    if (validate == 1)
     {
-        printf("%s,\n",kb->FUNCTION_NAME[setID][i]);
+        printf("ERROR: WRONG FUNCTION (set='%d') NAME '%s' set contains=\n", setID, function);
+        for (int i = 0; i < FUNCTION_RESULT_SIZE*INT_LENGTH; i++)
+        {
+            printf("%s,\n",kb->FUNCTION_NAME[setID][i]);
+        }
+        exit(1);
     }
-    exit(1);
+    return -1;
+}
+
+int getSetElementIDWithName(KnowledgeBase* kb, int setID, char* element, int validate)
+{
+    for (int i = 0; i < MAX_SET_ELEMENTS; i++)
+    {
+        //printf("COMPARE: %s, %s\n",function,FUNCTION_NAME[setID][i]);
+        if (strcmp(element,kb->ELEMENT_NAMES[setID][i]) == 0)
+        {
+            return i;
+        }
+    }
+    if (validate == 1)
+    {
+        printf("ERROR: WRONG ELEMENT (set='%d') NAME '%s' set contains=\n", setID, element);
+        for (int i = 0; i < MAX_SET_ELEMENTS; i++)
+        {
+            printf("%s,\n",kb->ELEMENT_NAMES[setID][i]);
+        }
+        exit(1);
+    }
     return -1;
 }
 
@@ -261,16 +289,16 @@ int isKnown(KnowledgeBase* kb, int set, int element, int function)
 
 int isKnownName(KnowledgeBase* kb, char* set, int element, char* function)
 {
-    int setID = getSetIDWithName(kb, set);
-    int functionID = getSetFunctionIDWithName(kb, setID, function);
+    int setID = getSetIDWithName(kb, set, 1);
+    int functionID = getSetFunctionIDWithName(kb, setID, function, 1);
 
     return isKnown(kb, setID, element, functionID);
 }
 
 void addKnowledgeName(KnowledgeBase* kb, char* set, int element, char* function)
 {
-    int setID = getSetIDWithName(kb, set);
-    int functionID = getSetFunctionIDWithName(kb, setID, function);
+    int setID = getSetIDWithName(kb, set, 1);
+    int functionID = getSetFunctionIDWithName(kb, setID, function, 1);
 
     addKnowledge(kb, setID, element, functionID);
 }
