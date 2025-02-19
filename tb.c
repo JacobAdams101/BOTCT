@@ -10,6 +10,8 @@ char *ROLE_NAMES[NUM_BOTCT_ROLES];
 char *ROLE_TEAMS[NUM_BOTCT_ROLES];
 char *ROLE_CLASSES[NUM_BOTCT_ROLES];
 
+int ROLE_IN_SCRIPT[NUM_BOTCT_ROLES];
+
 int TOTAL_MINIONS = 8;
 int TOTAL_OUTSIDERS = 8;
 int FIRST_MINION_INDEX = 1;
@@ -26,12 +28,13 @@ void initRoleStrings(int maxLen)
     }
 }
 
-void addRole(int *index, char* name, char* team, char* class, int maxLen)
+void addRole(int *index, char* name, char* team, char* class, int roleInScript, int maxLen)
 {
     int SIZE = maxLen*sizeof(char);
     snprintf(ROLE_NAMES[*index], SIZE, "%s", name);
     snprintf(ROLE_TEAMS[*index], SIZE, "%s", team);
     snprintf(ROLE_CLASSES[*index], SIZE, "%s", class);
+    ROLE_IN_SCRIPT[*index] = roleInScript;
     
     *index = *index + 1;
 }
@@ -45,70 +48,107 @@ void initTB(RuleSet** rs, KnowledgeBase** kb, int NUM_PLAYERS, int NUM_MINIONS, 
     //+4+4+4+13
 
     
+
+    int TB = 0;
+    int SV = 1;
+    int BMR = 2;
+
+    int SCRIPT = TB;
+    
     //Roles
     //Demons
-    addRole(&count, "IMP", "EVIL", "DEMON", 64);
+    //TB
+    addRole(&count, "IMP", "EVIL", "DEMON", SCRIPT==TB, 64);
     //S&V
-    addRole(&count, "FANG_GU", "EVIL", "DEMON", 64);
-    addRole(&count, "VIGORMORTIS", "EVIL", "DEMON", 64);
-    addRole(&count, "NO_DASHII", "EVIL", "DEMON", 64);
-    addRole(&count, "VORTOX", "EVIL", "DEMON", 64);
+    addRole(&count, "FANG_GU", "EVIL", "DEMON", SCRIPT==SV, 64);
+    addRole(&count, "VIGORMORTIS", "EVIL", "DEMON", SCRIPT==SV, 64);
+    addRole(&count, "NO_DASHII", "EVIL", "DEMON", SCRIPT==SV, 64);
+    addRole(&count, "VORTOX", "EVIL", "DEMON", SCRIPT==SV, 64);
+    //BMR
+    addRole(&count, "ZOMBUUL", "EVIL", "DEMON", SCRIPT==BMR, 64);
+    addRole(&count, "PUKKA", "EVIL", "DEMON", SCRIPT==BMR, 64);
+    addRole(&count, "SHABALOTH", "EVIL", "DEMON", SCRIPT==BMR, 64);
+    addRole(&count, "PO", "EVIL", "DEMON", SCRIPT==BMR, 64);
 
     //Minions
     FIRST_MINION_INDEX = count;
     //TB
-    addRole(&count, "BARON", "EVIL", "MINION", 64);
-    addRole(&count, "SCARLET_WOMAN", "EVIL", "MINION", 64);
-    addRole(&count, "SPY", "EVIL", "MINION", 64);
-    addRole(&count, "POISONER", "EVIL", "MINION", 64);
+    addRole(&count, "BARON", "EVIL", "MINION", SCRIPT==TB, 64);
+    addRole(&count, "SCARLET_WOMAN", "EVIL", "MINION", SCRIPT==TB, 64);
+    addRole(&count, "SPY", "EVIL", "MINION", SCRIPT==TB, 64);
+    addRole(&count, "POISONER", "EVIL", "MINION", SCRIPT==TB, 64);
     //S&V
-    addRole(&count, "EVIL_TWIN", "EVIL", "MINION", 64);
-    addRole(&count, "WITCH", "EVIL", "MINION", 64);
-    addRole(&count, "CERENOVUS", "EVIL", "MINION", 64);
-    addRole(&count, "PIT_HAG", "EVIL", "MINION", 64);
+    addRole(&count, "EVIL_TWIN", "EVIL", "MINION", SCRIPT==SV, 64);
+    addRole(&count, "WITCH", "EVIL", "MINION", SCRIPT==SV, 64);
+    addRole(&count, "CERENOVUS", "EVIL", "MINION", SCRIPT==SV, 64);
+    addRole(&count, "PIT_HAG", "EVIL", "MINION", SCRIPT==SV, 64);
+    //BMR
+    addRole(&count, "GODFATHER", "EVIL", "MINION", SCRIPT==BMR, 64);
+    addRole(&count, "DEVILS_ADVOCATE", "EVIL", "MINION", SCRIPT==BMR, 64);
+    addRole(&count, "ASSASSIN", "EVIL", "MINION", SCRIPT==BMR, 64);
+    addRole(&count, "MASTERMIND", "EVIL", "MINION", SCRIPT==BMR, 64);
 
     //Townsfolk
     //TB
-    addRole(&count, "WASHERWOMAN", "GOOD", "TOWNSFOLK", 64);
-    addRole(&count, "LIBRARIAN", "GOOD", "TOWNSFOLK", 64);
-    addRole(&count, "INVESTIGATOR", "GOOD", "TOWNSFOLK", 64);
-    addRole(&count, "CHEF", "GOOD", "TOWNSFOLK", 64);
-    addRole(&count, "EMPATH", "GOOD", "TOWNSFOLK", 64);
-    addRole(&count, "FORTUNE_TELLER", "GOOD", "TOWNSFOLK", 64);
-    addRole(&count, "UNDERTAKER", "GOOD", "TOWNSFOLK", 64);
-    addRole(&count, "MONK", "GOOD", "TOWNSFOLK", 64);
-    addRole(&count, "RAVENKEEPER", "GOOD", "TOWNSFOLK", 64);
-    addRole(&count, "VIRGIN", "GOOD", "TOWNSFOLK", 64);
-    addRole(&count, "SLAYER", "GOOD", "TOWNSFOLK", 64);
-    addRole(&count, "SOLDIER", "GOOD", "TOWNSFOLK", 64);
-    addRole(&count, "MAYOR", "GOOD", "TOWNSFOLK", 64);
+    addRole(&count, "WASHERWOMAN", "GOOD", "TOWNSFOLK", SCRIPT==TB, 64);
+    addRole(&count, "LIBRARIAN", "GOOD", "TOWNSFOLK", SCRIPT==TB, 64);
+    addRole(&count, "INVESTIGATOR", "GOOD", "TOWNSFOLK", SCRIPT==TB, 64);
+    addRole(&count, "CHEF", "GOOD", "TOWNSFOLK", SCRIPT==TB, 64);
+    addRole(&count, "EMPATH", "GOOD", "TOWNSFOLK", SCRIPT==TB, 64);
+    addRole(&count, "FORTUNE_TELLER", "GOOD", "TOWNSFOLK", SCRIPT==TB, 64);
+    addRole(&count, "UNDERTAKER", "GOOD", "TOWNSFOLK", SCRIPT==TB, 64);
+    addRole(&count, "MONK", "GOOD", "TOWNSFOLK", SCRIPT==TB, 64);
+    addRole(&count, "RAVENKEEPER", "GOOD", "TOWNSFOLK", SCRIPT==TB, 64);
+    addRole(&count, "VIRGIN", "GOOD", "TOWNSFOLK", SCRIPT==TB, 64);
+    addRole(&count, "SLAYER", "GOOD", "TOWNSFOLK", SCRIPT==TB, 64);
+    addRole(&count, "SOLDIER", "GOOD", "TOWNSFOLK", SCRIPT==TB, 64);
+    addRole(&count, "MAYOR", "GOOD", "TOWNSFOLK", SCRIPT==TB, 64);
     //S&V
-    addRole(&count, "CLOCKMAKER", "GOOD", "TOWNSFOLK", 64);
-    addRole(&count, "DREAMER", "GOOD", "TOWNSFOLK", 64);
-    addRole(&count, "SNAKE_CHARMER", "GOOD", "TOWNSFOLK", 64);
-    addRole(&count, "MATHEMATITICIAN", "GOOD", "TOWNSFOLK", 64);
-    addRole(&count, "FLOWERGIRL", "GOOD", "TOWNSFOLK", 64);
-    addRole(&count, "TOWN_CRIER", "GOOD", "TOWNSFOLK", 64);
-    addRole(&count, "ORACLE", "GOOD", "TOWNSFOLK", 64);
-    addRole(&count, "SAVANT", "GOOD", "TOWNSFOLK", 64);
-    addRole(&count, "SEAMSTRESS", "GOOD", "TOWNSFOLK", 64);
-    addRole(&count, "PHILOSOPHER", "GOOD", "TOWNSFOLK", 64);
-    addRole(&count, "ARTIST", "GOOD", "TOWNSFOLK", 64);
-    addRole(&count, "JUGGLER", "GOOD", "TOWNSFOLK", 64);
-    addRole(&count, "SAGE", "GOOD", "TOWNSFOLK", 64);
+    addRole(&count, "CLOCKMAKER", "GOOD", "TOWNSFOLK", SCRIPT==SV, 64);
+    addRole(&count, "DREAMER", "GOOD", "TOWNSFOLK", SCRIPT==SV, 64);
+    addRole(&count, "SNAKE_CHARMER", "GOOD", "TOWNSFOLK", SCRIPT==SV, 64);
+    addRole(&count, "MATHEMATITICIAN", "GOOD", "TOWNSFOLK", SCRIPT==SV, 64);
+    addRole(&count, "FLOWERGIRL", "GOOD", "TOWNSFOLK", SCRIPT==SV, 64);
+    addRole(&count, "TOWN_CRIER", "GOOD", "TOWNSFOLK", SCRIPT==SV, 64);
+    addRole(&count, "ORACLE", "GOOD", "TOWNSFOLK", SCRIPT==SV, 64);
+    addRole(&count, "SAVANT", "GOOD", "TOWNSFOLK", SCRIPT==SV, 64);
+    addRole(&count, "SEAMSTRESS", "GOOD", "TOWNSFOLK", SCRIPT==SV, 64);
+    addRole(&count, "PHILOSOPHER", "GOOD", "TOWNSFOLK", SCRIPT==SV, 64);
+    addRole(&count, "ARTIST", "GOOD", "TOWNSFOLK", SCRIPT==SV, 64);
+    addRole(&count, "JUGGLER", "GOOD", "TOWNSFOLK", SCRIPT==SV, 64);
+    addRole(&count, "SAGE", "GOOD", "TOWNSFOLK", SCRIPT==SV, 64);
+    //BMR
+    addRole(&count, "GRANDMOTHER", "GOOD", "TOWNSFOLK", SCRIPT==BMR, 64);
+    addRole(&count, "SAILOR", "GOOD", "TOWNSFOLK", SCRIPT==BMR, 64);
+    addRole(&count, "CHAMBERMAID", "GOOD", "TOWNSFOLK", SCRIPT==BMR, 64);
+    addRole(&count, "EXORCIST", "GOOD", "TOWNSFOLK", SCRIPT==BMR, 64);
+    addRole(&count, "INNKEEPER", "GOOD", "TOWNSFOLK", SCRIPT==BMR, 64);
+    addRole(&count, "GAMBLER", "GOOD", "TOWNSFOLK", SCRIPT==BMR, 64);
+    addRole(&count, "GOSSIP", "GOOD", "TOWNSFOLK", SCRIPT==BMR, 64);
+    addRole(&count, "COURTIER", "GOOD", "TOWNSFOLK", SCRIPT==BMR, 64);
+    addRole(&count, "PROFESSOR", "GOOD", "TOWNSFOLK", SCRIPT==BMR, 64);
+    addRole(&count, "MINSTREL", "GOOD", "TOWNSFOLK", SCRIPT==BMR, 64);
+    addRole(&count, "TEA_LADY", "GOOD", "TOWNSFOLK", SCRIPT==BMR, 64);
+    addRole(&count, "PACIFIST", "GOOD", "TOWNSFOLK", SCRIPT==BMR, 64);
+    addRole(&count, "FOOL", "GOOD", "TOWNSFOLK", SCRIPT==BMR, 64);
 
     //Outsiders
     FIRST_OUTSIDER_INDEX = count;
     //TB
-    addRole(&count, "BUTLER", "GOOD", "OUTSIDER", 64);
-    addRole(&count, "DRUNK", "GOOD", "OUTSIDER", 64);
-    addRole(&count, "RECLUSE", "GOOD", "OUTSIDER", 64);
-    addRole(&count, "SAINT", "GOOD", "OUTSIDER", 64);
+    addRole(&count, "BUTLER", "GOOD", "OUTSIDER", SCRIPT==TB, 64);
+    addRole(&count, "DRUNK", "GOOD", "OUTSIDER", SCRIPT==TB, 64);
+    addRole(&count, "RECLUSE", "GOOD", "OUTSIDER", SCRIPT==TB, 64);
+    addRole(&count, "SAINT", "GOOD", "OUTSIDER", SCRIPT==TB, 64);
     //S&V
-    addRole(&count, "MUTANT", "GOOD", "OUTSIDER", 64);
-    addRole(&count, "SWEETHEART", "GOOD", "OUTSIDER", 64);
-    addRole(&count, "BARBER", "GOOD", "OUTSIDER", 64);
-    addRole(&count, "KLUTZ", "GOOD", "OUTSIDER", 64);
+    addRole(&count, "MUTANT", "GOOD", "OUTSIDER", SCRIPT==SV, 64);
+    addRole(&count, "SWEETHEART", "GOOD", "OUTSIDER", SCRIPT==SV, 64);
+    addRole(&count, "BARBER", "GOOD", "OUTSIDER", SCRIPT==SV, 64);
+    addRole(&count, "KLUTZ", "GOOD", "OUTSIDER", SCRIPT==SV, 64);
+    //BMR
+    addRole(&count, "TINKER", "GOOD", "OUTSIDER", SCRIPT==BMR, 64);
+    addRole(&count, "MOONCHILD", "GOOD", "OUTSIDER", SCRIPT==BMR, 64);
+    addRole(&count, "GOON", "GOOD", "OUTSIDER", SCRIPT==BMR, 64);
+    addRole(&count, "LUNATIC", "GOOD", "OUTSIDER", SCRIPT==BMR, 64);
 
     printf("INIT DATA STRUCTURES...\n");
     //Init data structures

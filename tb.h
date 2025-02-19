@@ -1,6 +1,6 @@
 #pragma once
 
-#define NUM_BOTCT_ROLES 47
+#define NUM_BOTCT_ROLES 72
 #include "rules.h"
 #include "knowledge.h"
 
@@ -10,3 +10,4 @@ void buildRules(RuleSet* rs, KnowledgeBase* kb, int numPlayers, int numMinions, 
 extern char *ROLE_NAMES[NUM_BOTCT_ROLES];
 extern char *ROLE_TEAMS[NUM_BOTCT_ROLES];
 extern char *ROLE_CLASSES[NUM_BOTCT_ROLES]; 
+extern int ROLE_IN_SCRIPT[NUM_BOTCT_ROLES]; 

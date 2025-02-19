@@ -371,17 +371,25 @@ void printPlayerTable(KnowledgeBase* kb)
     printf("         |");
     for (int role = 0; role < NUM_BOTCT_ROLES; role++)
     {
-        for (int c = 0; c < 3; c++)
+        //Only print roles in the script
+        if (ROLE_IN_SCRIPT[role] == 1)
         {
-            printf("%c", ROLE_NAMES[role][c]);
+            for (int c = 0; c < 3; c++)
+            {
+                printf("%c", ROLE_NAMES[role][c]);
+            }
+            printf("|");
         }
-        printf("|");
     }
     printf("\n");
     printf("---------|");
     for (int role = 0; role < NUM_BOTCT_ROLES; role++)
     {
-        printf("---|");
+        //Only print roles in the script
+        if (ROLE_IN_SCRIPT[role] == 1)
+        {
+            printf("---|");
+        }
     }
     printf("-----------|------|");
     printf("\n");
@@ -402,26 +410,30 @@ void printPlayerTable(KnowledgeBase* kb)
         printf("|");
         for (int role = 0; role < NUM_BOTCT_ROLES; role++)
         {
-            int function1 = role*2;
-            int index1 = function1 / INT_LENGTH;
-            int bit1 = function1 - (index1 * INT_LENGTH);
+            //Only print roles in the script
+            if (ROLE_IN_SCRIPT[role] == 1)
+            {
+                int function1 = role*2;
+                int index1 = function1 / INT_LENGTH;
+                int bit1 = function1 - (index1 * INT_LENGTH);
 
-            int function2 = role*2+1;
-            int index2 = function2 / INT_LENGTH;
-            int bit2 = function2 - (index2 * INT_LENGTH);
-            if (((kb->KNOWLEDGE_BASE[set][element][index1] >> bit1) & 1) == 1)
-            {
-                printf(" * ");
+                int function2 = role*2+1;
+                int index2 = function2 / INT_LENGTH;
+                int bit2 = function2 - (index2 * INT_LENGTH);
+                if (((kb->KNOWLEDGE_BASE[set][element][index1] >> bit1) & 1) == 1)
+                {
+                    printf(" * ");
+                }
+                else if (((kb->KNOWLEDGE_BASE[set][element][index2] >> bit2) & 1) == 1)
+                {
+                    printf("   ");
+                }
+                else
+                {
+                    printf(" ? ");
+                }
+                printf("|");
             }
-            else if (((kb->KNOWLEDGE_BASE[set][element][index2] >> bit2) & 1) == 1)
-            {
-                printf("   ");
-            }
-            else
-            {
-                printf(" ? ");
-            }
-            printf("|");
         }
         if (isTownsfolk == 1)
         {
@@ -465,17 +477,25 @@ void printRoleTable(KnowledgeBase* kb)
     printf("         |");
     for (int role = 0; role < NUM_BOTCT_ROLES; role++)
     {
-        for (int c = 0; c < 3; c++)
+        //Only print roles in the script
+        if (ROLE_IN_SCRIPT[role] == 1)
         {
-            printf("%c", ROLE_NAMES[role][c]);
+            for (int c = 0; c < 3; c++)
+            {
+                printf("%c", ROLE_NAMES[role][c]);
+            }
+            printf("|");
         }
-        printf("|");
     }
     printf("\n");
     printf("---------|");
     for (int role = 0; role < NUM_BOTCT_ROLES; role++)
     {
-        printf("---|");
+        //Only print roles in the script
+        if (ROLE_IN_SCRIPT[role] == 1)
+        {
+            printf("---|");
+        }
     }
     //printf("-----------|------|");
     printf("\n");
@@ -484,26 +504,30 @@ void printRoleTable(KnowledgeBase* kb)
     printf("IN GAME  |");
     for (int role = 0; role < NUM_BOTCT_ROLES; role++)
     {
-        int function1 = role*2;
-        int index1 = function1 / INT_LENGTH;
-        int bit1 = function1 - (index1 * INT_LENGTH);
+        //Only print roles in the script
+        if (ROLE_IN_SCRIPT[role] == 1)
+        {
+            int function1 = role*2;
+            int index1 = function1 / INT_LENGTH;
+            int bit1 = function1 - (index1 * INT_LENGTH);
 
-        int function2 = role*2+1;
-        int index2 = function2 / INT_LENGTH;
-        int bit2 = function2 - (index2 * INT_LENGTH);
-        if (((kb->KNOWLEDGE_BASE[set][element][index1] >> bit1) & 1) == 1)
-        {
-            printf(" * ");
+            int function2 = role*2+1;
+            int index2 = function2 / INT_LENGTH;
+            int bit2 = function2 - (index2 * INT_LENGTH);
+            if (((kb->KNOWLEDGE_BASE[set][element][index1] >> bit1) & 1) == 1)
+            {
+                printf(" * ");
+            }
+            else if (((kb->KNOWLEDGE_BASE[set][element][index2] >> bit2) & 1) == 1)
+            {
+                printf("   ");
+            }
+            else
+            {
+                printf(" ? ");
+            }
+            printf("|");
         }
-        else if (((kb->KNOWLEDGE_BASE[set][element][index2] >> bit2) & 1) == 1)
-        {
-            printf("   ");
-        }
-        else
-        {
-            printf(" ? ");
-        }
-        printf("|");
     }
     printf("|\n");
     

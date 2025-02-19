@@ -593,8 +593,8 @@ void addPingRule(KnowledgeBase* kb, RuleSet* rs)
             {
                 playerX = kb->SET_SIZES[0]-1;
             }
-            
-            for (int tempNight = 0; tempNight <= night; night++)
+            isDead = 0;
+            for (int tempNight = 0; tempNight <= night; tempNight++)
             {
                 snprintf(buff, STRING_BUFF_SIZE, "died_NIGHT%d", night);
                 if (isKnownName(kb, "PLAYERS", playerX, buff) == 1)
@@ -612,8 +612,8 @@ void addPingRule(KnowledgeBase* kb, RuleSet* rs)
             {
                 playerY = 0;
             }
-            
-            for (int tempNight = 0; tempNight <= night; night++)
+            isDead = 0;
+            for (int tempNight = 0; tempNight <= night; tempNight++)
             {
                 snprintf(buff, STRING_BUFF_SIZE, "died_NIGHT%d", night);
                 if (isKnownName(kb, "PLAYERS", playerY, buff) == 1)
@@ -624,7 +624,7 @@ void addPingRule(KnowledgeBase* kb, RuleSet* rs)
             
         } while (isDead == 1);
 
-        printf("Empath ping on %s and %s", kb->ELEMENT_NAMES[0][playerX], kb->ELEMENT_NAMES[0][playerY]);
+        printf("Empath ping on %s and %s\n", kb->ELEMENT_NAMES[0][playerX], kb->ELEMENT_NAMES[0][playerY]);
         
         /*
         if (countEvil == 0)
