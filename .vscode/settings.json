@@ -4,6 +4,7 @@
         "bitset": "c",
         "unordered_map": "c",
         "chrono": "c",
-        "ui.h": "c"
+        "ui.h": "c",
+        "ios": "cpp"
     }
 }
