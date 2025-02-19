@@ -1,10 +1,7 @@
 #pragma once
 
-#define MAX_NUM_RULES 1000
-#define MAX_VARS_IN_RULE 16
-#define FUNCTION_RESULT_SIZE 2
-
 #include "knowledge.h"
+#include "constants.h"
 
 typedef struct
 {

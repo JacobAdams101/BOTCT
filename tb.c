@@ -10,6 +10,11 @@ char *ROLE_NAMES[NUM_BOTCT_ROLES];
 char *ROLE_TEAMS[NUM_BOTCT_ROLES];
 char *ROLE_CLASSES[NUM_BOTCT_ROLES];
 
+int TOTAL_MINIONS = 8;
+int TOTAL_OUTSIDERS = 8;
+int FIRST_MINION_INDEX = 1;
+int FIRST_OUTSIDER_INDEX = 18;
+
 void initRoleStrings(int maxLen)
 {
     int SIZE = maxLen*sizeof(char);
@@ -37,40 +42,73 @@ void initTB(RuleSet** rs, KnowledgeBase** kb, int NUM_PLAYERS, int NUM_MINIONS, 
     int count = 0;
     initRoleStrings(64);
 
+    //+4+4+4+13
+
     
     //Roles
     //Demons
     addRole(&count, "IMP", "EVIL", "DEMON", 64);
+    //S&V
+    addRole(&count, "FANG_GU", "EVIL", "DEMON", 64);
+    addRole(&count, "VIGORMORTIS", "EVIL", "DEMON", 64);
+    addRole(&count, "NO_DASHII", "EVIL", "DEMON", 64);
+    addRole(&count, "VORTOX", "EVIL", "DEMON", 64);
 
     //Minions
+    FIRST_MINION_INDEX = count;
+    //TB
     addRole(&count, "BARON", "EVIL", "MINION", 64);
     addRole(&count, "SCARLET_WOMAN", "EVIL", "MINION", 64);
     addRole(&count, "SPY", "EVIL", "MINION", 64);
     addRole(&count, "POISONER", "EVIL", "MINION", 64);
+    //S&V
+    addRole(&count, "EVIL_TWIN", "EVIL", "MINION", 64);
+    addRole(&count, "WITCH", "EVIL", "MINION", 64);
+    addRole(&count, "CERENOVUS", "EVIL", "MINION", 64);
+    addRole(&count, "PIT_HAG", "EVIL", "MINION", 64);
 
     //Townsfolk
+    //TB
     addRole(&count, "WASHERWOMAN", "GOOD", "TOWNSFOLK", 64);
     addRole(&count, "LIBRARIAN", "GOOD", "TOWNSFOLK", 64);
     addRole(&count, "INVESTIGATOR", "GOOD", "TOWNSFOLK", 64);
     addRole(&count, "CHEF", "GOOD", "TOWNSFOLK", 64);
-
     addRole(&count, "EMPATH", "GOOD", "TOWNSFOLK", 64);
     addRole(&count, "FORTUNE_TELLER", "GOOD", "TOWNSFOLK", 64);
     addRole(&count, "UNDERTAKER", "GOOD", "TOWNSFOLK", 64);
     addRole(&count, "MONK", "GOOD", "TOWNSFOLK", 64);
-
     addRole(&count, "RAVENKEEPER", "GOOD", "TOWNSFOLK", 64);
     addRole(&count, "VIRGIN", "GOOD", "TOWNSFOLK", 64);
     addRole(&count, "SLAYER", "GOOD", "TOWNSFOLK", 64);
     addRole(&count, "SOLDIER", "GOOD", "TOWNSFOLK", 64);
-
     addRole(&count, "MAYOR", "GOOD", "TOWNSFOLK", 64);
+    //S&V
+    addRole(&count, "CLOCKMAKER", "GOOD", "TOWNSFOLK", 64);
+    addRole(&count, "DREAMER", "GOOD", "TOWNSFOLK", 64);
+    addRole(&count, "SNAKE_CHARMER", "GOOD", "TOWNSFOLK", 64);
+    addRole(&count, "MATHEMATITICIAN", "GOOD", "TOWNSFOLK", 64);
+    addRole(&count, "FLOWERGIRL", "GOOD", "TOWNSFOLK", 64);
+    addRole(&count, "TOWN_CRIER", "GOOD", "TOWNSFOLK", 64);
+    addRole(&count, "ORACLE", "GOOD", "TOWNSFOLK", 64);
+    addRole(&count, "SAVANT", "GOOD", "TOWNSFOLK", 64);
+    addRole(&count, "SEAMSTRESS", "GOOD", "TOWNSFOLK", 64);
+    addRole(&count, "PHILOSOPHER", "GOOD", "TOWNSFOLK", 64);
+    addRole(&count, "ARTIST", "GOOD", "TOWNSFOLK", 64);
+    addRole(&count, "JUGGLER", "GOOD", "TOWNSFOLK", 64);
+    addRole(&count, "SAGE", "GOOD", "TOWNSFOLK", 64);
 
     //Outsiders
+    FIRST_OUTSIDER_INDEX = count;
+    //TB
     addRole(&count, "BUTLER", "GOOD", "OUTSIDER", 64);
     addRole(&count, "DRUNK", "GOOD", "OUTSIDER", 64);
     addRole(&count, "RECLUSE", "GOOD", "OUTSIDER", 64);
     addRole(&count, "SAINT", "GOOD", "OUTSIDER", 64);
+    //S&V
+    addRole(&count, "MUTANT", "GOOD", "OUTSIDER", 64);
+    addRole(&count, "SWEETHEART", "GOOD", "OUTSIDER", 64);
+    addRole(&count, "BARBER", "GOOD", "OUTSIDER", 64);
+    addRole(&count, "KLUTZ", "GOOD", "OUTSIDER", 64);
 
     printf("INIT DATA STRUCTURES...\n");
     //Init data structures
@@ -222,8 +260,7 @@ void buildRules(RuleSet* rs, KnowledgeBase* kb, int numPlayers, int numMinions, 
         addConditionToTempRuleName(rs,kb, 0, "METADATA", buff);
         pushTempRule(rs);
     }
-    int FIRST_MINION_INDEX = 1;
-    int TOTAL_MINIONS = 4;
+    
     //Counting arguments for role metadata 
     //If found all minions in play set all unused minions to is_NOT_<MINION>_in_PLAY
     int numUnusedMinions = TOTAL_MINIONS-numMinions;
@@ -286,8 +323,7 @@ void buildRules(RuleSet* rs, KnowledgeBase* kb, int numPlayers, int numMinions, 
     }
     
  
-    int TOTAL_OUTSIDERS = 4;
-    int FIRST_OUTSIDER_INDEX = 18;
+    
 
     int numUnusedOutsiders = TOTAL_OUTSIDERS-numMinions;
 

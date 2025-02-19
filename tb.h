@@ -1,6 +1,6 @@
 #pragma once
 
-#define NUM_BOTCT_ROLES 22
+#define NUM_BOTCT_ROLES 47
 #include "rules.h"
 #include "knowledge.h"
 

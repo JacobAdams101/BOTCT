@@ -2,3 +2,9 @@
 
 #define INT_LENGTH 64
 #define STRING_BUFF_SIZE 256
+
+#define NUM_SETS 3
+#define MAX_SET_ELEMENTS 16
+#define FUNCTION_RESULT_SIZE 3
+#define MAX_VARS_IN_RULE 16
+#define MAX_NUM_RULES 1000

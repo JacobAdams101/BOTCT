@@ -597,7 +597,7 @@ void addPingRule(KnowledgeBase* kb, RuleSet* rs)
             for (int tempNight = 0; tempNight <= night; night++)
             {
                 snprintf(buff, STRING_BUFF_SIZE, "died_NIGHT%d", night);
-                if (isKnownName(kb, 0, playerX, buff) == 1)
+                if (isKnownName(kb, "PLAYERS", playerX, buff) == 1)
                 {
                     isDead = 1;
                 }
@@ -616,7 +616,7 @@ void addPingRule(KnowledgeBase* kb, RuleSet* rs)
             for (int tempNight = 0; tempNight <= night; night++)
             {
                 snprintf(buff, STRING_BUFF_SIZE, "died_NIGHT%d", night);
-                if (isKnownName(kb, 0, playerY, buff) == 1)
+                if (isKnownName(kb, "PLAYERS", playerY, buff) == 1)
                 {
                     isDead = 1;
                 }

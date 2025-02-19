@@ -2,10 +2,6 @@
 
 #include "constants.h"
 
-#define NUM_SETS 3
-#define MAX_SET_ELEMENTS 16
-#define FUNCTION_RESULT_SIZE 2
-
 typedef struct {
     long KNOWLEDGE_BASE[NUM_SETS][MAX_SET_ELEMENTS][FUNCTION_RESULT_SIZE];
     int SET_SIZES[NUM_SETS];
@@ -32,7 +28,7 @@ void addKnowledge(KnowledgeBase* kb,  int set, int element, int function);
 void addKnowledgeName(KnowledgeBase* kb,  char* set, int element, char* function);
 
 int isKnown(KnowledgeBase* kb,  int set, int element, int function);
-int isKnownName(KnowledgeBase* kb,  int set, int element, char* function);
+int isKnownName(KnowledgeBase* kb,  char* set, int element, char* function);
 
 int hasExplicitContradiction(KnowledgeBase* kb);
 
