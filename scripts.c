@@ -2,7 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "tb.h"
+#include "scripts.h"
 #include "constants.h"
 #include "rules.h"
 
@@ -41,13 +41,12 @@ void addRole(int *index, char* name, char* team, char* class, int roleInScript, 
 
 void initTB(RuleSet** rs, KnowledgeBase** kb, int NUM_PLAYERS, int NUM_MINIONS, int NUM_DEMONS, int BASE_OUTSIDERS, int NUM_DAYS)
 {
+    //Temporary string buffer for writing names into
+    char buff[STRING_BUFF_SIZE];
+
     printf("NAME THINGS...\n");
     int count = 0;
     initRoleStrings(64);
-
-    //+4+4+4+13
-
-    
 
     int TB = 0;
     int SV = 1;
@@ -160,6 +159,15 @@ void initTB(RuleSet** rs, KnowledgeBase** kb, int NUM_PLAYERS, int NUM_MINIONS, 
     printf("-DONE!..\n");
 
     printf("BUILD RULES...\n");
+
+    for (int i = 0; i < NUM_BOTCT_ROLES; i++)
+    {
+        if (ROLE_IN_SCRIPT[i] == 0)
+        {
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s_in_PLAY", ROLE_NAMES[i]);
+            addKnowledgeName(*kb, "METADATA", 0, buff);
+        }
+    }
 
     buildRules(*rs, *kb, NUM_PLAYERS, NUM_MINIONS, NUM_DEMONS, BASE_OUTSIDERS);
 }

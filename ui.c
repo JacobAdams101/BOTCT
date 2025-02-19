@@ -5,7 +5,7 @@
 #include "rules.h"
 #include "knowledge.h"
 #include "constants.h"
-#include "tb.h"
+#include "scripts.h"
 #include "ui.h"
 
 void printTitle(char *title, char *subheading)

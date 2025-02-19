@@ -3,6 +3,7 @@
         "__bit_reference": "c",
         "bitset": "c",
         "unordered_map": "c",
-        "chrono": "c"
+        "chrono": "c",
+        "ui.h": "c"
     }
 }

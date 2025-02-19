@@ -3,7 +3,6 @@
 #include "rules.h"
 #include "knowledge.h"
 #include "constants.h"
-#include "tb.h"
 
 void printTitle(char *title, char *subheading);
 void printHeading(char *title);

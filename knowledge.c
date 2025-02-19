@@ -4,7 +4,7 @@
 
 #include "knowledge.h"
 #include "constants.h"
-#include "tb.h"
+#include "scripts.h"
 
 
 
@@ -529,6 +529,6 @@ void printRoleTable(KnowledgeBase* kb)
             printf("|");
         }
     }
-    printf("|\n");
+    printf("\n");
     
 }
