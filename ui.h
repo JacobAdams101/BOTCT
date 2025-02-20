@@ -30,7 +30,7 @@
 
 void printTitle(char *title, char *subheading);
 void printHeading(char *title);
-void setup(int *numPlayers, int *numMinions, int *numDemons, int *baseOutsiders);
+void setup(int *numPlayers, int *numMinions, int *numDemons, int *baseOutsiders, int *script);
 void getNames(char* names[NUM_SETS][MAX_SET_ELEMENTS], int numPlayers);
 int getRoleIdFromString(char* roleName);
 int getRoleIDInput(char* message);

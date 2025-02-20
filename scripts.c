@@ -36,8 +36,8 @@ char *ROLE_CLASSES[NUM_BOTCT_ROLES];
 
 int ROLE_IN_SCRIPT[NUM_BOTCT_ROLES];
 
-int TOTAL_MINIONS = 8;
-int TOTAL_OUTSIDERS = 8;
+int TOTAL_MINIONS = 12;
+int TOTAL_OUTSIDERS = 12;
 int FIRST_MINION_INDEX = 1;
 int FIRST_OUTSIDER_INDEX = 18;
 
@@ -63,7 +63,7 @@ void addRole(int *index, char* name, char* team, char* class, int roleInScript, 
     *index = *index + 1;
 }
 
-void initTB(RuleSet** rs, KnowledgeBase** kb, int NUM_PLAYERS, int NUM_MINIONS, int NUM_DEMONS, int BASE_OUTSIDERS, int NUM_DAYS)
+void initScript(RuleSet** rs, KnowledgeBase** kb, const int SCRIPT, const int NUM_PLAYERS, const int NUM_MINIONS, const int NUM_DEMONS, const int BASE_OUTSIDERS, const int NUM_DAYS)
 {
     //Temporary string buffer for writing names into
     char buff[STRING_BUFF_SIZE];
@@ -76,7 +76,6 @@ void initTB(RuleSet** rs, KnowledgeBase** kb, int NUM_PLAYERS, int NUM_MINIONS, 
     int SV = 1;
     int BMR = 2;
 
-    int SCRIPT = TB;
     
     //Roles
     //Demons
@@ -91,7 +90,7 @@ void initTB(RuleSet** rs, KnowledgeBase** kb, int NUM_PLAYERS, int NUM_MINIONS, 
     addRole(&count, "ZOMBUUL", "EVIL", "DEMON", SCRIPT==BMR, 64);
     addRole(&count, "PUKKA", "EVIL", "DEMON", SCRIPT==BMR, 64);
     addRole(&count, "SHABALOTH", "EVIL", "DEMON", SCRIPT==BMR, 64);
-    addRole(&count, "PO", "EVIL", "DEMON", SCRIPT==BMR, 64);
+    addRole(&count, "PO.", "EVIL", "DEMON", SCRIPT==BMR, 64);
 
     //Minions
     FIRST_MINION_INDEX = count;
@@ -338,9 +337,9 @@ void buildRules(RuleSet* rs, KnowledgeBase* kb, int numPlayers, int numMinions, 
     int numUnusedMinions = TOTAL_MINIONS-numMinions;
     if (0 < numMinions && numMinions < TOTAL_MINIONS)
     {
-        for (int i = 0; i < 16; i++)
+        for (int i = 0; i < 4096; i++)
         {
-            //Permute all subsets of size 4
+            //Permute all subsets
             int count = 0;
             for (int j = 0; j < TOTAL_MINIONS; j++)
             {
@@ -419,9 +418,9 @@ void buildRules(RuleSet* rs, KnowledgeBase* kb, int numPlayers, int numMinions, 
     }
     else if (0 < baseOutsiders && baseOutsiders < TOTAL_OUTSIDERS)
     {
-        for (int i = 0; i < 16; i++)
+        for (int i = 0; i < 4096; i++)
         {
-            //Permute all subsets of size 4
+            //Permute all subsets
             int count = 0;
             for (int j = 0; j < TOTAL_OUTSIDERS; j++)
             {
@@ -502,9 +501,9 @@ void buildRules(RuleSet* rs, KnowledgeBase* kb, int numPlayers, int numMinions, 
     }
     else if (0 < numOutsidersWithBaron && numOutsidersWithBaron < 4)
     {
-        for (int i = 0; i < 16; i++)
+        for (int i = 0; i < 4096; i++)
         {
-            //Permute all subsets of size 4
+            //Permute all subsets
             int count = 0;
             for (int j = 0; j < TOTAL_OUTSIDERS; j++)
             {
@@ -611,13 +610,26 @@ void buildRules(RuleSet* rs, KnowledgeBase* kb, int numPlayers, int numMinions, 
     setTempRuleParams(rs, 1,0);
     
     setTempRuleResultName(rs, kb, 0, "PLAYERS", "is_NOT_DEMON");
-    addConditionToTempRuleName(rs,kb, 0, "PLAYERS", "is_NOT_IMP");
+    for (int i = 0; i < NUM_BOTCT_ROLES; i++)
+    {
+        if (strcmp(ROLE_CLASSES[i], "DEMON") == 0)
+        {
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s", ROLE_NAMES[i]);
+            addConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff);
+        }
+    }
     pushTempRule(rs);
 
     //The converse is also true
     setTempRuleParams(rs, 1,0);
-    
-    setTempRuleResultName(rs, kb, 0, "PLAYERS", "is_NOT_IMP");
+    for (int i = 0; i < NUM_BOTCT_ROLES; i++)
+    {
+        if (strcmp(ROLE_CLASSES[i], "DEMON") == 0)
+        {
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s", ROLE_NAMES[i]);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+        }
+    }
     addConditionToTempRuleName(rs,kb, 0, "PLAYERS", "is_NOT_DEMON");
     pushTempRule(rs);
 
@@ -625,19 +637,26 @@ void buildRules(RuleSet* rs, KnowledgeBase* kb, int numPlayers, int numMinions, 
     setTempRuleParams(rs, 1,0);
     
     setTempRuleResultName(rs, kb, 0, "PLAYERS", "is_NOT_MINION");
-    addConditionToTempRuleName(rs,kb, 0, "PLAYERS", "is_NOT_BARON");
-    addConditionToTempRuleName(rs,kb, 0, "PLAYERS", "is_NOT_SCARLET_WOMAN");
-    addConditionToTempRuleName(rs,kb, 0, "PLAYERS", "is_NOT_SPY");
-    addConditionToTempRuleName(rs,kb, 0, "PLAYERS", "is_NOT_POISONER");
+    for (int i = 0; i < NUM_BOTCT_ROLES; i++)
+    {
+        if (strcmp(ROLE_CLASSES[i], "MINION") == 0)
+        {
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s", ROLE_NAMES[i]);
+            addConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff);
+        }
+    }
     pushTempRule(rs);
 
     //The converse is also true
     setTempRuleParams(rs, 1,0);
-    
-    setTempRuleResultName(rs, kb, 0, "PLAYERS", "is_NOT_BARON");
-    setTempRuleResultName(rs, kb, 0, "PLAYERS", "is_NOT_SCARLET_WOMAN");
-    setTempRuleResultName(rs, kb, 0, "PLAYERS", "is_NOT_SPY");
-    setTempRuleResultName(rs, kb, 0, "PLAYERS", "is_NOT_POISONER");
+    for (int i = 0; i < NUM_BOTCT_ROLES; i++)
+    {
+        if (strcmp(ROLE_CLASSES[i], "MINION") == 0)
+        {
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s", ROLE_NAMES[i]);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+        }
+    }
     addConditionToTempRuleName(rs,kb, 0, "PLAYERS", "is_NOT_MINION");
     pushTempRule(rs);
 
@@ -645,19 +664,26 @@ void buildRules(RuleSet* rs, KnowledgeBase* kb, int numPlayers, int numMinions, 
     setTempRuleParams(rs, 1,0);
     
     setTempRuleResultName(rs, kb, 0, "PLAYERS", "is_NOT_OUTSIDER");
-    addConditionToTempRuleName(rs,kb, 0, "PLAYERS", "is_NOT_BUTLER");
-    addConditionToTempRuleName(rs,kb, 0, "PLAYERS", "is_NOT_DRUNK");
-    addConditionToTempRuleName(rs,kb, 0, "PLAYERS", "is_NOT_RECLUSE");
-    addConditionToTempRuleName(rs,kb, 0, "PLAYERS", "is_NOT_SAINT");
+    for (int i = 0; i < NUM_BOTCT_ROLES; i++)
+    {
+        if (strcmp(ROLE_CLASSES[i], "OUTSIDER") == 0)
+        {
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s", ROLE_NAMES[i]);
+            addConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff);
+        }
+    }
     pushTempRule(rs);
 
     //The converse is also true
     setTempRuleParams(rs, 1,0);
-    
-    setTempRuleResultName(rs, kb, 0, "PLAYERS", "is_NOT_BUTLER");
-    setTempRuleResultName(rs, kb, 0, "PLAYERS", "is_NOT_DRUNK");
-    setTempRuleResultName(rs, kb, 0, "PLAYERS", "is_NOT_RECLUSE");
-    setTempRuleResultName(rs, kb, 0, "PLAYERS", "is_NOT_SAINT");
+    for (int i = 0; i < NUM_BOTCT_ROLES; i++)
+    {
+        if (strcmp(ROLE_CLASSES[i], "OUTSIDER") == 0)
+        {
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s", ROLE_NAMES[i]);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+        }
+    }
     addConditionToTempRuleName(rs,kb, 0, "PLAYERS", "is_NOT_OUTSIDER");
     pushTempRule(rs);
 
@@ -669,43 +695,26 @@ void buildRules(RuleSet* rs, KnowledgeBase* kb, int numPlayers, int numMinions, 
     setTempRuleParams(rs, 1,0);
     
     setTempRuleResultName(rs, kb, 0, "PLAYERS", "is_NOT_TOWNSFOLK");
-    addConditionToTempRuleName(rs,kb, 0, "PLAYERS", "is_NOT_WASHERWOMAN");
-    addConditionToTempRuleName(rs,kb, 0, "PLAYERS", "is_NOT_LIBRARIAN");
-    addConditionToTempRuleName(rs,kb, 0, "PLAYERS", "is_NOT_INVESTIGATOR");
-    addConditionToTempRuleName(rs,kb, 0, "PLAYERS", "is_NOT_CHEF");
-
-    addConditionToTempRuleName(rs,kb, 0, "PLAYERS", "is_NOT_EMPATH");
-    addConditionToTempRuleName(rs,kb, 0, "PLAYERS", "is_NOT_FORTUNE_TELLER");
-    addConditionToTempRuleName(rs,kb, 0, "PLAYERS", "is_NOT_UNDERTAKER");
-    addConditionToTempRuleName(rs,kb, 0, "PLAYERS", "is_NOT_MONK");
-
-    addConditionToTempRuleName(rs,kb, 0, "PLAYERS", "is_NOT_RAVENKEEPER");
-    addConditionToTempRuleName(rs,kb, 0, "PLAYERS", "is_NOT_VIRGIN");
-    addConditionToTempRuleName(rs,kb, 0, "PLAYERS", "is_NOT_SLAYER");
-    addConditionToTempRuleName(rs,kb, 0, "PLAYERS", "is_NOT_SOLDIER");
-
-    addConditionToTempRuleName(rs,kb, 0, "PLAYERS", "is_NOT_MAYOR");
+    for (int i = 0; i < NUM_BOTCT_ROLES; i++)
+    {
+        if (strcmp(ROLE_CLASSES[i], "TOWNSFOLK") == 0)
+        {
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s", ROLE_NAMES[i]);
+            addConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff);
+        }
+    }
     pushTempRule(rs);
 
     //The converse is also true
     setTempRuleParams(rs, 1,0);
-    
-    setTempRuleResultName(rs, kb, 0, "PLAYERS", "is_NOT_WASHERWOMAN");
-    setTempRuleResultName(rs, kb, 0, "PLAYERS", "is_NOT_LIBRARIAN");
-    setTempRuleResultName(rs, kb, 0, "PLAYERS", "is_NOT_INVESTIGATOR");
-    setTempRuleResultName(rs, kb, 0, "PLAYERS", "is_NOT_CHEF");
-
-    setTempRuleResultName(rs, kb, 0, "PLAYERS", "is_NOT_EMPATH");
-    setTempRuleResultName(rs, kb, 0, "PLAYERS", "is_NOT_FORTUNE_TELLER");
-    setTempRuleResultName(rs, kb, 0, "PLAYERS", "is_NOT_UNDERTAKER");
-    setTempRuleResultName(rs, kb, 0, "PLAYERS", "is_NOT_MONK");
-
-    setTempRuleResultName(rs, kb, 0, "PLAYERS", "is_NOT_RAVENKEEPER");
-    setTempRuleResultName(rs, kb, 0, "PLAYERS", "is_NOT_VIRGIN");
-    setTempRuleResultName(rs, kb, 0, "PLAYERS", "is_NOT_SLAYER");
-    setTempRuleResultName(rs, kb, 0, "PLAYERS", "is_NOT_SOLDIER");
-
-    setTempRuleResultName(rs, kb, 0, "PLAYERS", "is_NOT_MAYOR");
+    for (int i = 0; i < NUM_BOTCT_ROLES; i++)
+    {
+        if (strcmp(ROLE_CLASSES[i], "TOWNSFOLK") == 0)
+        {
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s", ROLE_NAMES[i]);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+        }
+    }
     addConditionToTempRuleName(rs,kb, 0, "PLAYERS", "is_NOT_TOWNSFOLK");
     pushTempRule(rs);
 

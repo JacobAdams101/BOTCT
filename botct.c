@@ -202,9 +202,10 @@ int main()
     int NUM_MINIONS;
     int NUM_DEMONS;
     int BASE_OUTSIDERS;
+    int SCRIPT;
 
     int NUM_DAYS = 10;
-    setup(&NUM_PLAYERS, &NUM_MINIONS, &NUM_DEMONS, &BASE_OUTSIDERS);
+    setup(&NUM_PLAYERS, &NUM_MINIONS, &NUM_DEMONS, &BASE_OUTSIDERS, &SCRIPT);
 
     printHeading("CREATING GAME..."); //UI HEADING
     printf("There are %d players in the game\n", NUM_PLAYERS);
@@ -216,7 +217,7 @@ int main()
     KnowledgeBase* kb = NULL;
     RuleSet* rs = NULL;
 
-    initTB(&rs, &kb, NUM_PLAYERS, NUM_MINIONS, NUM_DEMONS, BASE_OUTSIDERS, NUM_DAYS);
+    initScript(&rs, &kb, SCRIPT, NUM_PLAYERS, NUM_MINIONS, NUM_DEMONS, BASE_OUTSIDERS, NUM_DAYS);
 
     getNames(kb->ELEMENT_NAMES, NUM_PLAYERS);
 

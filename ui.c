@@ -47,7 +47,7 @@ void printHeading(char *title)
     printf("‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\n");
 }
 
-void setup(int *numPlayers, int *numMinions, int *numDemons, int *baseOutsiders)
+void setup(int *numPlayers, int *numMinions, int *numDemons, int *baseOutsiders, int *script)
 {
 
     printTitle("BLOOD ON THE CLOCKTOWER SOLVER", "By Jacob Adams");
@@ -56,6 +56,9 @@ void setup(int *numPlayers, int *numMinions, int *numDemons, int *baseOutsiders)
     printf("This program is used to aid in solving standard Trouble Brewing games of BOTCT\n");
     printf("Do NOT use without the storyteller's permission\n");
     printHeading("SETUP");
+    printf("What script are you playing 0-TB, 1-S&V, 2-BMR?:\n");
+    scanf("%d", script);
+
     printf("How many players are in the game?:\n");
     scanf("%d", numPlayers);
 
