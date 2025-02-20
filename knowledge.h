@@ -48,6 +48,7 @@ int getSetElementIDWithName(KnowledgeBase* kb, int setID, char* element, int val
 void getIndexAndBit(int* index, int* bit, int functionID);
 
 void resetElement(KnowledgeBase* kb, int set, int element);
+void mergeKnowledge(KnowledgeBase* kb, KnowledgeBase* x);
 void addKnowledge(KnowledgeBase* kb,  int set, int element, int function);
 void addKnowledgeName(KnowledgeBase* kb,  char* set, int element, char* function);
 

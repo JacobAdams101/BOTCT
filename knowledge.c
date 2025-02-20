@@ -181,6 +181,18 @@ void copyTo(KnowledgeBase* dest, KnowledgeBase* src)
 {
     //Deep copy knowlegde base (these might change)
     memcpy(dest->KNOWLEDGE_BASE, src->KNOWLEDGE_BASE, sizeof(long)*NUM_SETS*MAX_SET_ELEMENTS*FUNCTION_RESULT_SIZE);
+    /*
+    for (int i = 0; i < NUM_SETS; i++)
+    {
+        for (int j = 0; j < MAX_SET_ELEMENTS; j++)
+        {
+            for (int k = 0; k < FUNCTION_RESULT_SIZE; k++)
+            {
+                dest->KNOWLEDGE_BASE[i][j][k] = src->KNOWLEDGE_BASE[i][j][k];
+            }
+        }
+    }
+    */
     memcpy(dest->SET_SIZES, src->SET_SIZES, sizeof(int)*NUM_SETS);
     for (int i = 0; i < NUM_SETS; i++)
     {
@@ -291,6 +303,20 @@ void resetElement(KnowledgeBase* kb, int set, int element)
     for (int i = 0; i < FUNCTION_RESULT_SIZE; i++)
     {
         kb->KNOWLEDGE_BASE[set][element][i] = 0;
+    }
+}
+
+void mergeKnowledge(KnowledgeBase* kb, KnowledgeBase* x)
+{
+    for (int set = 0; set < NUM_SETS; set++)
+    {
+        for (int element = 0; element < kb->SET_SIZES[set]; element++)
+        {
+            for (int i = 0 ; i < FUNCTION_RESULT_SIZE; i++)
+            {
+                kb->KNOWLEDGE_BASE[set][element][i] |= x->KNOWLEDGE_BASE[set][element][i];
+            }
+        }
     }
 }
 
