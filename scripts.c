@@ -182,20 +182,97 @@ void initScript(RuleSet** rs, KnowledgeBase** kb, const int SCRIPT, const int NU
     printf("-DONE!..\n");
 
     printf("BUILD RULES...\n");
-
-    for (int i = 0; i < NUM_BOTCT_ROLES; i++)
+    for (int night = 0; night < NUM_DAYS; night++)
     {
-        if (ROLE_IN_SCRIPT[i] == 0)
+        for (int i = 0; i < NUM_BOTCT_ROLES; i++)
         {
-            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s_in_PLAY", ROLE_NAMES[i]);
-            addKnowledgeName(*kb, "METADATA", 0, buff);
+            if (ROLE_IN_SCRIPT[i] == 0)
+            {
+                snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s_in_PLAY_[NIGHT%d]", ROLE_NAMES[i], night);
+                addKnowledgeName(*kb, "METADATA", 0, buff);
+            }
         }
     }
 
-    buildRules(*rs, *kb, NUM_PLAYERS, NUM_MINIONS, NUM_DEMONS, BASE_OUTSIDERS);
+    buildRules(*rs, *kb, NUM_PLAYERS, NUM_MINIONS, NUM_DEMONS, BASE_OUTSIDERS, NUM_DAYS);
 }
 
-void buildRules(RuleSet* rs, KnowledgeBase* kb, int numPlayers, int numMinions, int numDemons, int baseOutsiders)
+void basicRoleRules(RuleSet* rs, KnowledgeBase* kb, int numDays)
+{
+    //Temporary string buffer for writing names into
+    char buff[STRING_BUFF_SIZE];
+
+    // ===========================================
+    //  Make role based rules
+    // ===========================================
+    for (int night = 0; night < numDays; night++)
+    {
+        for (int i = 0; i < NUM_BOTCT_ROLES; i++)
+        {
+            //A role implies a team
+            //<PLAYER>is_<ROLE> => <PLAYER>is_<ROLE_TEAM>
+            setTempRuleParams(rs, 1,0);
+            snprintf(buff, STRING_BUFF_SIZE, "is_%s_[NIGHT%d]", ROLE_TEAMS[i], night);
+            setTempRuleResultName(rs, kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_%s_[NIGHT%d]", ROLE_NAMES[i], night);
+            addConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff);
+            pushTempRule(rs);
+
+            //A role implies a class
+            //<PLAYER>is_<ROLE> => <PLAYER>is_<ROLE_CLASS>
+            setTempRuleParams(rs, 1,0);
+            
+            snprintf(buff, STRING_BUFF_SIZE, "is_%s_[NIGHT%d]", ROLE_CLASSES[i], night);
+            setTempRuleResultName(rs, kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_%s_[NIGHT%d]", ROLE_NAMES[i], night);
+            addConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff);
+            pushTempRule(rs);
+
+            //Only one player can have a role
+            //<PLAYER_A>is_<ROLE> => <PLAYER_B>is_NOT<ROLE>
+            setTempRuleParams(rs, 1,0);
+            
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s_[NIGHT%d]", ROLE_NAMES[i], night);
+            setTempRuleResultName(rs, kb, -1, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_%s_[NIGHT%d]", ROLE_NAMES[i], night);
+            addConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff);
+            pushTempRule(rs);
+
+            
+            //A player must have one role
+            //<PLAYER>is_NOT_{<ROLE_A>, <ROLE_B>...} => <PLAYER>is_<ROLE_Z>
+            setTempRuleParams(rs, 1,0);
+            
+            snprintf(buff, STRING_BUFF_SIZE, "is_%s_[NIGHT%d]", ROLE_NAMES[i], night);
+            setTempRuleResultName(rs, kb, 0, "PLAYERS", buff); //A player is role ROLE_NAME[i] if
+            for (int j = 0; j < NUM_BOTCT_ROLES; j++)
+            {
+                if (j!=i)
+                { //A player is NOT role ROLE_NAME[j] for all i!=j
+                    snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s_[NIGHT%d]", ROLE_NAMES[j], night);
+                    addConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff);
+                }
+            }
+            pushTempRule(rs);
+        }
+    }
+}
+
+void buildRules(RuleSet* rs, KnowledgeBase* kb, int numPlayers, int numMinions, int numDemons, int baseOutsiders, int numDays)
+{
+    int numEvil = numMinions+numDemons;
+    int numGood = numPlayers-numEvil;
+
+    //For Baron[+2], Godfather[+OR-1], Vigomortis [-1], Fang Gu [+1]
+    int minOutsiders = baseOutsiders;
+    int maxOutsiders = baseOutsiders; 
+
+    basicRoleRules(rs, kb, numDays);
+
+    
+}
+
+void buildRulesOLD(RuleSet* rs, KnowledgeBase* kb, int numPlayers, int numMinions, int numDemons, int baseOutsiders)
 {
     int numEvil = numMinions+numDemons;
     int numGood = numPlayers-numEvil;
@@ -263,7 +340,6 @@ void buildRules(RuleSet* rs, KnowledgeBase* kb, int numPlayers, int numMinions, 
             }
         }
         pushTempRule(rs);
-        
     }
 
     

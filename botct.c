@@ -35,15 +35,14 @@
 #include "scripts.h"
 #include "ui.h"
 
+#define NUM_SOLVE_STEPS 5
 
-int inferImplicitFacts(KnowledgeBase* kb, RuleSet* rs, int numRounds)
+int inferImplicitFacts(KnowledgeBase* kb, RuleSet* rs, int numRounds, int verbose)
 {
-    printHeading("INFER FACTS"); //UI HEADING
         
     for (int i = 0; i < numRounds; i++)
     {
-        printf("INFER FACTS [ROUND%d]:\n",i);
-        inferknowledgeBaseFromRules(rs, kb, 1);
+        inferknowledgeBaseFromRules(rs, kb, verbose);
     }
     //Check for contradictions
     return hasExplicitContradiction(kb);
@@ -93,12 +92,7 @@ void* inferFactsByContradiction(void* void_arg)
                 addKnowledge(contradiction_kb, 0, player, function);
 
                 //Infer knowledge (to see if a contradiction arises)
-                for (int i = 0; i < 5; i++)
-                {
-                    inferknowledgeBaseFromRules(rs, contradiction_kb, 0);
-                }
-
-                if (hasExplicitContradiction(contradiction_kb) == 1)
+                if (inferImplicitFacts(contradiction_kb, rs, NUM_SOLVE_STEPS, 0) == 1)
                 { //If contradiction found by only adding "function" to assumptions we know NOT function is true 
                     //Update KB
                     printf("FOUND CONTRADICTION: %s(%d:%s) => %s(%d:%s)\n", kb->FUNCTION_NAME[0][function], player, kb->SET_NAMES[0], kb->FUNCTION_NAME[0][functionNeg], player, kb->SET_NAMES[0]);
@@ -115,7 +109,7 @@ void solve(KnowledgeBase* kb, RuleSet* rs, int NUM_PLAYERS, int NUM_MINIONS, int
     KnowledgeBase* revert_kb = initKB(NUM_PLAYERS, NUM_DAYS); //For backup incase of contradictions
 
 
-    int NUM_THREADS = 8;
+    int NUM_THREADS = 16;
     KnowledgeBase* thread_kb[NUM_THREADS];
     KnowledgeBase* contradiction_kb[NUM_THREADS];
     //Thread object
@@ -137,7 +131,8 @@ void solve(KnowledgeBase* kb, RuleSet* rs, int NUM_PLAYERS, int NUM_MINIONS, int
         copyTo(revert_kb, kb);
         add_info(kb, rs);
 
-        contradiction = inferImplicitFacts(kb, rs, 5);
+        printHeading("INFER FACTS"); //UI HEADING
+        contradiction = inferImplicitFacts(kb, rs, NUM_SOLVE_STEPS, 1);
         
 
         
@@ -177,12 +172,13 @@ void solve(KnowledgeBase* kb, RuleSet* rs, int NUM_PLAYERS, int NUM_MINIONS, int
 
         if (contradiction == 0)
         {
+            int printNight = 0;
             printHeading("KNOWLEDGE BASE"); //UI HEADING
             printKnowledgeBase(kb);
             printHeading("PLAYER TABLE"); //UI HEADING
-            printPlayerTable(kb);
+            printPlayerTable(kb, printNight);
             printHeading("ROLE TABLE"); //UI HEADING
-            printRoleTable(kb);
+            printRoleTable(kb, printNight);
         }
 
         if (contradiction == 1)
@@ -204,7 +200,7 @@ int main()
     int BASE_OUTSIDERS;
     int SCRIPT;
 
-    int NUM_DAYS = 10;
+    int NUM_DAYS = 5;
     setup(&NUM_PLAYERS, &NUM_MINIONS, &NUM_DEMONS, &BASE_OUTSIDERS, &SCRIPT);
 
     printHeading("CREATING GAME..."); //UI HEADING

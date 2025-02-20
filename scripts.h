@@ -29,7 +29,7 @@
 #include "knowledge.h"
 
 void initScript(RuleSet** rs, KnowledgeBase** kb, const int SCRIPT, const int NUM_PLAYERS, const int NUM_MINIONS, const int NUM_DEMONS, const int BASE_OUTSIDERS, const int NUM_DAYS);
-void buildRules(RuleSet* rs, KnowledgeBase* kb, int numPlayers, int numMinions, int numDemons, int baseOutsiders);
+void buildRules(RuleSet* rs, KnowledgeBase* kb, int numPlayers, int numMinions, int numDemons, int baseOutsiders, int numDays);
 
 extern char *ROLE_NAMES[NUM_BOTCT_ROLES];
 extern char *ROLE_TEAMS[NUM_BOTCT_ROLES];

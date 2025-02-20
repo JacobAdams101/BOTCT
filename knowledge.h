@@ -58,5 +58,5 @@ int isKnownName(KnowledgeBase* kb,  char* set, int element, char* function);
 int hasExplicitContradiction(KnowledgeBase* kb);
 
 void printKnowledgeBase(KnowledgeBase* kb);
-void printPlayerTable(KnowledgeBase* kb);
-void printRoleTable(KnowledgeBase* kb);
+void printPlayerTable(KnowledgeBase* kb, int night);
+void printRoleTable(KnowledgeBase* kb, int night);

@@ -55,24 +55,6 @@ void initElementStrings(char *elementName[NUM_SETS][MAX_SET_ELEMENTS], int maxLe
         }
     }
 }
-void writeRoleFunc(char *funcName[NUM_SETS][FUNCTION_RESULT_SIZE*INT_LENGTH], int set, int index[], char *name, int maxLen)
-{
-    int SIZE = maxLen*sizeof(char);
-    snprintf(funcName[set][index[set]], SIZE, "is_%s", name);
-    index[set] += 1;
-    snprintf(funcName[set][index[set]], SIZE, "is_NOT_%s", name);
-    index[set] += 1;
-}
-
-void writeRoleInGameFunc(char *funcName[NUM_SETS][FUNCTION_RESULT_SIZE*INT_LENGTH], int set, int index[], char *name, int maxLen)
-{
-    int SIZE = maxLen*sizeof(char);
-    snprintf(funcName[set][index[set]], SIZE, "is_%s_in_PLAY", name);
-    index[set] += 1;
-    snprintf(funcName[set][index[set]], SIZE, "is_NOT_%s_in_PLAY", name);
-    index[set] += 1;
-}
-
 void writeFunc(char *funcName[NUM_SETS][FUNCTION_RESULT_SIZE*INT_LENGTH], int set, int index[], char *str, char *strNegation, int maxLen)
 {
     int SIZE = maxLen*sizeof(char);
@@ -82,22 +64,43 @@ void writeFunc(char *funcName[NUM_SETS][FUNCTION_RESULT_SIZE*INT_LENGTH], int se
     index[set] += 1;
 }
 
-void writeDeathFunc(char *funcName[NUM_SETS][FUNCTION_RESULT_SIZE*INT_LENGTH], int set, int index[], int night, int maxLen)
+void writeFuncNight(char *funcName[NUM_SETS][FUNCTION_RESULT_SIZE*INT_LENGTH], int set, int index[], char *str, char *strNegation, int night, int maxLen)
 {
     int SIZE = maxLen*sizeof(char);
-    snprintf(funcName[set][index[set]], SIZE, "died_NIGHT%d", night);
+    snprintf(funcName[set][index[set]], SIZE, "%s_[NIGHT%d]", str, night);
     index[set] += 1;
-    snprintf(funcName[set][index[set]], SIZE, "alive_NIGHT%d", night);
+    snprintf(funcName[set][index[set]], SIZE, "%s_[NIGHT%d]", strNegation, night);
     index[set] += 1;
+}
+
+void writeRoleFunc(char *funcName[NUM_SETS][FUNCTION_RESULT_SIZE*INT_LENGTH], int set, int index[], char *name, int night, int maxLen)
+{
+    char str[maxLen]; // Declare a character array to hold the string 
+    char strNeg[maxLen]; // Declare a character array to hold the string 
+    int SIZE = maxLen*sizeof(char);
+    snprintf(str, SIZE, "is_%s", name);
+    snprintf(strNeg, SIZE, "is_NOT_%s", name);
+    writeFuncNight(funcName, set, index, str, strNeg, night, maxLen);
+}
+
+void writeRoleInGameFunc(char *funcName[NUM_SETS][FUNCTION_RESULT_SIZE*INT_LENGTH], int set, int index[], char *name, int night, int maxLen)
+{
+    char str[maxLen]; // Declare a character array to hold the string 
+    char strNeg[maxLen]; // Declare a character array to hold the string 
+    int SIZE = maxLen*sizeof(char);
+    snprintf(str, SIZE, "is_%s_in_PLAY", name);
+    snprintf(strNeg, SIZE, "is_NOT_%s_in_PLAY", name);
+    writeFuncNight(funcName, set, index, str, strNeg, night, maxLen);
+}
+
+void writeDeathFunc(char *funcName[NUM_SETS][FUNCTION_RESULT_SIZE*INT_LENGTH], int set, int index[], int night, int maxLen)
+{
+    writeFuncNight(funcName, set, index, "is_DEAD", "is_ALIVE", night, maxLen);
 }
 
 void writePoisonFunc(char *funcName[NUM_SETS][FUNCTION_RESULT_SIZE*INT_LENGTH], int set, int index[], int night, int maxLen)
 {
-    int SIZE = maxLen*sizeof(char);
-    snprintf(funcName[set][index[set]], SIZE, "is_poisoned_NIGHT%d", night);
-    index[set] += 1;
-    snprintf(funcName[set][index[set]], SIZE, "is_NOT_poisoned_NIGHT%d", night);
-    index[set] += 1;
+    writeFuncNight(funcName, set, index, "is_POISONED", "is_NOT_POISONED", night, maxLen);
 }
 
 
@@ -129,36 +132,35 @@ KnowledgeBase* initKB(int NUM_PLAYERS, int NUM_DAYS)
     //  PLAYER FUNCTIONS
     // ===========================================
     //Roles
-    
-    for (int i = 0; i < NUM_BOTCT_ROLES; i++)
+    for (int night = 0; night < NUM_DAYS; night++)
     {
-        writeRoleFunc(kb->FUNCTION_NAME, 0, index, ROLE_NAMES[i], 64);
-    }
-    //Teams
-    writeFunc(kb->FUNCTION_NAME, 0, index, "is_GOOD", "is_EVIL", 64);
-    //Classes
-    writeFunc(kb->FUNCTION_NAME, 0, index, "is_TOWNSFOLK", "is_NOT_TOWNSFOLK", 64);
-    writeFunc(kb->FUNCTION_NAME, 0, index, "is_OUTSIDER", "is_NOT_OUTSIDER", 64);
-    writeFunc(kb->FUNCTION_NAME, 0, index, "is_MINION", "is_NOT_MINION", 64);
-    writeFunc(kb->FUNCTION_NAME, 0, index, "is_DEMON", "is_NOT_DEMON", 64);
+        for (int roleID = 0; roleID < NUM_BOTCT_ROLES; roleID++)
+        {
+            writeRoleFunc(kb->FUNCTION_NAME, 0, index, ROLE_NAMES[roleID], night, 64);
+        }
 
-    //Deaths  
-    writeFunc(kb->FUNCTION_NAME, 0, index, "is_DEAD", "is_ALIVE", 64);
-    writeFunc(kb->FUNCTION_NAME, 0, index, "died_in_NIGHT", "died_NOT_in_NIGHT", 64);
-    writeFunc(kb->FUNCTION_NAME, 0, index, "died_by_HANGING", "died_NOT_by_HANGING", 64);
-    //Death on night
-    for (int night = 0; night < NUM_DAYS; night++)
-    {
-        writeDeathFunc(kb->FUNCTION_NAME, 0, index, night, 64);
-    }
-    //Poison
-    for (int night = 0; night < NUM_DAYS; night++)
-    {
+        //Teams
+        writeFuncNight(kb->FUNCTION_NAME, 0, index, "is_GOOD", "is_EVIL", night,64);
+        //Classes
+        writeFuncNight(kb->FUNCTION_NAME, 0, index, "is_TOWNSFOLK", "is_NOT_TOWNSFOLK", night, 64);
+        writeFuncNight(kb->FUNCTION_NAME, 0, index, "is_OUTSIDER", "is_NOT_OUTSIDER", night, 64);
+        writeFuncNight(kb->FUNCTION_NAME, 0, index, "is_MINION", "is_NOT_MINION", night, 64);
+        writeFuncNight(kb->FUNCTION_NAME, 0, index, "is_DEMON", "is_NOT_DEMON", night, 64);
+
+        //Poison
         writePoisonFunc(kb->FUNCTION_NAME, 0, index, night, 64);
+
+        //Deaths
+        writeDeathFunc(kb->FUNCTION_NAME, 0, index, night, 64);
+        //Death Types
+        writeFuncNight(kb->FUNCTION_NAME, 0, index, "died_in_NIGHT", "died_NOT_in_NIGHT", night, 64);
+        writeFuncNight(kb->FUNCTION_NAME, 0, index, "died_by_HANGING", "died_NOT_by_HANGING", night, 64);
     }
 
     //REDHERRING
     writeFunc(kb->FUNCTION_NAME, 0, index, "is_REDHERRING", "is_NOT_REDHERRING", 64);
+    //Evil Twin Pair
+    writeFunc(kb->FUNCTION_NAME, 0, index, "is_GOOD_TWIN", "is_NOT_GOOD_TWIN", 64);
 
     // ===========================================
     //  DAY FUNCTIONS
@@ -169,9 +171,12 @@ KnowledgeBase* initKB(int NUM_PLAYERS, int NUM_DAYS)
     // ===========================================
     //  METADATA FUNCTIONS
     // ===========================================
-    for (int i = 0; i < NUM_BOTCT_ROLES; i++)
+    for (int night = 0; night < NUM_DAYS; night++)
     {
-        writeRoleInGameFunc(kb->FUNCTION_NAME, 2, index, ROLE_NAMES[i], 64);
+        for (int roleID = 0; roleID < NUM_BOTCT_ROLES; roleID++)
+        {
+            writeRoleInGameFunc(kb->FUNCTION_NAME, 2, index, ROLE_NAMES[roleID], night, 64);
+        }
     }
 
     return kb;
@@ -181,18 +186,6 @@ void copyTo(KnowledgeBase* dest, KnowledgeBase* src)
 {
     //Deep copy knowlegde base (these might change)
     memcpy(dest->KNOWLEDGE_BASE, src->KNOWLEDGE_BASE, sizeof(long)*NUM_SETS*MAX_SET_ELEMENTS*FUNCTION_RESULT_SIZE);
-    /*
-    for (int i = 0; i < NUM_SETS; i++)
-    {
-        for (int j = 0; j < MAX_SET_ELEMENTS; j++)
-        {
-            for (int k = 0; k < FUNCTION_RESULT_SIZE; k++)
-            {
-                dest->KNOWLEDGE_BASE[i][j][k] = src->KNOWLEDGE_BASE[i][j][k];
-            }
-        }
-    }
-    */
     memcpy(dest->SET_SIZES, src->SET_SIZES, sizeof(int)*NUM_SETS);
     for (int i = 0; i < NUM_SETS; i++)
     {
@@ -416,8 +409,10 @@ void printPlayerName(char* name, int maxLen)
     }
 }
 
-void printPlayerTable(KnowledgeBase* kb)
+void printPlayerTable(KnowledgeBase* kb, int night)
 {
+    char buff[64];
+
     printf("         |");
     for (int role = 0; role < NUM_BOTCT_ROLES; role++)
     {
@@ -446,13 +441,19 @@ void printPlayerTable(KnowledgeBase* kb)
     int set = 0;
     for (int element = 0; element < kb->SET_SIZES[set]; element++)
     {
-        int isTownsfolk = isKnownName(kb, "PLAYERS", element, "is_TOWNSFOLK"); //((kb->KNOWLEDGE_BASE[set][element][0] >> 56) & 1);
-        int isOutsider = isKnownName(kb, "PLAYERS", element, "is_OUTSIDER"); //((kb->KNOWLEDGE_BASE[set][element][0] >> 58) & 1);
-        int isMinion = isKnownName(kb, "PLAYERS", element, "is_MINION"); //((kb->KNOWLEDGE_BASE[set][element][0] >> 60) & 1);
-        int isDemon = isKnownName(kb, "PLAYERS", element, "is_DEMON"); //((kb->KNOWLEDGE_BASE[set][element][0] >> 62) & 1);
+        snprintf(buff, 64, "is_TOWNSFOLK_[NIGHT%d]", night);
+        int isTownsfolk = isKnownName(kb, "PLAYERS", element, buff); 
+        snprintf(buff, 64, "is_OUTSIDER_[NIGHT%d]", night);
+        int isOutsider = isKnownName(kb, "PLAYERS", element, buff); 
+        snprintf(buff, 64, "is_MINION_[NIGHT%d]", night);
+        int isMinion = isKnownName(kb, "PLAYERS", element, buff); 
+        snprintf(buff, 64, "is_DEMON_[NIGHT%d]", night);
+        int isDemon = isKnownName(kb, "PLAYERS", element, buff); 
 
-        int isGood = isKnownName(kb, "PLAYERS", element, "is_GOOD"); //((kb->KNOWLEDGE_BASE[set][element][0] >> 54) & 1);
-        int isEvil = isKnownName(kb, "PLAYERS", element, "is_EVIL"); //((kb->KNOWLEDGE_BASE[set][element][0] >> 55) & 1);
+        snprintf(buff, 64, "is_GOOD_[NIGHT%d]", night);
+        int isGood = isKnownName(kb, "PLAYERS", element, buff); 
+        snprintf(buff, 64, "is_EVIL_[NIGHT%d]", night);
+        int isEvil = isKnownName(kb, "PLAYERS", element, buff); 
 
         //printf("PLAYER %d |", element);
         //printf("%s |", kb->ELEMENT_NAMES[0][element]);
@@ -463,18 +464,15 @@ void printPlayerTable(KnowledgeBase* kb)
             //Only print roles in the script
             if (ROLE_IN_SCRIPT[role] == 1)
             {
-                int function1 = role*2;
-                int index1 = function1 / INT_LENGTH;
-                int bit1 = function1 - (index1 * INT_LENGTH);
-
-                int function2 = role*2+1;
-                int index2 = function2 / INT_LENGTH;
-                int bit2 = function2 - (index2 * INT_LENGTH);
-                if (((kb->KNOWLEDGE_BASE[set][element][index1] >> bit1) & 1) == 1)
+                snprintf(buff, 64, "is_%s_[NIGHT%d]", ROLE_NAMES[role], night);
+                int isRole = isKnownName(kb, "PLAYERS", element, buff); 
+                snprintf(buff, 64, "is_NOT_%s_[NIGHT%d]", ROLE_NAMES[role], night);
+                int isNotRole = isKnownName(kb, "PLAYERS", element, buff);
+                if (isRole == 1)
                 {
                     printf(" * ");
                 }
-                else if (((kb->KNOWLEDGE_BASE[set][element][index2] >> bit2) & 1) == 1)
+                else if (isNotRole == 1)
                 {
                     printf("   ");
                 }
@@ -522,8 +520,10 @@ void printPlayerTable(KnowledgeBase* kb)
     }
 }
 
-void printRoleTable(KnowledgeBase* kb)
+void printRoleTable(KnowledgeBase* kb, int night)
 {
+    char buff[64];
+
     printf("         |");
     for (int role = 0; role < NUM_BOTCT_ROLES; role++)
     {
@@ -549,7 +549,6 @@ void printRoleTable(KnowledgeBase* kb)
     }
     //printf("-----------|------|");
     printf("\n");
-    int set = 2;
     int element = 0;
     printf("IN GAME  |");
     for (int role = 0; role < NUM_BOTCT_ROLES; role++)
@@ -557,18 +556,16 @@ void printRoleTable(KnowledgeBase* kb)
         //Only print roles in the script
         if (ROLE_IN_SCRIPT[role] == 1)
         {
-            int function1 = role*2;
-            int index1 = function1 / INT_LENGTH;
-            int bit1 = function1 - (index1 * INT_LENGTH);
+            snprintf(buff, 64, "is_%s_in_PLAY_[NIGHT%d]", ROLE_NAMES[role], night);
+            int isRoleInPlay = isKnownName(kb, "METADATA", element, buff); 
+            snprintf(buff, 64, "is_NOT_%s_in_PLAY_[NIGHT%d]", ROLE_NAMES[role], night);
+            int isNotRoleInPlay = isKnownName(kb, "METADATA", element, buff);
 
-            int function2 = role*2+1;
-            int index2 = function2 / INT_LENGTH;
-            int bit2 = function2 - (index2 * INT_LENGTH);
-            if (((kb->KNOWLEDGE_BASE[set][element][index1] >> bit1) & 1) == 1)
+            if (isRoleInPlay == 1)
             {
                 printf(" * ");
             }
-            else if (((kb->KNOWLEDGE_BASE[set][element][index2] >> bit2) & 1) == 1)
+            else if (isNotRoleInPlay == 1)
             {
                 printf("   ");
             }
