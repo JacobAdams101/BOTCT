@@ -35,9 +35,9 @@ void getNames(char* names[NUM_SETS][MAX_SET_ELEMENTS], int numPlayers);
 int getRoleIdFromString(char* roleName);
 int getRoleIDInput(char* message);
 int getPlayerIDInput(KnowledgeBase* kb, char* message);
-
+/*
 void shown_role(KnowledgeBase* kb);
-void roleNotInGame(KnowledgeBase* kb);
+void roleNotInGame(KnowledgeBase* kb, int numDays);
 void noptions(KnowledgeBase* kb);
 void poisoned(KnowledgeBase* kb);
 void redHerring(KnowledgeBase* kb);
@@ -45,4 +45,5 @@ void diedInNight(KnowledgeBase* kb);
 void hung(KnowledgeBase* kb);
 void reset(KnowledgeBase* kb);
 void addPingRule(KnowledgeBase* kb, RuleSet* rs);
-void add_info(KnowledgeBase* kb, RuleSet* rs);
+*/
+void add_info(KnowledgeBase* kb, RuleSet* rs, int numDays);

@@ -90,9 +90,12 @@ int getRoleIdFromString(char* roleName)
 {
     for (int roleID = 0; roleID < NUM_BOTCT_ROLES; roleID++)
     {
-        if (strcmp(roleName,ROLE_NAMES[roleID]) == 0)
+        if (ROLE_IN_SCRIPT[roleID] == 1)
         {
-            return roleID;
+            if (strcmp(roleName,ROLE_NAMES[roleID]) == 0)
+            {
+                return roleID;
+            }
         }
     }
     return -1;
@@ -105,7 +108,10 @@ int getRoleIDInput(char* message)
     printf("%s:\n", message);
     for (int i = 0; i < NUM_BOTCT_ROLES; i++)
     {
-        printf("%s\n", ROLE_NAMES[i]);
+        if (ROLE_IN_SCRIPT[i] == 1)
+        {
+            printf("%s\n", ROLE_NAMES[i]);
+        }
     }
     while (roleID == -1)
     {
@@ -138,7 +144,7 @@ int getPlayerIDInput(KnowledgeBase* kb, char* message)
     return roleID;
 }
 
-void shown_role(KnowledgeBase* kb)
+static void shown_role(KnowledgeBase* kb)
 {
     int playerID;
     char buff[STRING_BUFF_SIZE]; // Declare a character array to hold the string 
@@ -154,11 +160,11 @@ void shown_role(KnowledgeBase* kb)
 
     roleID = getRoleIDInput("Role?");
 
-    if (strcmp(ROLE_CLASSES[roleID], "DEMON")) //If demon team, they're either a demon or the lunatic
+    if (strcmp(ROLE_CLASSES[roleID], "DEMON") == 0) //If demon team, they're either a demon or the lunatic
     {
         for (int i = 0; i < NUM_BOTCT_ROLES; i++)
         {
-            if ((strcmp(ROLE_CLASSES[i], ROLE_CLASSES[roleID]) == 0) || (strcmp(ROLE_CLASSES[i], "LUNATIC") == 0))
+            if ((strcmp(ROLE_NAMES[i], ROLE_NAMES[roleID]) == 0) || (strcmp(ROLE_NAMES[i], "LUNATIC") == 0))
             { //Demon could either be lunatic or actual role
 
             }
@@ -170,12 +176,12 @@ void shown_role(KnowledgeBase* kb)
         }
 
     }
-    else if (strcmp(ROLE_CLASSES[roleID], "MINION")) //If minion, we're certain they are a minion
+    else if (strcmp(ROLE_CLASSES[roleID], "MINION") == 0) //If minion, we're certain they are a minion
     {
         snprintf(buff, STRING_BUFF_SIZE, "is_%s_[NIGHT%d]", ROLE_NAMES[roleID], night);
         addKnowledgeName(kb, "PLAYERS", playerID, buff);
     }
-    else if (strcmp(ROLE_CLASSES[roleID], "OUTSIDER")) //If outsider, we're certain they are an outsider
+    else if (strcmp(ROLE_CLASSES[roleID], "OUTSIDER") == 0) //If outsider, we're certain they are an outsider
     {
         snprintf(buff, STRING_BUFF_SIZE, "is_%s_[NIGHT%d]", ROLE_NAMES[roleID], night);
         addKnowledgeName(kb, "PLAYERS", playerID, buff);
@@ -184,7 +190,7 @@ void shown_role(KnowledgeBase* kb)
     { //Townsfolk
         for (int i = 0; i < NUM_BOTCT_ROLES; i++)
         {
-            if ((strcmp(ROLE_CLASSES[i], ROLE_CLASSES[roleID]) == 0) || (strcmp(ROLE_CLASSES[i], "DRUNK") == 0))
+            if ((strcmp(ROLE_NAMES[i], ROLE_NAMES[roleID]) == 0) || (strcmp(ROLE_NAMES[i], "DRUNK") == 0))
             { 
             }
             else
@@ -196,7 +202,7 @@ void shown_role(KnowledgeBase* kb)
     }
 }
 
-void roleNotInGame(KnowledgeBase* kb)
+static  void roleNotInGame(KnowledgeBase* kb, int numDays)
 {
     char buff[STRING_BUFF_SIZE]; // Declare a character array to hold the string 
     int roleID = -1;
@@ -206,14 +212,25 @@ void roleNotInGame(KnowledgeBase* kb)
 
     roleID = getRoleIDInput("Role not in game?");
 
-    printf("On night?:\n");
+    printf("On night? (Type -1 for every night):\n");
     scanf("%d", &night); // Read player ID
 
-    snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s_in_PLAY_[NIGHT%d]", ROLE_NAMES[roleID], night);
-    addKnowledgeName(kb, "METADATA", 0, buff);
+    if (night == -1)
+    {
+        for (int i = 0; i < numDays; i++)
+        {
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s_in_PLAY_[NIGHT%d]", ROLE_NAMES[roleID], i);
+            addKnowledgeName(kb, "METADATA", 0, buff);
+        }
+    }
+    else
+    {
+        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s_in_PLAY_[NIGHT%d]", ROLE_NAMES[roleID], night);
+        addKnowledgeName(kb, "METADATA", 0, buff);
+    }
 }
 
-void noptions(KnowledgeBase* kb)
+static void noptions(KnowledgeBase* kb)
 {
     
     printf("ENERTING: n POSSIBILITIES\n");
@@ -271,7 +288,7 @@ void noptions(KnowledgeBase* kb)
             }
         }
         //Roles someone might be that would cause them to lie about their three for three
-        if ((strcmp(ROLE_CLASSES[i], "DRUNK") == 0) || (strcmp(ROLE_CLASSES[i], "MUTANT") == 0) || (strcmp(ROLE_TEAMS[i], "EVIL") == 0)) //If i is on evil team or Drunk, or Mutant
+        if ((strcmp(ROLE_NAMES[i], "DRUNK") == 0) || (strcmp(ROLE_NAMES[i], "MUTANT") == 0) || (strcmp(ROLE_TEAMS[i], "EVIL") == 0)) //If i is on evil team or Drunk, or Mutant
         { //People as these roles could always give a false 3 for 3
             inRole = 1;
         }
@@ -287,7 +304,7 @@ void noptions(KnowledgeBase* kb)
     }
 }
 
-void poisoned(KnowledgeBase* kb)
+static void poisoned(KnowledgeBase* kb)
 {
     char buff[STRING_BUFF_SIZE]; // Declare a character array to hold the string 
 
@@ -307,7 +324,7 @@ void poisoned(KnowledgeBase* kb)
     addKnowledgeName(kb, "PLAYERS", playerID, buff);
 }
 
-void redHerring(KnowledgeBase* kb)
+static void redHerring(KnowledgeBase* kb)
 {
     int playerID;
 
@@ -320,7 +337,7 @@ void redHerring(KnowledgeBase* kb)
     addKnowledgeName(kb, "PLAYERS", playerID, "is_REDHERRING");
 }
 
-void diedInNight(KnowledgeBase* kb)
+static void diedInNight(KnowledgeBase* kb)
 {
     char buff[STRING_BUFF_SIZE]; // Declare a character array to hold the string 
 
@@ -342,7 +359,7 @@ void diedInNight(KnowledgeBase* kb)
     addKnowledgeName(kb, "PLAYERS", playerID, buff);
 }
 
-void hung(KnowledgeBase* kb)
+static void hung(KnowledgeBase* kb)
 {
     char buff[STRING_BUFF_SIZE]; // Declare a character array to hold the string 
 
@@ -364,7 +381,7 @@ void hung(KnowledgeBase* kb)
     addKnowledgeName(kb, "PLAYERS", playerID, buff);
 }
 
-void reset(KnowledgeBase* kb)
+static void reset(KnowledgeBase* kb)
 {
     int playerID;
 
@@ -375,12 +392,12 @@ void reset(KnowledgeBase* kb)
     resetElement(kb, 0, playerID);
 }
 
-void resetMetaData(KnowledgeBase* kb)
+static void resetMetaData(KnowledgeBase* kb)
 {
     resetElement(kb, 2, 0);
 }
 
-void addPingRule(KnowledgeBase* kb, RuleSet* rs)
+static void addPingRule(KnowledgeBase* kb, RuleSet* rs)
 {
     char inputPingType[STRING_BUFF_SIZE]; // Declare a character array to hold the string 
     char buff[STRING_BUFF_SIZE]; // Declare a character array to hold the string 
@@ -880,7 +897,7 @@ void addPingRule(KnowledgeBase* kb, RuleSet* rs)
     }
 }
 
-void add_info(KnowledgeBase* kb, RuleSet* rs)
+void add_info(KnowledgeBase* kb, RuleSet* rs, int numDays)
 {
     char buff[STRING_BUFF_SIZE]; // Declare a character array to hold the string 
     printHeading("ADD INFORMATION");
@@ -926,7 +943,7 @@ void add_info(KnowledgeBase* kb, RuleSet* rs)
         }
         else if (strcmp(buff,ROLE_NOT_IN_GAME) == 0)
         {
-            roleNotInGame(kb);
+            roleNotInGame(kb, numDays);
         }
         else if (strcmp(buff,PING) == 0)
         {

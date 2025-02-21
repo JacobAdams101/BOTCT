@@ -43,7 +43,7 @@ Rule* getRule(RuleSet* ruleSet, int index)
 }
 
 
-void resetRule(Rule* rule)
+static void resetRule(Rule* rule)
 {
     rule->varCount = 0;
     rule->resultVarName = 0;
@@ -65,7 +65,7 @@ void resetRule(Rule* rule)
 
 }
 
-int LHSSymmetric(Rule* rule)
+static int LHSSymmetric(Rule* rule)
 {
     //Check LHS Symmetric
     for (int var = 1; var < rule->varCount; var++)
@@ -138,7 +138,7 @@ void setTempRuleParams(RuleSet* rs, int varCount, int varsMutuallyExclusive)
     rs->temp_rule->varsMutuallyExclusive = varsMutuallyExclusive;
 }
 
-void setRuleResult(Rule* rule, int resultVarName, int set, int function)
+static void setRuleResult(Rule* rule, int resultVarName, int set, int function)
 {
     rule->resultVarName = resultVarName;
     rule->resultFromSet = set;
@@ -156,7 +156,7 @@ void setTempRuleResult(RuleSet* rs, int resultVarName, int set, int function)
     setRuleResult(rs->temp_rule, resultVarName, set, function);
 }
 
-void setRuleResultName(Rule* rule, KnowledgeBase* kb, int resultVarName, char* set, char* function)
+static void setRuleResultName(Rule* rule, KnowledgeBase* kb, int resultVarName, char* set, char* function)
 {
     int setID = getSetIDWithName(kb, set, 1);
     int functionID = getSetFunctionIDWithName(kb, setID, function, 1);
@@ -169,7 +169,7 @@ void setTempRuleResultName(RuleSet* rs, KnowledgeBase* kb, int resultVarName, ch
     setRuleResultName(rs->temp_rule, kb, resultVarName, set, function);
 }
 
-void addConditionToRule(Rule* rule, int varName, int set, int function, int forcedSubstitution)
+static void addConditionToRule(Rule* rule, int varName, int set, int function, int forcedSubstitution)
 {
     int index, bit;
     getIndexAndBit(&index, &bit, function);
@@ -186,7 +186,7 @@ void addConditionToTempRule(RuleSet* rs, int varName, int set, int function, int
     addConditionToRule(rs->temp_rule, varName, set, function, forcedSubstitution);
 }
 
-void addConditionToRuleName(Rule* rule, KnowledgeBase* kb, int varName, char* set, char* function)
+static void addConditionToRuleName(Rule* rule, KnowledgeBase* kb, int varName, char* set, char* function)
 {
     int setID = getSetIDWithName(kb, set, 1);
     int functionID = getSetFunctionIDWithName(kb, setID, function, 1);
@@ -199,7 +199,7 @@ void addConditionToTempRuleName(RuleSet* rs, KnowledgeBase* kb, int varName, cha
     addConditionToRuleName(rs->temp_rule, kb, varName, set, function);
 }
 
-void addFixedConditionToRuleName(Rule* rule, KnowledgeBase* kb, int varName, char* set, char* function, int forcedSubstitution)
+static void addFixedConditionToRuleName(Rule* rule, KnowledgeBase* kb, int varName, char* set, char* function, int forcedSubstitution)
 {
     int setID = getSetIDWithName(kb, set, 1);
     int functionID = getSetFunctionIDWithName(kb, setID, function, 1);
@@ -370,7 +370,7 @@ void getAssignment(int satisfied[MAX_VARS_IN_RULE][MAX_SET_ELEMENTS], int length
     
 }
 
-void applyRule(Rule* rule, KnowledgeBase* kb, int assignement[MAX_VARS_IN_RULE], int verbose)
+static void applyRule(Rule* rule, KnowledgeBase* kb, int assignement[MAX_VARS_IN_RULE], int verbose)
 {
     if (rule->resultVarName >= 0)
     { //Result found in condition

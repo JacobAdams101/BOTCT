@@ -426,7 +426,7 @@ void printPlayerTable(KnowledgeBase* kb, int night)
             printf("|");
         }
     }
-    printf("\n");
+    printf("   CLASS   | TEAM | POISONED |\n");
     printf("---------|");
     for (int role = 0; role < NUM_BOTCT_ROLES; role++)
     {
@@ -436,8 +436,7 @@ void printPlayerTable(KnowledgeBase* kb, int night)
             printf("---|");
         }
     }
-    printf("-----------|------|");
-    printf("\n");
+    printf("-----------|------|----------|\n");
     int set = 0;
     for (int element = 0; element < kb->SET_SIZES[set]; element++)
     {
@@ -454,6 +453,11 @@ void printPlayerTable(KnowledgeBase* kb, int night)
         int isGood = isKnownName(kb, "PLAYERS", element, buff); 
         snprintf(buff, 64, "is_EVIL_[NIGHT%d]", night);
         int isEvil = isKnownName(kb, "PLAYERS", element, buff); 
+
+        snprintf(buff, 64, "is_POISONED_[NIGHT%d]", night);
+        int isPoisoned = isKnownName(kb, "PLAYERS", element, buff); 
+        snprintf(buff, 64, "is_NOT_POISONED_[NIGHT%d]", night);
+        int isNotPoisoned = isKnownName(kb, "PLAYERS", element, buff); 
 
         //printf("PLAYER %d |", element);
         //printf("%s |", kb->ELEMENT_NAMES[0][element]);
@@ -515,6 +519,19 @@ void printPlayerTable(KnowledgeBase* kb, int night)
         else
         {
             printf("  ?   ");
+        }
+        printf("|");
+        if (isPoisoned == 1)
+        {
+            printf(" POISONED ");
+        }
+        else if (isNotPoisoned == 1)
+        {
+            printf("  HEALTHY ");
+        }
+        else
+        {
+            printf("     ?    ");
         }
         printf("|\n");
     }

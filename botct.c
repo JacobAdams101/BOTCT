@@ -37,7 +37,7 @@
 
 #define NUM_SOLVE_STEPS 5
 
-int inferImplicitFacts(KnowledgeBase* kb, RuleSet* rs, int numRounds, int verbose)
+static int inferImplicitFacts(KnowledgeBase* kb, RuleSet* rs, int numRounds, int verbose)
 {
         
     for (int i = 0; i < numRounds; i++)
@@ -56,7 +56,7 @@ struct inferFactsByContradictionArgs
     int min;
     int max;
 };
-void* inferFactsByContradiction(void* void_arg)
+static void* inferFactsByContradiction(void* void_arg)
 {
     struct inferFactsByContradictionArgs *args = (struct inferFactsByContradictionArgs*) void_arg; //Get arguments by casting
 
@@ -104,8 +104,9 @@ void* inferFactsByContradiction(void* void_arg)
     return NULL;
 }
 
-void solve(KnowledgeBase* kb, RuleSet* rs, int NUM_PLAYERS, int NUM_MINIONS, int NUM_DEMONS,int BASE_OUTSIDERS, int NUM_DAYS)
+static void solve(KnowledgeBase* kb, RuleSet* rs, int NUM_PLAYERS, int NUM_MINIONS, int NUM_DEMONS,int BASE_OUTSIDERS, int NUM_DAYS)
 {
+    char buff[STRING_BUFF_SIZE];
     KnowledgeBase* revert_kb = initKB(NUM_PLAYERS, NUM_DAYS); //For backup incase of contradictions
 
 
@@ -129,13 +130,14 @@ void solve(KnowledgeBase* kb, RuleSet* rs, int NUM_PLAYERS, int NUM_MINIONS, int
     {
         //Create copy as backup incase of contradictions
         copyTo(revert_kb, kb);
-        add_info(kb, rs);
+        add_info(kb, rs, NUM_DAYS);
 
         printHeading("INFER FACTS"); //UI HEADING
         contradiction = inferImplicitFacts(kb, rs, NUM_SOLVE_STEPS, 1);
         
 
-        
+        /*
+        Commented out for being too slow: further optimisation is needed
         if (contradiction == 0)
         { //If no immediate contradictions 
             printHeading("LOOK FOR PROOF BY CONTRADICTION"); //UI HEADING
@@ -169,16 +171,19 @@ void solve(KnowledgeBase* kb, RuleSet* rs, int NUM_PLAYERS, int NUM_MINIONS, int
                 mergeKnowledge(kb, thread_kb[i]);
             }
         }
+        */
 
         if (contradiction == 0)
         {
-            int printNight = 0;
             printHeading("KNOWLEDGE BASE"); //UI HEADING
             printKnowledgeBase(kb);
-            printHeading("PLAYER TABLE"); //UI HEADING
-            printPlayerTable(kb, printNight);
-            printHeading("ROLE TABLE"); //UI HEADING
-            printRoleTable(kb, printNight);
+            for (int night = 0; night < NUM_DAYS; night++)
+            {
+                snprintf(buff, STRING_BUFF_SIZE, "ROLE INFORMATION [NIGHT %d]", night);
+                printHeading(buff); //UI HEADING
+                printPlayerTable(kb, night);
+                printRoleTable(kb, night);
+            }
         }
 
         if (contradiction == 1)

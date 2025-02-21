@@ -2,7 +2,7 @@
 CC = gcc
 
 # Compiler Flags
-CFLAGS = -Wall 
+CFLAGS = -Wall -O2
 
 # Find all .c files in the current directory
 SRCS = $(wildcard *.c)
