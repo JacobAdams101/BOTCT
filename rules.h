@@ -82,4 +82,4 @@ void printRuleAssignment(Rule* rule, KnowledgeBase* kb, int assignement[MAX_VARS
 void printRules(RuleSet* rs, KnowledgeBase* kb);
 
 int satisfiesRule(Rule* rule, KnowledgeBase* kb, int verbose);
-void inferknowledgeBaseFromRules(RuleSet* rs, KnowledgeBase* kb, int verbose);
+int inferknowledgeBaseFromRules(RuleSet* rs, KnowledgeBase* kb, int verbose);

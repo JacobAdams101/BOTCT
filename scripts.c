@@ -543,15 +543,15 @@ static void roleMetaDataCounting(RuleSet* rs, KnowledgeBase* kb, int numPlayers,
             int isGodFatherInPlay = 0;
 
             int numOutsiders = baseOutsiders;
-            if (isBaronInPlay == 1)
+            if (isBaronInPlay)
             {
                 numOutsiders += 2;
             }
-            if (isFangGuInPlay == 1)
+            if (isFangGuInPlay)
             {
                 numOutsiders += 1;
             }
-            if (isVigormortisInPlay == 1)
+            if (isVigormortisInPlay)
             {
                 numOutsiders -= 1;
             }
@@ -568,7 +568,7 @@ static void roleMetaDataCounting(RuleSet* rs, KnowledgeBase* kb, int numPlayers,
                         count++;
                     }
                 }
-                if (count == baseOutsiders)
+                if (count == numOutsiders)
                 {
                     //<METADATA>is_<OUTSIDER>_in_PLAY (xA) AND <METADATA>is_NOT_BARON_in_PLAY => <METADATA>is_NOT_<OUTSIDER>_in_PLAY (x4-A)
                     setTempRuleParams(rs, 1,0);
@@ -607,7 +607,7 @@ static void roleMetaDataCounting(RuleSet* rs, KnowledgeBase* kb, int numPlayers,
                     else
                     {
                         //The VIGORMORTIS can NOT be in play for this
-                        snprintf(buff, STRING_BUFF_SIZE, "is_VIGORMORTIS_in_PLAY_[NIGHT%d]", night);
+                        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_VIGORMORTIS_in_PLAY_[NIGHT%d]", night);
                         addConditionToTempRuleName(rs,kb, 0, "METADATA", buff);
                     }
                     if (isGodFatherInPlay == 1)
@@ -619,7 +619,7 @@ static void roleMetaDataCounting(RuleSet* rs, KnowledgeBase* kb, int numPlayers,
                     else
                     {
                         //The GODFATHER can NOT be in play for this
-                        snprintf(buff, STRING_BUFF_SIZE, "is_GODFATHER_in_PLAY_[NIGHT%d]", night);
+                        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_GODFATHER_in_PLAY_[NIGHT%d]", night);
                         addConditionToTempRuleName(rs,kb, 0, "METADATA", buff);
                     }
 
@@ -677,7 +677,7 @@ static void roleMetaDataCounting(RuleSet* rs, KnowledgeBase* kb, int numPlayers,
                     else
                     {
                         //The VIGORMORTIS can NOT be in play for this
-                        snprintf(buff, STRING_BUFF_SIZE, "is_VIGORMORTIS_in_PLAY_[NIGHT%d]", night);
+                        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_VIGORMORTIS_in_PLAY_[NIGHT%d]", night);
                         addConditionToTempRuleName(rs,kb, 0, "METADATA", buff);
                     }
                     if (isGodFatherInPlay == 1)
@@ -689,7 +689,7 @@ static void roleMetaDataCounting(RuleSet* rs, KnowledgeBase* kb, int numPlayers,
                     else
                     {
                         //The GODFATHER can NOT be in play for this
-                        snprintf(buff, STRING_BUFF_SIZE, "is_GODFATHER_in_PLAY_[NIGHT%d]", night);
+                        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_GODFATHER_in_PLAY_[NIGHT%d]", night);
                         addConditionToTempRuleName(rs,kb, 0, "METADATA", buff);
                     }
 

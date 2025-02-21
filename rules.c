@@ -370,8 +370,9 @@ void getAssignment(int satisfied[MAX_VARS_IN_RULE][MAX_SET_ELEMENTS], int length
     
 }
 
-static void applyRule(Rule* rule, KnowledgeBase* kb, int assignement[MAX_VARS_IN_RULE], int verbose)
+static int applyRule(Rule* rule, KnowledgeBase* kb, int assignement[MAX_VARS_IN_RULE], int verbose)
 {
+    int foundNovelInformation = 0;
     if (rule->resultVarName >= 0)
     { //Result found in condition
         
@@ -390,9 +391,10 @@ static void applyRule(Rule* rule, KnowledgeBase* kb, int assignement[MAX_VARS_IN
                 addKnowledge(kb, rule->resultFromSet, assignement[rule->resultVarName], function);
             }
         }
-        if (novelInformation == 1 && verbose == 1)
+        if (novelInformation == 1)
         {
-            printRuleAssignment(rule, kb, assignement, assignement[rule->resultVarName]);
+            foundNovelInformation = 1;
+            if (verbose) printRuleAssignment(rule, kb, assignement, assignement[rule->resultVarName]);
         }
         
     }
@@ -426,9 +428,10 @@ static void applyRule(Rule* rule, KnowledgeBase* kb, int assignement[MAX_VARS_IN
                     }
                 }
             }
-            if (novelInformation == 1 && verbose == 1)
+            if (novelInformation)
             {
-                printRuleAssignment(rule, kb, assignement, setElement);
+                foundNovelInformation = 1;
+                if (verbose) printRuleAssignment(rule, kb, assignement, setElement);
             }
         }
         
@@ -456,17 +459,23 @@ static void applyRule(Rule* rule, KnowledgeBase* kb, int assignement[MAX_VARS_IN
                 addKnowledge(kb, rule->resultFromSet, varToSub, function);
             }
         }
-        if (novelInformation == 1 && verbose == 1)
+        if (novelInformation)
         {
-            printRuleAssignment(rule, kb, assignement, varToSub);
+            foundNovelInformation = 1;
+            if (verbose) printRuleAssignment(rule, kb, assignement, varToSub);
         }
     }
+    return foundNovelInformation;
 }
 
 int satisfiesRule(Rule* rule, KnowledgeBase* kb, int verbose)
 {
 
     int satisfied[MAX_VARS_IN_RULE][MAX_SET_ELEMENTS];
+    int lengths[MAX_VARS_IN_RULE];
+    int assignement[MAX_VARS_IN_RULE];
+
+    int foundNovelSolution = 0;
     for (int var = 0; var < MAX_VARS_IN_RULE; var++)
     {
         for (int element = 0; element < MAX_SET_ELEMENTS; element++)
@@ -536,8 +545,7 @@ int satisfiesRule(Rule* rule, KnowledgeBase* kb, int verbose)
     
     //If it satifies the rule continue by iterating 
 
-    int lengths[MAX_VARS_IN_RULE];
-    int assignement[MAX_VARS_IN_RULE];
+    
     for (int var = 0; var < rule->varCount; var++)
     {
         int lengthCounter = 0;
@@ -572,7 +580,7 @@ int satisfiesRule(Rule* rule, KnowledgeBase* kb, int verbose)
                 }
                 //If the assignement is valid
                 //Update Knowledge Base
-                applyRule(rule, kb, assignement, verbose);
+                foundNovelSolution |= applyRule(rule, kb, assignement, verbose); //If some novel information was added
             }
             else
             { //Lengths > rule->varCount   ---> Multiple valid substitutions
@@ -590,8 +598,7 @@ int satisfiesRule(Rule* rule, KnowledgeBase* kb, int verbose)
                     }
                     //If the assignement is valid
                     //Update Knowledge Base
-                    
-                    applyRule(rule, kb, assignement, verbose);
+                    foundNovelSolution |= applyRule(rule, kb, assignement, verbose); //If some novel information was added
                 }
             }
 
@@ -606,7 +613,7 @@ int satisfiesRule(Rule* rule, KnowledgeBase* kb, int verbose)
                 }
                 //If the assignement is valid
                 //Update Knowledge Base
-                applyRule(rule, kb, assignement, verbose);
+                foundNovelSolution |= applyRule(rule, kb, assignement, verbose); //If some novel information was added
             }
         }
         
@@ -639,20 +646,22 @@ int satisfiesRule(Rule* rule, KnowledgeBase* kb, int verbose)
             if (validAssignment == 1)
             { //If the assignement is valid
                 //Update Knowledge Base
-                applyRule(rule, kb, assignement, verbose);
+                foundNovelSolution |= applyRule(rule, kb, assignement, verbose); //If some novel information was added
             }
         }
     }
     
-    return 1;
+    return foundNovelSolution;
 }
 
-void inferknowledgeBaseFromRules(RuleSet* rs, KnowledgeBase* kb, int verbose)
+int inferknowledgeBaseFromRules(RuleSet* rs, KnowledgeBase* kb, int verbose)
 {
+    int foundNovelSolution = 0;
     for (int i = 0; i < rs->NUM_RULES; i++)
     {
-        int result = satisfiesRule(rs->RULES[i], kb, verbose);
+        foundNovelSolution |= satisfiesRule(rs->RULES[i], kb, verbose);
     }
+    return foundNovelSolution;
 }
 
 void printRules(RuleSet* rs, KnowledgeBase* kb)
