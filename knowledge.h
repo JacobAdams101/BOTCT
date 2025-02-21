@@ -35,11 +35,18 @@ typedef struct {
     char *ELEMENT_NAMES[NUM_SETS][MAX_SET_ELEMENTS];
 } KnowledgeBase;
 
+typedef struct {
+    int KNOWLEDGE_BASE[NUM_SETS][MAX_SET_ELEMENTS][FUNCTION_RESULT_SIZE*INT_LENGTH];
+    int tally;
+} ProbKnowledgeBase;
+
 KnowledgeBase* initKB(int NUM_PLAYERS, int NUM_DAYS);
+ProbKnowledgeBase* initProbKB();
 
 void copyTo(KnowledgeBase* dest, KnowledgeBase* src);
 
 void resetKnowledgeBase(long knowledgeBase[NUM_SETS][MAX_SET_ELEMENTS][FUNCTION_RESULT_SIZE]);
+void resetProbKnowledgeBase(ProbKnowledgeBase* tally);
 
 int getSetIDWithName(KnowledgeBase* kb, char* set, int validate);
 int getSetFunctionIDWithName(KnowledgeBase* kb, int setID, char* function, int validate);
@@ -48,7 +55,10 @@ int getSetElementIDWithName(KnowledgeBase* kb, int setID, char* element, int val
 void getIndexAndBit(int* index, int* bit, int functionID);
 
 void resetElement(KnowledgeBase* kb, int set, int element);
+
 void mergeKnowledge(KnowledgeBase* kb, KnowledgeBase* x);
+void mergeProbKnowledge(ProbKnowledgeBase* probkb, ProbKnowledgeBase* x);
+
 void addKnowledge(KnowledgeBase* kb,  int set, int element, int function);
 void addKnowledgeName(KnowledgeBase* kb,  char* set, int element, char* function);
 
@@ -57,6 +67,11 @@ int isKnownName(KnowledgeBase* kb,  char* set, int element, char* function);
 
 int hasExplicitContradiction(KnowledgeBase* kb);
 
+void addKBtoProbTally(KnowledgeBase* kb, ProbKnowledgeBase* tally);
+int getProbIntPercentage(ProbKnowledgeBase* tally, int set, int element, int function);
+
 void printKnowledgeBase(KnowledgeBase* kb);
 void printPlayerTable(KnowledgeBase* kb, int night);
+void printProbPlayerTable(KnowledgeBase* kb, ProbKnowledgeBase* probkb, int night);
 void printRoleTable(KnowledgeBase* kb, int night);
+void printProbRoleTable(KnowledgeBase* kb, ProbKnowledgeBase* probkb, int night);

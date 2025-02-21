@@ -182,6 +182,16 @@ KnowledgeBase* initKB(int NUM_PLAYERS, int NUM_DAYS)
     return kb;
 }
 
+ProbKnowledgeBase* initProbKB()
+{
+    //Allocate memory
+    ProbKnowledgeBase* tally = (ProbKnowledgeBase*) malloc(sizeof(ProbKnowledgeBase));
+
+    resetProbKnowledgeBase(tally);
+
+    return tally;
+}
+
 void copyTo(KnowledgeBase* dest, KnowledgeBase* src)
 {
     //Deep copy knowlegde base (these might change)
@@ -291,6 +301,21 @@ void resetKnowledgeBase(long knowledgeBase[NUM_SETS][MAX_SET_ELEMENTS][FUNCTION_
     }
 }
 
+void resetProbKnowledgeBase(ProbKnowledgeBase* tally)
+{
+    for (int set = 0; set < NUM_SETS; set++)
+    {
+        for (int element = 0; element < MAX_SET_ELEMENTS; element++)
+        {
+            for (int function = 0; function < FUNCTION_RESULT_SIZE*INT_LENGTH; function++)
+            {
+                tally->KNOWLEDGE_BASE[set][element][function] = 0;
+            }
+        }
+    }
+    tally->tally = 0;
+}
+
 void resetElement(KnowledgeBase* kb, int set, int element)
 {
     for (int i = 0; i < FUNCTION_RESULT_SIZE; i++)
@@ -311,6 +336,21 @@ void mergeKnowledge(KnowledgeBase* kb, KnowledgeBase* x)
             }
         }
     }
+}
+
+void mergeProbKnowledge(ProbKnowledgeBase* probkb, ProbKnowledgeBase* x)
+{
+    for (int set = 0; set < NUM_SETS; set++)
+    {
+        for (int element = 0; element < MAX_SET_ELEMENTS; element++)
+        {
+            for (int function = 0 ; function < FUNCTION_RESULT_SIZE*INT_LENGTH; function++)
+            {
+                probkb->KNOWLEDGE_BASE[set][element][function] += x->KNOWLEDGE_BASE[set][element][function];
+            }
+        }
+    }
+    probkb->tally += x->tally;
 }
 
 void addKnowledge(KnowledgeBase* kb, int set, int element, int function)
@@ -368,7 +408,37 @@ int hasExplicitContradiction(KnowledgeBase* kb)
     return 0;
 }
 
+void addKBtoProbTally(KnowledgeBase* kb, ProbKnowledgeBase* tally)
+{
 
+    for (int set = 0; set < NUM_SETS; set++)
+    {
+        for (int element = 0; element < MAX_SET_ELEMENTS; element++)
+        {
+            for(int function = 0; function < FUNCTION_RESULT_SIZE*INT_LENGTH; function++)
+            {
+                if (isKnown(kb, set, element, function))
+                {
+                    tally->KNOWLEDGE_BASE[set][element][function]++;
+                }
+            }
+        }
+    }
+    tally->tally++;
+}
+
+int getProbIntPercentage(ProbKnowledgeBase* tally, int set, int element, int function)
+{
+    return (tally->KNOWLEDGE_BASE[set][element][function]*100) / tally->tally;
+}
+
+int getProbIntPercentageName(ProbKnowledgeBase* tally, KnowledgeBase* kb, char* set, int element, char* function)
+{
+    int setID = getSetIDWithName(kb, set, 1);
+    int functionID = getSetFunctionIDWithName(kb, setID, function, 1);
+
+    return getProbIntPercentage(tally, setID, element, functionID);
+}
 
 void printKnowledgeBase(KnowledgeBase* kb)
 {
@@ -379,10 +449,7 @@ void printKnowledgeBase(KnowledgeBase* kb)
         {
             for(int function = 0; function < FUNCTION_RESULT_SIZE*INT_LENGTH; function++)
             {
-                int index = function / INT_LENGTH;
-                int bit = function - (index * INT_LENGTH);
-                
-                if (((kb->KNOWLEDGE_BASE[set][element][index] >> bit) & 1) == 1)
+                if (isKnown(kb, set, element, function))
                 {
                     printf("%s(%d:%s), ", kb->FUNCTION_NAME[set][function], element, kb->SET_NAMES[set]);
                 }
@@ -589,6 +656,130 @@ void printRoleTable(KnowledgeBase* kb, int night)
             else
             {
                 printf(" ? ");
+            }
+            printf("|");
+        }
+    }
+    printf("\n");
+    
+}
+
+void printProbPlayerTable(KnowledgeBase* kb, ProbKnowledgeBase* probkb, int night)
+{
+    char buff[64];
+
+    printf("         |  ");
+    for (int role = 0; role < NUM_BOTCT_ROLES; role++)
+    {
+        //Only print roles in the script
+        if (ROLE_IN_SCRIPT[role] == 1)
+        {
+            for (int c = 0; c < 3; c++)
+            {
+                printf("%c", ROLE_NAMES[role][c]);
+            }
+            printf("  |  ");
+        }
+    }
+    printf("\n");
+    printf("---------|");
+    for (int role = 0; role < NUM_BOTCT_ROLES; role++)
+    {
+        //Only print roles in the script
+        if (ROLE_IN_SCRIPT[role] == 1)
+        {
+            printf("-------|");
+        }
+    }
+    printf("\n");
+    int set = 0;
+    for (int element = 0; element < kb->SET_SIZES[set]; element++)
+    {
+
+
+        printPlayerName(kb->ELEMENT_NAMES[0][element], 9);
+        printf("|");
+        for (int role = 0; role < NUM_BOTCT_ROLES; role++)
+        {
+            //Only print roles in the script
+            if (ROLE_IN_SCRIPT[role] == 1)
+            {
+                snprintf(buff, 64, "is_%s_[NIGHT%d]", ROLE_NAMES[role], night);
+                int isRole = getProbIntPercentageName(probkb, kb, "PLAYERS", element, buff); 
+                snprintf(buff, 64, "is_NOT_%s_[NIGHT%d]", ROLE_NAMES[role], night);
+                int isNotRole = getProbIntPercentageName(probkb, kb, "PLAYERS", element, buff);
+                
+                if (isRole == 100)
+                {
+                    printf("   *   ");
+                }
+                else if (isNotRole == 100)
+                {
+                    printf("       ");
+                }
+                else
+                {
+                    printf("%03d-%03d", isRole, isNotRole);
+                }
+                printf("|");
+                }
+        }
+        printf("\n");
+    }
+}
+
+void printProbRoleTable(KnowledgeBase* kb, ProbKnowledgeBase* probkb, int night)
+{
+    char buff[64];
+
+    printf("         |  ");
+    for (int role = 0; role < NUM_BOTCT_ROLES; role++)
+    {
+        //Only print roles in the script
+        if (ROLE_IN_SCRIPT[role] == 1)
+        {
+            for (int c = 0; c < 3; c++)
+            {
+                printf("%c", ROLE_NAMES[role][c]);
+            }
+            printf("  |  ");
+        }
+    }
+    printf("\n");
+    printf("---------|");
+    for (int role = 0; role < NUM_BOTCT_ROLES; role++)
+    {
+        //Only print roles in the script
+        if (ROLE_IN_SCRIPT[role] == 1)
+        {
+            printf("-------|");
+        }
+    }
+    //printf("-----------|------|");
+    printf("\n");
+    int element = 0;
+    printf("IN GAME  |");
+    for (int role = 0; role < NUM_BOTCT_ROLES; role++)
+    {
+        //Only print roles in the script
+        if (ROLE_IN_SCRIPT[role] == 1)
+        {
+            snprintf(buff, 64, "is_%s_in_PLAY_[NIGHT%d]", ROLE_NAMES[role], night);
+            int isRoleInPlay = getProbIntPercentageName(probkb, kb, "METADATA", element, buff); 
+            snprintf(buff, 64, "is_NOT_%s_in_PLAY_[NIGHT%d]", ROLE_NAMES[role], night);
+            int isNotRoleInPlay = getProbIntPercentageName(probkb, kb, "METADATA", element, buff);
+
+            if (isRoleInPlay == 100)
+            {
+                printf("   *   ");
+            }
+            else if (isNotRoleInPlay == 100)
+            {
+                printf("       ");
+            }
+            else
+            {
+                printf("%03d-%03d", isRoleInPlay, isNotRoleInPlay);
             }
             printf("|");
         }
