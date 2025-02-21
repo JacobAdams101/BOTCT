@@ -42,7 +42,11 @@ static int inferImplicitFacts(KnowledgeBase* kb, RuleSet* rs, int numRounds, int
         
     for (int i = 0; i < numRounds; i++)
     {
-        inferknowledgeBaseFromRules(rs, kb, verbose);
+        int foundNovelSolution = inferknowledgeBaseFromRules(rs, kb, verbose);
+        if (foundNovelSolution == 0)
+        { //If nothing new was found
+            break;
+        }
     }
     //Check for contradictions
     return hasExplicitContradiction(kb);
