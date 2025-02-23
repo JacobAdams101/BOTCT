@@ -101,11 +101,8 @@ int getRoleIdFromString(char* roleName)
     return -1;
 }
 
-int getRoleIDInput(char* message)
+static void printRolesInScript()
 {
-    char input[STRING_BUFF_SIZE]; // Declare a character array to hold the string
-    int roleID = -1;
-    printf("%s:\n", message);
     for (int i = 0; i < NUM_BOTCT_ROLES; i++)
     {
         if (ROLE_IN_SCRIPT[i] == 1)
@@ -113,6 +110,14 @@ int getRoleIDInput(char* message)
             printf("%s\n", ROLE_NAMES[i]);
         }
     }
+}
+
+int getRoleIDInput(char* message)
+{
+    char input[STRING_BUFF_SIZE]; // Declare a character array to hold the string
+    int roleID = -1;
+    printf("%s:\n", message);
+    printRolesInScript();
     while (roleID == -1)
     {
         scanf("%255s", input); // Read a string (up to 99 characters to leave space for the null terminator)
@@ -253,10 +258,7 @@ static void noptions(KnowledgeBase* kb)
     scanf("%d", &night); // Read player ID
 
 
-    for (int i = 0; i < NUM_BOTCT_ROLES; i++)
-    {
-        printf("%s\n", ROLE_NAMES[i]);
-    }
+    printRolesInScript();
     for (int j = 0; j < n; j++)
     {
         roleIDs[j] = -1;
@@ -341,45 +343,128 @@ static void diedInNight(KnowledgeBase* kb)
 {
     char buff[STRING_BUFF_SIZE]; // Declare a character array to hold the string 
 
-    int playerID;
     int night;
 
-    printf("ENERTING: PLAYER DIED IN NIGHT\n");
+    printf("ENERTING: PLAYER(s) DIED IN NIGHT\n");
 
-    playerID = getPlayerIDInput(kb, "Which player died in the night?"); // Read player ID
-    //printf("For player?:\n");
-    //scanf("%d", &playerID); 
+    int n;
+    printf("Num Deaths?:\n");
+    scanf("%d", &n); // Read player ID
 
     printf("On night?:\n");
     scanf("%d", &night); // Read player ID
 
-    snprintf(buff, STRING_BUFF_SIZE, "is_DEAD_[NIGHT%d]", night);
-    addKnowledgeName(kb, "PLAYERS", playerID, buff);
-    snprintf(buff, STRING_BUFF_SIZE, "died_in_NIGHT_[NIGHT%d]", night);
-    addKnowledgeName(kb, "PLAYERS", playerID, buff);
+    int playerID[n];
+
+    for (int i = 0; i < n; i++)
+    {
+        playerID[i] = getPlayerIDInput(kb, "Which player(s) died in the night?"); // Read player ID
+    }
+
+    for (int i = 0; i < kb->SET_SIZES[0]; i++)
+    {
+        int inSet = 0;
+        for (int j = 0; j < n; j++)
+        {
+            if (playerID[j] == i) inSet = 1;
+        }
+        if (inSet)
+        {
+            snprintf(buff, STRING_BUFF_SIZE, "SLEEP_DEATH_[NIGHT%d]", night);
+            addKnowledgeName(kb, "PLAYERS", i, buff);
+        }
+        else
+        {
+            snprintf(buff, STRING_BUFF_SIZE, "NOT_SLEEP_DEATH_[NIGHT%d]", night);
+            addKnowledgeName(kb, "PLAYERS", i, buff);
+        }
+    }
 }
 
 static void hung(KnowledgeBase* kb)
 {
     char buff[STRING_BUFF_SIZE]; // Declare a character array to hold the string 
 
-    int playerID;
     int night;
 
-    printf("ENERTING: PLAYER HUNG\n");
+    printf("ENERTING: PLAYER(s) HUNG\n");
 
-    playerID = getPlayerIDInput(kb, "Which player was hung?"); // Read player ID
-    //printf("For player?:\n");
-    //scanf("%d", &playerID); 
+    int n;
+    printf("Num Deaths?:\n");
+    scanf("%d", &n); // Read player ID
 
     printf("On night?:\n");
     scanf("%d", &night); // Read player ID
 
-    snprintf(buff, STRING_BUFF_SIZE, "is_DEAD_[NIGHT%d]", night);
-    addKnowledgeName(kb, "PLAYERS", playerID, buff);
-    snprintf(buff, STRING_BUFF_SIZE, "died_by_HANGING_[NIGHT%d]", night);
-    addKnowledgeName(kb, "PLAYERS", playerID, buff);
+    int playerID[n];
+
+    for (int i = 0; i < n; i++)
+    {
+        playerID[i] = getPlayerIDInput(kb, "Which player(s) were hung?"); // Read player ID
+    }
+
+    for (int i = 0; i < kb->SET_SIZES[0]; i++)
+    {
+        int inSet = 0;
+        for (int j = 0; j < n; j++)
+        {
+            if (playerID[j] == i) inSet = 1;
+        }
+        if (inSet)
+        {
+            snprintf(buff, STRING_BUFF_SIZE, "HANGING_DEATH_[NIGHT%d]", night);
+            addKnowledgeName(kb, "PLAYERS", i, buff);
+        }
+        else
+        {
+            snprintf(buff, STRING_BUFF_SIZE, "NOT_HANGING_DEATH_[NIGHT%d]", night);
+            addKnowledgeName(kb, "PLAYERS", i, buff);
+        }
+    }
 }
+
+static void nominationDeath(KnowledgeBase* kb)
+{
+    char buff[STRING_BUFF_SIZE]; // Declare a character array to hold the string 
+
+    int night;
+
+    printf("ENERTING: PLAYER(s) NOMINATION DEATH\n");
+
+    int n;
+    printf("Num Deaths?:\n");
+    scanf("%d", &n); // Read player ID
+
+    printf("On night?:\n");
+    scanf("%d", &night); // Read player ID
+
+    int playerID[n];
+
+    for (int i = 0; i < n; i++)
+    {
+        playerID[i] = getPlayerIDInput(kb, "Which player(s) died when nominating someone?"); // Read player ID
+    }
+
+    for (int i = 0; i < kb->SET_SIZES[0]; i++)
+    {
+        int inSet = 0;
+        for (int j = 0; j < n; j++)
+        {
+            if (playerID[j] == i) inSet = 1;
+        }
+        if (inSet)
+        {
+            snprintf(buff, STRING_BUFF_SIZE, "NOMINATION_DEATH_[NIGHT%d]", night);
+            addKnowledgeName(kb, "PLAYERS", i, buff);
+        }
+        else
+        {
+            snprintf(buff, STRING_BUFF_SIZE, "NOT_NOMINATION_DEATH_[NIGHT%d]", night);
+            addKnowledgeName(kb, "PLAYERS", i, buff);
+        }
+    }
+}
+
 
 static void reset(KnowledgeBase* kb)
 {
@@ -1005,7 +1090,7 @@ static void addPingRule(KnowledgeBase* kb, RuleSet* rs)
     }
 }
 
-void add_info(KnowledgeBase* kb, RuleSet* rs, int numDays)
+int add_info(KnowledgeBase* kb, RuleSet* rs, int numDays)
 {
     char buff[STRING_BUFF_SIZE]; // Declare a character array to hold the string 
     printHeading("ADD INFORMATION");
@@ -1021,10 +1106,12 @@ void add_info(KnowledgeBase* kb, RuleSet* rs, int numDays)
         char RED_HERRING[] = "RH";
         char DIED[] = "D";
         char HUNG[] = "H";
+        char NOMINATION_DEATH[] = "ND";
         char FAILED_HANGING[] = "FH";
         char ALIVE[] = "A";
         char RESET[] = "RST";
-        char FINISH[] = "FINISH";
+        char FINISH[] = "SHOWDATA";
+        char FINISH_PROB[] = "SHOWPROB";
         printf("ADD INFORMATION:\n");
         printf("- Type '%s' to enter what role a player was shown:\n", SHOWN_ROLE);
         printf("- Type '%s' to enter a role not in the game:\n", ROLE_NOT_IN_GAME);
@@ -1033,13 +1120,15 @@ void add_info(KnowledgeBase* kb, RuleSet* rs, int numDays)
         printf("- Type '%s' to submit that a player that is confirmed poisoned:\n", POISONED);
         printf("- Type '%s' to submit that a player that is confirmed red herring:\n", RED_HERRING);
         printf("- Type '%s' to submit that a player died :\n", DIED);
+        printf("- Type '%s' to submit that a player that died when nominating a player:\n", NOMINATION_DEATH);
         printf("- Type '%s' to submit that a player was hung and died:\n", HUNG);
         printf("- Type '%s' to submit that a player was hung, but didn't die:\n", FAILED_HANGING);
-        printf("- Type '%s' to submit that a player that was dead is now back alive:\n", ALIVE);
+        printf("- Type '%s' to submit that everyone else is still alive:\n", ALIVE);
         printf("\n");
         printf("- Type '%s' to reset a players data:\n", RESET);
         printf("\n");
         printf("- Type '%s' to finish entering data:\n", FINISH);
+        printf("- Type '%s' to finish entering data and calculate the probabaility:\n", FINISH_PROB);
 
         
  
@@ -1077,6 +1166,10 @@ void add_info(KnowledgeBase* kb, RuleSet* rs, int numDays)
         {
             hung(kb);
         }
+        else if (strcmp(buff,NOMINATION_DEATH) == 0)
+        {
+            nominationDeath(kb);
+        }
         else if (strcmp(buff,FAILED_HANGING) == 0)
         {
             //TODO
@@ -1092,7 +1185,12 @@ void add_info(KnowledgeBase* kb, RuleSet* rs, int numDays)
         else if (strcmp(buff,FINISH) == 0)
         {
             printf("EXITING...");
-            running = 0;
+            return 0;
+        }
+        else if (strcmp(buff,FINISH_PROB) == 0)
+        {
+            printf("EXITING...");
+            return 1;
         }
         else
         {
@@ -1100,4 +1198,6 @@ void add_info(KnowledgeBase* kb, RuleSet* rs, int numDays)
         }
 
     }
+
+    return 0;
 }

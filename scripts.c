@@ -375,7 +375,7 @@ static void roleMutuallyExclusive(RuleSet* rs, KnowledgeBase* kb, int numPlayers
         {
             //<PLAYER_A>is_<ROLE> AND <PLAYER_A>is_ALIVE AND <PLAYER_B>is_ALIVE => <PLAYER_B>is_NOT<ROLE>
             // IDEA: Only one alive player can have a role
-            setTempRuleParams(rs, 2,0);
+            setTempRuleParams(rs, 2,1);
             snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s_[NIGHT%d]", ROLE_NAMES[i], night);
             setTempRuleResultName(rs, kb, 1, "PLAYERS", buff);
             snprintf(buff, STRING_BUFF_SIZE, "is_%s_[NIGHT%d]", ROLE_NAMES[i], night);
@@ -455,14 +455,23 @@ static void roleMetaData(RuleSet* rs, KnowledgeBase* kb, int numPlayers, int num
             addConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff);
             pushTempRule(rs);
 
-            //<PLAYER>is_<ROLE> AND <PLAYER>is_ALIVE => <METADATA>is_<ROLE>_in_PLAY
+            //<PLAYER>is_<ROLE> AND <PLAYER>is_ALIVE => <METADATA>is_<ROLE>_ALIVE
+            // IDEA: If a player is a role and is alive that role is in play and alive (obviously)
+            setTempRuleParams(rs, 1,0);
+            snprintf(buff, STRING_BUFF_SIZE, "is_%s_ALIVE_[NIGHT%d]", ROLE_NAMES[i], night);
+            setTempRuleResultName(rs, kb, -1, "METADATA", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_%s_[NIGHT%d]", ROLE_NAMES[i], night);
+            addConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_ALIVE_[NIGHT%d]", night);
+            addConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff);
+            pushTempRule(rs);
+
+            //<PLAYER>is_<ROLE> => <METADATA>is_<ROLE>_in_PLAY
             // IDEA: If a player is a role and is alive that role is in play and alive (obviously)
             setTempRuleParams(rs, 1,0);
             snprintf(buff, STRING_BUFF_SIZE, "is_%s_in_PLAY_[NIGHT%d]", ROLE_NAMES[i], night);
             setTempRuleResultName(rs, kb, -1, "METADATA", buff);
             snprintf(buff, STRING_BUFF_SIZE, "is_%s_[NIGHT%d]", ROLE_NAMES[i], night);
-            addConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff);
-            snprintf(buff, STRING_BUFF_SIZE, "is_ALIVE_[NIGHT%d]", night);
             addConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff);
             pushTempRule(rs);
 
@@ -1313,6 +1322,87 @@ static void poisonRules(RuleSet* rs, KnowledgeBase* kb, int numPlayers, int numM
 
 }
 
+static void deathRules(RuleSet* rs, KnowledgeBase* kb, int numPlayers, int numMinions, int numDemons, int baseOutsiders, int numDays)
+{
+    //Temporary string buffer for writing names into
+    char buff[STRING_BUFF_SIZE];
+    // ===========================================
+    //  Death rules
+    // ===========================================
+    /*
+     * IDEA: There can be one red herring for the fortune teller
+     * red herrings do not change with night
+    */
+
+    //If a player died: the player is dead
+    for (int night = 0; night < numDays; night++)
+    {
+        //<METADATA>SLEEP_DEATH_NIGHT<i> => <PLAYER>is_DEAD_NIGHT<i>
+        setTempRuleParams(rs, 1,0);
+        snprintf(buff, STRING_BUFF_SIZE, "is_DEAD_[NIGHT%d]", night);
+        setTempRuleResultName(rs, kb, 0, "PLAYERS", buff);
+        snprintf(buff, STRING_BUFF_SIZE, "SLEEP_DEATH_[NIGHT%d]", night);
+        addConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff);
+        pushTempRule(rs);
+
+        //<METADATA>HANGING_DEATH<i> => <PLAYER>is_DEAD_NIGHT<i>
+        setTempRuleParams(rs, 1,0);
+        snprintf(buff, STRING_BUFF_SIZE, "is_DEAD_[NIGHT%d]", night);
+        setTempRuleResultName(rs, kb, 0, "PLAYERS", buff);
+        snprintf(buff, STRING_BUFF_SIZE, "HANGING_DEATH_[NIGHT%d]", night);
+        addConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff);
+        pushTempRule(rs);
+
+        //<METADATA>NOMINATION_DEATH<i> => <PLAYER>is_DEAD_NIGHT<i>
+        setTempRuleParams(rs, 1,0);
+        snprintf(buff, STRING_BUFF_SIZE, "is_DEAD_[NIGHT%d]", night);
+        setTempRuleResultName(rs, kb, 0, "PLAYERS", buff);
+        snprintf(buff, STRING_BUFF_SIZE, "NOMINATION_DEATH_[NIGHT%d]", night);
+        addConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff);
+        pushTempRule(rs);
+
+        //Contrapositive
+        //<METADATA>is_ALIVE_NIGHT<i> => <PLAYER>NOT_SLEEP_DEATH_NIGHT<i>
+        setTempRuleParams(rs, 1,0);
+        snprintf(buff, STRING_BUFF_SIZE, "NOT_SLEEP_DEATH_[NIGHT%d]", night);
+        setTempRuleResultName(rs, kb, 0, "PLAYERS", buff);
+        snprintf(buff, STRING_BUFF_SIZE, "is_ALIVE_[NIGHT%d]", night);
+        addConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff);
+        pushTempRule(rs);
+
+        //<METADATA>is_ALIVE_NIGHT<i> => <PLAYER>NOT_HANGING_DEATH_NIGHT<i>
+        setTempRuleParams(rs, 1,0);
+        snprintf(buff, STRING_BUFF_SIZE, "NOT_HANGING_DEATH_[NIGHT%d]", night);
+        setTempRuleResultName(rs, kb, 0, "PLAYERS", buff);
+        snprintf(buff, STRING_BUFF_SIZE, "is_ALIVE_[NIGHT%d]", night);
+        addConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff);
+        pushTempRule(rs);
+
+        //<METADATA>is_ALIVE_NIGHT<i> => <PLAYER>NOT_NOMINATION_DEATH_NIGHT<i>
+        setTempRuleParams(rs, 1,0);
+        snprintf(buff, STRING_BUFF_SIZE, "NOT_NOMINATION_DEATH_[NIGHT%d]", night);
+        setTempRuleResultName(rs, kb, 0, "PLAYERS", buff);
+        snprintf(buff, STRING_BUFF_SIZE, "is_ALIVE_[NIGHT%d]", night);
+        addConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff);
+        pushTempRule(rs);
+
+        //Case Analysis
+        //<PLAYER>NOT_SLEEP_DEATH_NIGHT<i> AND <PLAYER>NOT_HANGING_DEATH_NIGHT<i> AND  <PLAYER>NOT_NOMINATION_DEATH_NIGHT<i> => <METADATA>is_ALIVE_NIGHT
+        setTempRuleParams(rs, 1,0);
+        snprintf(buff, STRING_BUFF_SIZE, "is_ALIVE_[NIGHT%d]", night);
+        setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+        snprintf(buff, STRING_BUFF_SIZE, "NOT_NOMINATION_DEATH_[NIGHT%d]", night);
+        addConditionToTempRuleName(rs, kb, 0, "PLAYERS", buff);
+        snprintf(buff, STRING_BUFF_SIZE, "NOT_HANGING_DEATH_[NIGHT%d]", night);
+        addConditionToTempRuleName(rs, kb, 0, "PLAYERS", buff);
+        snprintf(buff, STRING_BUFF_SIZE, "NOT_SLEEP_DEATH_[NIGHT%d]", night);
+        addConditionToTempRuleName(rs, kb, 0, "PLAYERS", buff);
+        pushTempRule(rs);
+
+    }
+
+}
+
 void buildRules(RuleSet* rs, KnowledgeBase* kb, int numPlayers, int numMinions, int numDemons, int baseOutsiders, int numDays)
 {
     //ROLE RULES
@@ -1332,61 +1422,8 @@ void buildRules(RuleSet* rs, KnowledgeBase* kb, int numPlayers, int numMinions, 
 
     //ROLE CONTINUITY ARGUMENTS
     roleContinuityArguments(rs, kb, numPlayers, numMinions, numDemons, baseOutsiders, numDays);
-    
-}
 
-void buildRulesOLD(RuleSet* rs, KnowledgeBase* kb, int numPlayers, int numMinions, int numDemons, int baseOutsiders)
-{
-
-     
-    // ===========================================
-    //  Setup memory
-    // ===========================================
-    printf("-SETUP MEMORY...\n");
-    //Temporary string buffer for writing names into
-    char buff[STRING_BUFF_SIZE];
-    
-    
-
-    
-    
-
-    
-
-
-    
-
-    // ===========================================
-    //  Dead rules
-    // ===========================================
-    //<PLAYER>died_by_HANGING AND <METADATA>is_NOT_SCARLET_WOMAN_in_PLAY=> <PLAYER>is_NOT_DEMON
-    setTempRuleParams(rs, 2,0);
-    
-    setTempRuleResultName(rs, kb, 0, "PLAYERS", "is_NOT_DEMON");
-    addConditionToTempRuleName(rs,kb, 0, "PLAYERS", "died_by_HANGING");
-    addConditionToTempRuleName(rs,kb, 1, "METADATA", "is_NOT_SCARLET_WOMAN_in_PLAY");
-    pushTempRule(rs);
-
-    //If a player died: the player is dead
-    for (int i = 0; i < 10; i++)
-    {
-        //<METADATA>died_NIGHT<i> => <PLAYER>is_DEAD
-        setTempRuleParams(rs, 1,0);
-        
-        setTempRuleResultName(rs, kb, 0, "PLAYERS", "is_DEAD");
-        snprintf(buff, STRING_BUFF_SIZE, "died_NIGHT%d", i);
-        addConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff);
-        pushTempRule(rs);
-
-    }
-    
-    // ===========================================
-    //  Poison rules
-    // ===========================================
-    for (int i = 0; i < 10; i++)
-    {
-        
-
-    }
+    //DEATH RULES
+    deathRules(rs, kb, numPlayers, numMinions, numDemons, baseOutsiders, numDays);
     
 }
