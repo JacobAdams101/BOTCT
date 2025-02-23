@@ -37,6 +37,11 @@
 
 #define NUM_SOLVE_STEPS 5
 
+static int getRandInt(int min, int max)
+{
+    return (rand() % (max - min)) + min;
+}
+
 static int inferImplicitFacts(KnowledgeBase* kb, RuleSet* rs, int numRounds, int verbose)
 {
         
@@ -52,78 +57,125 @@ static int inferImplicitFacts(KnowledgeBase* kb, RuleSet* rs, int numRounds, int
     return hasExplicitContradiction(kb);
 }
 
-struct inferFactsByContradictionArgs
+struct getProbApproxArgs
 {
     KnowledgeBase* kb;
     KnowledgeBase* contradiction_kb;
+    ProbKnowledgeBase* determinedInNWorlds;
     RuleSet* rs;
-    int min;
-    int max;
+    int numIterations;
+    //int min;
+    //int max;
 };
-static void* inferFactsByContradiction(void* void_arg)
+static void buildWorld(KnowledgeBase* contradiction_kb, ProbKnowledgeBase* determinedInNWorlds, RuleSet* rs)
 {
-    struct inferFactsByContradictionArgs *args = (struct inferFactsByContradictionArgs*) void_arg; //Get arguments by casting
-
-    KnowledgeBase* kb = args->kb;
-    KnowledgeBase* contradiction_kb = args->contradiction_kb;
-    RuleSet* rs = args->rs;
-    int min = args->min;
-    int max = args->max;
-    
-    //see if it's possible to rule out any further worlds
-    //proof by contradiction
-    for (int player = min; player < max; player++)
+    char buff[64];
+    /*
+     * IDEA: Loop through all important information to try 
+     * and build some worlds where every play is assigned a role
+     * After each step infer as much information as possible checking to see if there are contradictions
+     * IF: there are contradiction STOP
+     * ELSE: continue until all player are assigned roles
+     * once/if every player is assigned roles add this to the tally
+    */
+    for (int night = 0; night < 5; night++)
     {
-        for (int function = 0; function < INT_LENGTH*FUNCTION_RESULT_SIZE; function++)
+        
+        for (int player = 0; player < contradiction_kb->SET_SIZES[0]; player++)
         {
-            int functionNeg;
-            // Using the fact KB[2n] = A KB[2n+1] = NOT A
-            if (function % 2 == 0)
+            //printf("NIGHT %d PLAYER %d\n", night, player);
+            int avaliableRoles = 0;
+            for (int roleID = 0; roleID < NUM_BOTCT_ROLES; roleID++)
             {
-                functionNeg = function+1;
+                snprintf(buff, 64, "is_NOT_%s_[NIGHT%d]", ROLE_NAMES[roleID], night);
+                int isNotRole = isKnownName(contradiction_kb, "PLAYERS", player, buff);
+                if (isNotRole == 0)
+                {
+                    avaliableRoles++;
+                } 
             }
-            else
+            if (avaliableRoles > 1)
             {
-                functionNeg = function-1;
-            }
-
-            if (isKnown(kb, 0, player, function) == 0 && isKnown(kb, 0, player, functionNeg) == 0)
-            { //If this is not already assumed
-                //Create copy of main space to look for contradiction
-                copyTo(contradiction_kb, kb);
+                int rand = getRandInt(0, avaliableRoles);
+                int selectedRoleID = -1;
+                int isNotRole;
+                do
+                {
+                    selectedRoleID++;
+                    snprintf(buff, 64, "is_NOT_%s_[NIGHT%d]", ROLE_NAMES[selectedRoleID], night);
+                    isNotRole = isKnownName(contradiction_kb, "PLAYERS", player, buff);
+                    if (isNotRole == 0)
+                    {
+                        rand--;
+                    } 
+                    
+                } while (rand >= 0);
 
                 //Assume true
-                addKnowledge(contradiction_kb, 0, player, function);
-
+                snprintf(buff, 64, "is_%s_[NIGHT%d]", ROLE_NAMES[selectedRoleID], night);
+                addKnowledgeName(contradiction_kb, "PLAYERS", player, buff);
                 //Infer knowledge (to see if a contradiction arises)
-                if (inferImplicitFacts(contradiction_kb, rs, NUM_SOLVE_STEPS, 0) == 1)
+                
+                if (inferImplicitFacts(contradiction_kb, rs, NUM_SOLVE_STEPS/2, 0) == 1)
                 { //If contradiction found by only adding "function" to assumptions we know NOT function is true 
-                    //Update KB
-                    printf("FOUND CONTRADICTION: %s(%d:%s) => %s(%d:%s)\n", kb->FUNCTION_NAME[0][function], player, kb->SET_NAMES[0], kb->FUNCTION_NAME[0][functionNeg], player, kb->SET_NAMES[0]);
-                    addKnowledge(kb, 0, player, functionNeg);
+                    printf("WORLD HAD CONRADICTION!\n");
+                    return;
                 }
+                    
+                
             }
         }
     }
+    printf("FOUND WORLD!\n");
+    addKBtoProbTally(contradiction_kb, determinedInNWorlds);
+}
+static void* getProbApprox(void* void_arg)
+{
+    //Arguments
+    struct getProbApproxArgs *args = (struct getProbApproxArgs*) void_arg; //Get arguments by casting
+    //Upack arguments
+    KnowledgeBase* kb = args->kb;
+    KnowledgeBase* contradiction_kb = args->contradiction_kb;
+    ProbKnowledgeBase* determinedInNWorlds = args->determinedInNWorlds;
+    RuleSet* rs = args->rs;
+    int numIterations = args->numIterations;
+
+    
+    for (int i = 0; i < numIterations; i++)
+    {
+        copyTo(contradiction_kb, kb);
+        buildWorld(contradiction_kb, determinedInNWorlds, rs);
+    }
     return NULL;
 }
+/*
+static int min(int a, int b)
+{
+    return a < b ? a : b;
+}
+*/
 
 static void solve(KnowledgeBase* kb, RuleSet* rs, int NUM_PLAYERS, int NUM_MINIONS, int NUM_DEMONS,int BASE_OUTSIDERS, int NUM_DAYS)
 {
     char buff[STRING_BUFF_SIZE];
+    //Store tallies of possible worlds
+    ProbKnowledgeBase* worldTally = initProbKB();
+
     KnowledgeBase* revert_kb = initKB(NUM_PLAYERS, NUM_DAYS); //For backup incase of contradictions
 
 
     int NUM_THREADS = 16;
-    KnowledgeBase* thread_kb[NUM_THREADS];
+    int NUM_ITERATIONS = 32;
+
+    ProbKnowledgeBase* thread_tallies[NUM_THREADS];
     KnowledgeBase* contradiction_kb[NUM_THREADS];
     //Thread object
     pthread_t threads[NUM_THREADS];
-    struct inferFactsByContradictionArgs* threadArgs[NUM_THREADS];
+    struct getProbApproxArgs* threadArgs[NUM_THREADS];
     for (int i = 0; i < NUM_THREADS; i++)
     {
-        thread_kb[i] = initKB(NUM_PLAYERS, NUM_DAYS);
         contradiction_kb[i] = initKB(NUM_PLAYERS, NUM_DAYS);
+        thread_tallies[i] = initProbKB();
     }
 
     printf("BEGIN GAME LOOP...\n");
@@ -140,42 +192,53 @@ static void solve(KnowledgeBase* kb, RuleSet* rs, int NUM_PLAYERS, int NUM_MINIO
         contradiction = inferImplicitFacts(kb, rs, NUM_SOLVE_STEPS, 1);
         
 
+        
+        //Commented out for being too slow: further optimisation is needed
+        //NOTE: Re-added after optimisation
+
+
+        //Probability analysis
         /*
-        Commented out for being too slow: further optimisation is needed
+         * IDEA: try setting random elements to true see if the world produces any contradictions
+         * tally up all TRUE functions in worlds without contradictions compute prob estimate off that
+        */
         if (contradiction == 0)
         { //If no immediate contradictions 
-            printHeading("LOOK FOR PROOF BY CONTRADICTION"); //UI HEADING
+            printHeading("PROBABILITY ANALYSIS"); //UI HEADING
             for (int i = 0; i < NUM_THREADS; i++)
             {
-                copyTo(thread_kb[i], kb);
+                resetProbKnowledgeBase(thread_tallies[i]);
             }
             for (int i = 0; i < NUM_THREADS; i++)
             {
                 
                 //Create arguments in strctures to pass into new thread
-                threadArgs[i] = (struct inferFactsByContradictionArgs*) malloc(sizeof(struct inferFactsByContradictionArgs));
+                threadArgs[i] = (struct getProbApproxArgs*) malloc(sizeof(struct getProbApproxArgs));
                 
-                threadArgs[i]->kb = thread_kb[i];
-                threadArgs[i]->contradiction_kb = contradiction_kb[i];
+                threadArgs[i]->kb = kb; //We MUST promise to never touch this in the thread
+                threadArgs[i]->contradiction_kb = contradiction_kb[i]; //Working block of memory
+                threadArgs[i]->determinedInNWorlds = thread_tallies[i]; //The output tallies
                 threadArgs[i]->rs = rs;
-                threadArgs[i]->min = (i*NUM_PLAYERS)/NUM_THREADS;
-                threadArgs[i]->max = ((i+1)*NUM_PLAYERS)/NUM_THREADS;
+                threadArgs[i]->numIterations = NUM_ITERATIONS;
 
-                pthread_create(&threads[i], NULL, &inferFactsByContradiction, (void *) threadArgs[i]);
+                pthread_create(&threads[i], NULL, &getProbApprox, (void *) threadArgs[i]);
                 
             }
+            //Wait for all threads to finish
             for (int i = 0; i < NUM_THREADS; i++)
             {
                 void *aretreive;
                 pthread_join(threads[i], &aretreive);
             }
+            //Compute total tally
+            resetProbKnowledgeBase(worldTally);
             for (int i = 0; i < NUM_THREADS; i++)
             {
                 free(threadArgs[i]);
-                mergeKnowledge(kb, thread_kb[i]);
+                mergeProbKnowledge(worldTally, thread_tallies[i]);
             }
         }
-        */
+        
 
         if (contradiction == 0)
         {
@@ -185,8 +248,19 @@ static void solve(KnowledgeBase* kb, RuleSet* rs, int NUM_PLAYERS, int NUM_MINIO
             {
                 snprintf(buff, STRING_BUFF_SIZE, "ROLE INFORMATION [NIGHT %d]", night);
                 printHeading(buff); //UI HEADING
+                //No longer using deterministic values
                 printPlayerTable(kb, night);
                 printRoleTable(kb, night);
+            }
+            for (int night = 0; night < NUM_DAYS; night++)
+            {
+                snprintf(buff, STRING_BUFF_SIZE, "ROLE INFORMATION [NIGHT %d]", night);
+                printHeading(buff); //UI HEADING
+                //No longer using deterministic values
+                //printPlayerTable(kb, night);
+                //printRoleTable(kb, night);
+                printProbPlayerTable(kb, worldTally, night);
+                printProbRoleTable(kb, worldTally, night);
             }
         }
 
@@ -203,6 +277,8 @@ static void solve(KnowledgeBase* kb, RuleSet* rs, int NUM_PLAYERS, int NUM_MINIO
 
 int main()
 {
+    srand(time(NULL));
+
     int NUM_PLAYERS;
     int NUM_MINIONS;
     int NUM_DEMONS;

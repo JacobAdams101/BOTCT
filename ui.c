@@ -402,6 +402,7 @@ static void addPingRule(KnowledgeBase* kb, RuleSet* rs)
     char inputPingType[STRING_BUFF_SIZE]; // Declare a character array to hold the string 
     char buff[STRING_BUFF_SIZE]; // Declare a character array to hold the string 
 
+    //TB
     char WASHERWOMAN_PING[] = "WASHERWOMAN";
     char LIBRARIAN_PING[] = "LIBRARIAN";
     char INVESTIGATOR_PING[] = "INVESTIGATOR";
@@ -411,6 +412,34 @@ static void addPingRule(KnowledgeBase* kb, RuleSet* rs)
     char UNDERTAKER_PING[] = "UNDERTAKER";
     //char MONK_PING[] = "MONK"; //Monks don't have pings
     char RAVENKEEPER_PING[] = "RAVENKEEPER";
+
+    //SV
+    char CLOCKMAKER_PING[] = "CLOCKMAKER";
+    char DREAMER_PING[] = "DREAMER";
+    char SNAKE_CHARMER_PING[] = "SNAKE_CHARMER";
+    char MATHEMATICIAN_PING[] = "MATHEMATICIAN";
+    char FLOWERGIRL_PING[] = "FLOWERGIRL";
+    char TOWN_CRIER_PING[] = "TOWN_CRIER";
+    char ORACLE_PING[] = "ORACLE";
+    char SAVANT_PING[] = "SAVANT";
+    char SEAMSTRESS_PING[] = "SEAMSTRESS";
+    char PHILOSOPHER_PING[] = "PHILOSOPHER";
+    char ARTIST_PING[] = "ARTIST";
+    char JUGGLER_PING[] = "JUGGLER";
+    char SAGE_PING[] = "SAGE";
+
+    //BMR
+    char GRANDMOTHER_PING[] = "GRANDMOTHER";
+    char CHAMBERMAID_PING[] = "CHAMBERMAID";
+    char EXORCIST_PING[] = "EXORCIST";
+    //char INNKEEPER_PING[] = "INNKEEPER";
+    char GAMBLER_PING[] = "GAMBLER";
+    char GOSSIP_PING[] = "GOSSIP";
+    //char COURTIER_PING[] = "COURTIER";
+    char PROFESSOR_PING[] = "PROFESSOR";
+    //char MINSTREL_PING[] = "MINSTREL";
+
+
     int pingTypeID = -1;
 
     int playerIDinfoFrom;
@@ -427,6 +456,7 @@ static void addPingRule(KnowledgeBase* kb, RuleSet* rs)
     while (pingTypeID == -1)
     {
         scanf("%255s", inputPingType); // Read a string (up to 99 characters to leave space for the null terminator)
+        //TB
         if (strcmp(inputPingType,WASHERWOMAN_PING) == 0)
         {
             pingTypeID = 0;
@@ -458,6 +488,84 @@ static void addPingRule(KnowledgeBase* kb, RuleSet* rs)
         else if (strcmp(inputPingType,RAVENKEEPER_PING) == 0)
         {
             pingTypeID = 7;
+        }
+        //SV
+        else if (strcmp(inputPingType,CLOCKMAKER_PING) == 0)
+        {
+            pingTypeID = 8;
+        }
+        else if (strcmp(inputPingType,DREAMER_PING) == 0)
+        {
+            pingTypeID = 9;
+        }
+        else if (strcmp(inputPingType,SNAKE_CHARMER_PING) == 0)
+        {
+            pingTypeID = 10;
+        }
+        else if (strcmp(inputPingType,MATHEMATICIAN_PING) == 0)
+        {
+            pingTypeID = 11;
+        }
+        else if (strcmp(inputPingType,FLOWERGIRL_PING) == 0)
+        {
+            pingTypeID = 12;
+        }
+        else if (strcmp(inputPingType,TOWN_CRIER_PING) == 0)
+        {
+            pingTypeID = 13;
+        }
+        else if (strcmp(inputPingType,ORACLE_PING) == 0)
+        {
+            pingTypeID = 14;
+        }
+        else if (strcmp(inputPingType,SAVANT_PING) == 0)
+        {
+            pingTypeID = 15;
+        }
+        else if (strcmp(inputPingType,SEAMSTRESS_PING) == 0)
+        {
+            pingTypeID = 16;
+        }
+        else if (strcmp(inputPingType,PHILOSOPHER_PING) == 0)
+        {
+            pingTypeID = 17;
+        }
+        else if (strcmp(inputPingType,ARTIST_PING) == 0)
+        {
+            pingTypeID = 18;
+        }
+        else if (strcmp(inputPingType,JUGGLER_PING) == 0)
+        {
+            pingTypeID = 19;
+        }
+        else if (strcmp(inputPingType,SAGE_PING) == 0)
+        {
+            pingTypeID = 20;
+        }
+        //BMR
+        else if (strcmp(inputPingType,GRANDMOTHER_PING) == 0)
+        {
+            pingTypeID = 21;
+        }
+        else if (strcmp(inputPingType,CHAMBERMAID_PING) == 0)
+        {
+            pingTypeID = 22;
+        }
+        else if (strcmp(inputPingType,EXORCIST_PING) == 0)
+        {
+            pingTypeID = 23;
+        }
+        else if (strcmp(inputPingType,GAMBLER_PING) == 0)
+        {
+            pingTypeID = 24;
+        }
+        else if (strcmp(inputPingType,GOSSIP_PING) == 0)
+        {
+            pingTypeID = 25;
+        }
+        else if (strcmp(inputPingType,PROFESSOR_PING) == 0)
+        {
+            pingTypeID = 26;
         }
         if (pingTypeID == -1)
         {
