@@ -193,6 +193,11 @@ void initScript(RuleSet** rs, KnowledgeBase** kb, const int SCRIPT, const int NU
             }
         }
     }
+    //No ones role can have changed on the first night
+    for (int player = 0; player < NUM_PLAYERS; player++)
+    {
+        addKnowledgeName(*kb, "PLAYERS", player, "is_NOT_ROLE_CHANGED_[NIGHT0]");
+    }
 
     buildRules(*rs, *kb, NUM_PLAYERS, NUM_MINIONS, NUM_DEMONS, BASE_OUTSIDERS, NUM_DAYS);
 }
@@ -354,6 +359,37 @@ static void roleAssociation(RuleSet* rs, KnowledgeBase* kb, int numPlayers, int 
             }
         }
         snprintf(buff, STRING_BUFF_SIZE, "is_NOT_TOWNSFOLK_[NIGHT%d]", night);
+        addConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff);
+        pushTempRule(rs);
+
+        //If the role hasn't been change you are definitely the correct alingment for your role
+        setTempRuleParams(rs, 1,0);
+        for (int i = 0; i < NUM_BOTCT_ROLES; i++)
+        {
+            if (strcmp(ROLE_TEAMS[i], "GOOD") == 0)
+            {
+                snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s_[NIGHT%d]", ROLE_NAMES[i], night);
+                setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            }
+        }
+        snprintf(buff, STRING_BUFF_SIZE, "is_EVIL_[NIGHT%d]", night);
+        addConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff);
+        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_ROLE_CHANGED_[NIGHT%d]", night);
+        addConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff);
+        pushTempRule(rs);
+
+        setTempRuleParams(rs, 1,0);
+        for (int i = 0; i < NUM_BOTCT_ROLES; i++)
+        {
+            if (strcmp(ROLE_TEAMS[i], "EVIL") == 0)
+            {
+                snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s_[NIGHT%d]", ROLE_NAMES[i], night);
+                setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            }
+        }
+        snprintf(buff, STRING_BUFF_SIZE, "is_GOOD_[NIGHT%d]", night);
+        addConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff);
+        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_ROLE_CHANGED_[NIGHT%d]", night);
         addConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff);
         pushTempRule(rs);
     }
@@ -518,246 +554,247 @@ static void roleMetaDataCounting(RuleSet* rs, KnowledgeBase* kb, int numPlayers,
      * IDEA: If we know about what roles are/are not in the game 
      * and we know about how many of a certain class we're expecting
      * we can deduce information about other roles that might be in the game
+     * 
+     * These rules ONLY works on night 0 as roles can change which changes the distrubution of roles
     */
-    for (int night = 0; night < numDays; night++)
+    int night = 0; //Set night to 0
+    //If found all minions in play set all unused minions to is_NOT_<MINION>_in_PLAY
+    int numUnusedMinions = TOTAL_MINIONS-numMinions;
+    if (0 < numMinions && numMinions < TOTAL_MINIONS)
     {
-        //If found all minions in play set all unused minions to is_NOT_<MINION>_in_PLAY
-        int numUnusedMinions = TOTAL_MINIONS-numMinions;
-        if (0 < numMinions && numMinions < TOTAL_MINIONS)
+        for (int i = 0; i < 4096; i++)
         {
-            for (int i = 0; i < 4096; i++)
+            //Permute all subsets
+            int count = 0;
+            for (int j = 0; j < TOTAL_MINIONS; j++)
             {
-                //Permute all subsets
-                int count = 0;
+                if (((i >> j) & 1) == 1)
+                {
+                    count++;
+                }
+            }
+            if (count == numMinions)
+            {
+                //<METADATA>is_NOT_<MINION>_in_PLAY => <METADATA>is_<MINION>_in_PLAY
+                setTempRuleParams(rs, 1,0);
+                
+
                 for (int j = 0; j < TOTAL_MINIONS; j++)
                 {
                     if (((i >> j) & 1) == 1)
                     {
-                        count++;
+                        snprintf(buff, STRING_BUFF_SIZE, "is_%s_in_PLAY_[NIGHT%d]", ROLE_NAMES[j+FIRST_MINION_INDEX], night);
+                        addConditionToTempRuleName(rs,kb, 0, "METADATA", buff);
                     }
-                }
-                if (count == numMinions)
-                {
-                    //<METADATA>is_NOT_<MINION>_in_PLAY => <METADATA>is_<MINION>_in_PLAY
-                    setTempRuleParams(rs, 1,0);
-                    
-
-                    for (int j = 0; j < TOTAL_MINIONS; j++)
+                    else
                     {
-                        if (((i >> j) & 1) == 1)
-                        {
-                            snprintf(buff, STRING_BUFF_SIZE, "is_%s_in_PLAY_[NIGHT%d]", ROLE_NAMES[j+FIRST_MINION_INDEX], night);
-                            addConditionToTempRuleName(rs,kb, 0, "METADATA", buff);
-                        }
-                        else
-                        {
-                            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s_in_PLAY_[NIGHT%d]", ROLE_NAMES[j+FIRST_MINION_INDEX], night);
-                            setTempRuleResultName(rs, kb, 0, "METADATA", buff);
-                        }
+                        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s_in_PLAY_[NIGHT%d]", ROLE_NAMES[j+FIRST_MINION_INDEX], night);
+                        setTempRuleResultName(rs, kb, 0, "METADATA", buff);
                     }
-                    pushTempRule(rs);
                 }
-                if (count == numUnusedMinions)
-                {
-                    //<PLAYER>is_<MINION>_in_PLAY => <METADATA>is_NOT_<MINION>_in_PLAY
-                    setTempRuleParams(rs, 1,0);
-                    
+                pushTempRule(rs);
+            }
+            if (count == numUnusedMinions)
+            {
+                //<PLAYER>is_<MINION>_in_PLAY => <METADATA>is_NOT_<MINION>_in_PLAY
+                setTempRuleParams(rs, 1,0);
+                
 
-                    for (int j = 0; j < TOTAL_MINIONS; j++)
+                for (int j = 0; j < TOTAL_MINIONS; j++)
+                {
+                    if (((i >> j) & 1) == 1)
                     {
-                        if (((i >> j) & 1) == 1)
-                        {
-                            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s_in_PLAY_[NIGHT%d]", ROLE_NAMES[j+FIRST_MINION_INDEX], night);
-                            addConditionToTempRuleName(rs,kb, 0, "METADATA", buff);
-                        }
-                        else
-                        {
-                            snprintf(buff, STRING_BUFF_SIZE, "is_%s_in_PLAY_[NIGHT%d]", ROLE_NAMES[j+FIRST_MINION_INDEX], night);
-                            setTempRuleResultName(rs, kb, 0, "METADATA", buff);
-                        }
+                        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s_in_PLAY_[NIGHT%d]", ROLE_NAMES[j+FIRST_MINION_INDEX], night);
+                        addConditionToTempRuleName(rs,kb, 0, "METADATA", buff);
                     }
-                    pushTempRule(rs);
+                    else
+                    {
+                        snprintf(buff, STRING_BUFF_SIZE, "is_%s_in_PLAY_[NIGHT%d]", ROLE_NAMES[j+FIRST_MINION_INDEX], night);
+                        setTempRuleResultName(rs, kb, 0, "METADATA", buff);
+                    }
                 }
+                pushTempRule(rs);
             }
         }
-        
-        for (int k = 0; k < 8; k++)
+    }
+    
+    for (int k = 0; k < 8; k++)
+    {
+        int isBaronInPlay = k&1;
+        int isFangGuInPlay = (k>>1)&1;
+        int isVigormortisInPlay = (k>>2)&1;
+        int isGodFatherInPlay = 0;
+
+        int numOutsiders = baseOutsiders;
+        if (isBaronInPlay)
         {
-            int isBaronInPlay = k&1;
-            int isFangGuInPlay = (k>>1)&1;
-            int isVigormortisInPlay = (k>>2)&1;
-            int isGodFatherInPlay = 0;
+            numOutsiders += 2;
+        }
+        if (isFangGuInPlay)
+        {
+            numOutsiders += 1;
+        }
+        if (isVigormortisInPlay)
+        {
+            numOutsiders -= 1;
+        }
+        int numUnusedOutsiders = TOTAL_OUTSIDERS-numOutsiders;
 
-            int numOutsiders = baseOutsiders;
-            if (isBaronInPlay)
+        for (int i = 0; i < 4096; i++)
+        {
+            //Permute all subsets
+            int count = 0;
+            for (int j = 0; j < TOTAL_OUTSIDERS; j++)
             {
-                numOutsiders += 2;
+                if (((i >> j) & 1) == 1)
+                {
+                    count++;
+                }
             }
-            if (isFangGuInPlay)
+            if (count == numOutsiders)
             {
-                numOutsiders += 1;
-            }
-            if (isVigormortisInPlay)
-            {
-                numOutsiders -= 1;
-            }
-            int numUnusedOutsiders = TOTAL_OUTSIDERS-numOutsiders;
+                //<METADATA>is_<OUTSIDER>_in_PLAY (xA) AND <METADATA>is_NOT_BARON_in_PLAY => <METADATA>is_NOT_<OUTSIDER>_in_PLAY (x4-A)
+                setTempRuleParams(rs, 1,0);
+                
+                //Check for outsider count modifiers
+                if (isBaronInPlay == 1)
+                {
+                    //The BARON must be in play for this
+                    snprintf(buff, STRING_BUFF_SIZE, "is_BARON_in_PLAY_[NIGHT%d]", night);
+                    addConditionToTempRuleName(rs,kb, 0, "METADATA", buff);
+                }
+                else
+                {
+                    //The BARON can NOT be in play for this
+                    snprintf(buff, STRING_BUFF_SIZE, "is_NOT_BARON_in_PLAY_[NIGHT%d]", night);
+                    addConditionToTempRuleName(rs,kb, 0, "METADATA", buff);
+                }
+                if (isFangGuInPlay == 1)
+                {
+                    //The FANG_GU must be in play for this
+                    snprintf(buff, STRING_BUFF_SIZE, "is_FANG_GU_in_PLAY_[NIGHT%d]", night);
+                    addConditionToTempRuleName(rs,kb, 0, "METADATA", buff);
+                }
+                else
+                {
+                    //The FANG_GU can NOT be in play for this
+                    snprintf(buff, STRING_BUFF_SIZE, "is_NOT_FANG_GU_in_PLAY_[NIGHT%d]", night);
+                    addConditionToTempRuleName(rs,kb, 0, "METADATA", buff);
+                }
+                if (isVigormortisInPlay == 1)
+                {
+                    //The VIGORMORTIS must be in play for this
+                    snprintf(buff, STRING_BUFF_SIZE, "is_VIGORMORTIS_in_PLAY_[NIGHT%d]", night);
+                    addConditionToTempRuleName(rs,kb, 0, "METADATA", buff);
+                }
+                else
+                {
+                    //The VIGORMORTIS can NOT be in play for this
+                    snprintf(buff, STRING_BUFF_SIZE, "is_NOT_VIGORMORTIS_in_PLAY_[NIGHT%d]", night);
+                    addConditionToTempRuleName(rs,kb, 0, "METADATA", buff);
+                }
+                if (isGodFatherInPlay == 1)
+                {
+                    //The GODFATHER must be in play for this
+                    snprintf(buff, STRING_BUFF_SIZE, "is_GODFATHER_in_PLAY_[NIGHT%d]", night);
+                    addConditionToTempRuleName(rs,kb, 0, "METADATA", buff);
+                }
+                else
+                {
+                    //The GODFATHER can NOT be in play for this
+                    snprintf(buff, STRING_BUFF_SIZE, "is_NOT_GODFATHER_in_PLAY_[NIGHT%d]", night);
+                    addConditionToTempRuleName(rs,kb, 0, "METADATA", buff);
+                }
 
-            for (int i = 0; i < 4096; i++)
-            {
-                //Permute all subsets
-                int count = 0;
                 for (int j = 0; j < TOTAL_OUTSIDERS; j++)
                 {
                     if (((i >> j) & 1) == 1)
                     {
-                        count++;
+                        snprintf(buff, STRING_BUFF_SIZE, "is_%s_in_PLAY_[NIGHT%d]", ROLE_NAMES[j+FIRST_OUTSIDER_INDEX], night);
+                        addConditionToTempRuleName(rs,kb, 0, "METADATA", buff);
+                    }
+                    else
+                    {
+                        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s_in_PLAY_[NIGHT%d]", ROLE_NAMES[j+FIRST_OUTSIDER_INDEX], night);
+                        setTempRuleResultName(rs, kb, 0, "METADATA", buff);
                     }
                 }
-                if (count == numOutsiders)
-                {
-                    //<METADATA>is_<OUTSIDER>_in_PLAY (xA) AND <METADATA>is_NOT_BARON_in_PLAY => <METADATA>is_NOT_<OUTSIDER>_in_PLAY (x4-A)
-                    setTempRuleParams(rs, 1,0);
-                    
-                    //Check for outsider count modifiers
-                    if (isBaronInPlay == 1)
-                    {
-                        //The BARON must be in play for this
-                        snprintf(buff, STRING_BUFF_SIZE, "is_BARON_in_PLAY_[NIGHT%d]", night);
-                        addConditionToTempRuleName(rs,kb, 0, "METADATA", buff);
-                    }
-                    else
-                    {
-                        //The BARON can NOT be in play for this
-                        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_BARON_in_PLAY_[NIGHT%d]", night);
-                        addConditionToTempRuleName(rs,kb, 0, "METADATA", buff);
-                    }
-                    if (isFangGuInPlay == 1)
-                    {
-                        //The FANG_GU must be in play for this
-                        snprintf(buff, STRING_BUFF_SIZE, "is_FANG_GU_in_PLAY_[NIGHT%d]", night);
-                        addConditionToTempRuleName(rs,kb, 0, "METADATA", buff);
-                    }
-                    else
-                    {
-                        //The FANG_GU can NOT be in play for this
-                        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_FANG_GU_in_PLAY_[NIGHT%d]", night);
-                        addConditionToTempRuleName(rs,kb, 0, "METADATA", buff);
-                    }
-                    if (isVigormortisInPlay == 1)
-                    {
-                        //The VIGORMORTIS must be in play for this
-                        snprintf(buff, STRING_BUFF_SIZE, "is_VIGORMORTIS_in_PLAY_[NIGHT%d]", night);
-                        addConditionToTempRuleName(rs,kb, 0, "METADATA", buff);
-                    }
-                    else
-                    {
-                        //The VIGORMORTIS can NOT be in play for this
-                        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_VIGORMORTIS_in_PLAY_[NIGHT%d]", night);
-                        addConditionToTempRuleName(rs,kb, 0, "METADATA", buff);
-                    }
-                    if (isGodFatherInPlay == 1)
-                    {
-                        //The GODFATHER must be in play for this
-                        snprintf(buff, STRING_BUFF_SIZE, "is_GODFATHER_in_PLAY_[NIGHT%d]", night);
-                        addConditionToTempRuleName(rs,kb, 0, "METADATA", buff);
-                    }
-                    else
-                    {
-                        //The GODFATHER can NOT be in play for this
-                        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_GODFATHER_in_PLAY_[NIGHT%d]", night);
-                        addConditionToTempRuleName(rs,kb, 0, "METADATA", buff);
-                    }
-
-                    for (int j = 0; j < TOTAL_OUTSIDERS; j++)
-                    {
-                        if (((i >> j) & 1) == 1)
-                        {
-                            snprintf(buff, STRING_BUFF_SIZE, "is_%s_in_PLAY_[NIGHT%d]", ROLE_NAMES[j+FIRST_OUTSIDER_INDEX], night);
-                            addConditionToTempRuleName(rs,kb, 0, "METADATA", buff);
-                        }
-                        else
-                        {
-                            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s_in_PLAY_[NIGHT%d]", ROLE_NAMES[j+FIRST_OUTSIDER_INDEX], night);
-                            setTempRuleResultName(rs, kb, 0, "METADATA", buff);
-                        }
-                    }
-                    pushTempRule(rs);
-                }
-                if (count == numUnusedOutsiders)
-                {
-                    //<METADATA>is_NOT_<OUTSIDER>_in_PLAY (xA) AND <METADATA>is_NOT_BARON_in_PLAY => <METADATA>is_<OUTSIDER>_in_PLAY (x4-A)
-                    setTempRuleParams(rs, 1,0);
-                    
-                    //Check for outsider count modifiers
-                    if (isBaronInPlay == 1)
-                    {
-                        //The BARON must be in play for this
-                        snprintf(buff, STRING_BUFF_SIZE, "is_BARON_in_PLAY_[NIGHT%d]", night);
-                        addConditionToTempRuleName(rs,kb, 0, "METADATA", buff);
-                    }
-                    else
-                    {
-                        //The BARON can NOT be in play for this
-                        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_BARON_in_PLAY_[NIGHT%d]", night);
-                        addConditionToTempRuleName(rs,kb, 0, "METADATA", buff);
-                    }
-                    if (isFangGuInPlay == 1)
-                    {
-                        //The FANG_GU must be in play for this
-                        snprintf(buff, STRING_BUFF_SIZE, "is_FANG_GU_in_PLAY_[NIGHT%d]", night);
-                        addConditionToTempRuleName(rs,kb, 0, "METADATA", buff);
-                    }
-                    else
-                    {
-                        //The FANG_GU can NOT be in play for this
-                        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_FANG_GU_in_PLAY_[NIGHT%d]", night);
-                        addConditionToTempRuleName(rs,kb, 0, "METADATA", buff);
-                    }
-                    if (isVigormortisInPlay == 1)
-                    {
-                        //The VIGORMORTIS must be in play for this
-                        snprintf(buff, STRING_BUFF_SIZE, "is_VIGORMORTIS_in_PLAY_[NIGHT%d]", night);
-                        addConditionToTempRuleName(rs,kb, 0, "METADATA", buff);
-                    }
-                    else
-                    {
-                        //The VIGORMORTIS can NOT be in play for this
-                        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_VIGORMORTIS_in_PLAY_[NIGHT%d]", night);
-                        addConditionToTempRuleName(rs,kb, 0, "METADATA", buff);
-                    }
-                    if (isGodFatherInPlay == 1)
-                    {
-                        //The GODFATHER must be in play for this
-                        snprintf(buff, STRING_BUFF_SIZE, "is_GODFATHER_in_PLAY_[NIGHT%d]", night);
-                        addConditionToTempRuleName(rs,kb, 0, "METADATA", buff);
-                    }
-                    else
-                    {
-                        //The GODFATHER can NOT be in play for this
-                        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_GODFATHER_in_PLAY_[NIGHT%d]", night);
-                        addConditionToTempRuleName(rs,kb, 0, "METADATA", buff);
-                    }
-
-                    for (int j = 0; j < TOTAL_OUTSIDERS; j++)
-                    {
-                        if (((i >> j) & 1) == 1)
-                        {
-                            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s_in_PLAY_[NIGHT%d]", ROLE_NAMES[j+FIRST_OUTSIDER_INDEX], night);
-                            addConditionToTempRuleName(rs,kb, 0, "METADATA", buff);
-                        }
-                        else
-                        {
-                            snprintf(buff, STRING_BUFF_SIZE, "is_%s_in_PLAY_[NIGHT%d]", ROLE_NAMES[j+FIRST_OUTSIDER_INDEX], night);
-                            setTempRuleResultName(rs, kb, 0, "METADATA", buff);
-                        }
-                    }
-                    pushTempRule(rs);
-                }
+                pushTempRule(rs);
             }
+            if (count == numUnusedOutsiders)
+            {
+                //<METADATA>is_NOT_<OUTSIDER>_in_PLAY (xA) AND <METADATA>is_NOT_BARON_in_PLAY => <METADATA>is_<OUTSIDER>_in_PLAY (x4-A)
+                setTempRuleParams(rs, 1,0);
+                
+                //Check for outsider count modifiers
+                if (isBaronInPlay == 1)
+                {
+                    //The BARON must be in play for this
+                    snprintf(buff, STRING_BUFF_SIZE, "is_BARON_in_PLAY_[NIGHT%d]", night);
+                    addConditionToTempRuleName(rs,kb, 0, "METADATA", buff);
+                }
+                else
+                {
+                    //The BARON can NOT be in play for this
+                    snprintf(buff, STRING_BUFF_SIZE, "is_NOT_BARON_in_PLAY_[NIGHT%d]", night);
+                    addConditionToTempRuleName(rs,kb, 0, "METADATA", buff);
+                }
+                if (isFangGuInPlay == 1)
+                {
+                    //The FANG_GU must be in play for this
+                    snprintf(buff, STRING_BUFF_SIZE, "is_FANG_GU_in_PLAY_[NIGHT%d]", night);
+                    addConditionToTempRuleName(rs,kb, 0, "METADATA", buff);
+                }
+                else
+                {
+                    //The FANG_GU can NOT be in play for this
+                    snprintf(buff, STRING_BUFF_SIZE, "is_NOT_FANG_GU_in_PLAY_[NIGHT%d]", night);
+                    addConditionToTempRuleName(rs,kb, 0, "METADATA", buff);
+                }
+                if (isVigormortisInPlay == 1)
+                {
+                    //The VIGORMORTIS must be in play for this
+                    snprintf(buff, STRING_BUFF_SIZE, "is_VIGORMORTIS_in_PLAY_[NIGHT%d]", night);
+                    addConditionToTempRuleName(rs,kb, 0, "METADATA", buff);
+                }
+                else
+                {
+                    //The VIGORMORTIS can NOT be in play for this
+                    snprintf(buff, STRING_BUFF_SIZE, "is_NOT_VIGORMORTIS_in_PLAY_[NIGHT%d]", night);
+                    addConditionToTempRuleName(rs,kb, 0, "METADATA", buff);
+                }
+                if (isGodFatherInPlay == 1)
+                {
+                    //The GODFATHER must be in play for this
+                    snprintf(buff, STRING_BUFF_SIZE, "is_GODFATHER_in_PLAY_[NIGHT%d]", night);
+                    addConditionToTempRuleName(rs,kb, 0, "METADATA", buff);
+                }
+                else
+                {
+                    //The GODFATHER can NOT be in play for this
+                    snprintf(buff, STRING_BUFF_SIZE, "is_NOT_GODFATHER_in_PLAY_[NIGHT%d]", night);
+                    addConditionToTempRuleName(rs,kb, 0, "METADATA", buff);
+                }
 
+                for (int j = 0; j < TOTAL_OUTSIDERS; j++)
+                {
+                    if (((i >> j) & 1) == 1)
+                    {
+                        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s_in_PLAY_[NIGHT%d]", ROLE_NAMES[j+FIRST_OUTSIDER_INDEX], night);
+                        addConditionToTempRuleName(rs,kb, 0, "METADATA", buff);
+                    }
+                    else
+                    {
+                        snprintf(buff, STRING_BUFF_SIZE, "is_%s_in_PLAY_[NIGHT%d]", ROLE_NAMES[j+FIRST_OUTSIDER_INDEX], night);
+                        setTempRuleResultName(rs, kb, 0, "METADATA", buff);
+                    }
+                }
+                pushTempRule(rs);
+            }
         }
+
     }
+    
 }
 /*
 NOTE: I think this function my need to be updated
@@ -775,101 +812,63 @@ static void teamAndClassCountingArguments(RuleSet* rs, KnowledgeBase* kb, int nu
     /*
      * IDEA: By counting the classes and teams of people,
      * we can deduce what teams other people must be
+     * 
+     * theses rules are ONLY true on night 0 when roles are assigned
+     * this is becaue roles can change on later nights
     */
-    for (int night = 0; night < numDays; night++)
+    int night = 0;
+
+    //RULE DISABLED DUE TO BAD PERFORMANCE
+    //EDIT: new optimisation reduces this from O(n!) down to O(n) ish ish runing so re enabled
+
+    //If all good players have been found the rest are evil
+    //<PLAYER_1>is_GOOD AND ... <PLAYER_[num good players]>is_GOOD => <PLAYER_A>is_EVIL
+    setTempRuleParams(rs, numGood,1);
+    snprintf(buff, STRING_BUFF_SIZE, "is_EVIL_[NIGHT%d]", night);
+    setTempRuleResultName(rs, kb, -1, "PLAYERS", buff); 
+    for (int j = 0; j < numGood; j++)
     {
-        //RULE DISABLED DUE TO BAD PERFORMANCE
-        //EDIT: new optimisation reduces this from O(n!) down to O(n) ish ish runing so re enabled
-
-        //If all good players have been found the rest are evil
-        //<PLAYER_1>is_GOOD AND ... <PLAYER_[num good players]>is_GOOD => <PLAYER_A>is_EVIL
-        setTempRuleParams(rs, numGood,1);
-        snprintf(buff, STRING_BUFF_SIZE, "is_EVIL_[NIGHT%d]", night);
-        setTempRuleResultName(rs, kb, -1, "PLAYERS", buff); 
-        for (int j = 0; j < numGood; j++)
-        {
-            snprintf(buff, STRING_BUFF_SIZE, "is_GOOD_[NIGHT%d]", night);
-            addConditionToTempRuleName(rs,kb, j, "PLAYERS", buff);
-        }
-        pushTempRule(rs);
-        
-
-
-        //If all evil players have been found the rest are good
-        //<PLAYER_1>is_EVIL AND ... <PLAYER_[num evil players]>is_EVIL => <PLAYER_A>is_GOOD
-        setTempRuleParams(rs, numEvil,1);
         snprintf(buff, STRING_BUFF_SIZE, "is_GOOD_[NIGHT%d]", night);
-        setTempRuleResultName(rs, kb, -1, "PLAYERS", buff); 
-        for (int j = 0; j < numEvil; j++)
-        {
-            snprintf(buff, STRING_BUFF_SIZE, "is_EVIL_[NIGHT%d]", night);
-            addConditionToTempRuleName(rs,kb, j, "PLAYERS", buff);
-        }
-        pushTempRule(rs);
-
-        //If all minion players have been found the rest are not minions
-        //<PLAYER_1>is_MINION AND ... <PLAYER_[num minion players]>is_MINION => <PLAYER_A>is_NOT_MINION
-        setTempRuleParams(rs, numMinions,1);
-        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_MINION_[NIGHT%d]", night);
-        setTempRuleResultName(rs, kb, -1, "PLAYERS", buff); 
-        for (int j = 0; j < numMinions; j++)
-        {
-            snprintf(buff, STRING_BUFF_SIZE, "is_MINION_[NIGHT%d]", night);
-            addConditionToTempRuleName(rs,kb, j, "PLAYERS", buff);
-        }
-        pushTempRule(rs);
-
-        //If all demon players have been found the rest are not demons
-        //<PLAYER_1>is_DEMON AND ... <PLAYER_[num minion players]>is_DEMON => <PLAYER_A>is_NOT_DEMON
-        setTempRuleParams(rs, numDemons,1);
-        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_DEMON_[NIGHT%d]", night);
-        setTempRuleResultName(rs, kb, -1, "PLAYERS", buff); 
-        for (int j = 0; j < numDemons; j++)
-        {
-            snprintf(buff, STRING_BUFF_SIZE, "is_DEMON_[NIGHT%d]", night);
-            addConditionToTempRuleName(rs,kb, j, "PLAYERS", buff);
-        }
-        pushTempRule(rs);
-
-        /*
-        EDIT: DISABLED DUE TO MORE COMPLEX SCRIPTS IN GAME NOW
-
-        //Outsider counting
-        //If all outsider players have been found the rest are not outsider
-        //<PLAYER_1>is_OUTSIDER AND ... <PLAYER_[num outsider players]>is_OUTSIDER => <PLAYER_A>is_NOT_OUTSIDER
-        setTempRuleParams(rs, maxOutsiders,1);
-        
-        setTempRuleResultName(rs, kb, -1, "PLAYERS", "is_NOT_OUTSIDER"); 
-        for (int j = 0; j < maxOutsiders; j++)
-        {
-            addConditionToTempRuleName(rs,kb, j, "PLAYERS", "is_OUTSIDER");
-        }
-        pushTempRule(rs);
-
-        //If all outsider players have been found the rest are not outsider
-        //<PLAYER_1>is_OUTSIDER AND ... <PLAYER_[num outsider players]>is_OUTSIDER => <PLAYER_A>is_NOT_OUTSIDER
-        setTempRuleParams(rs, baseOutsiders+1,1);
-        
-        setTempRuleResultName(rs, kb, -1, "PLAYERS", "is_NOT_OUTSIDER"); 
-        for (int j = 0; j < baseOutsiders; j++)
-        {
-            addConditionToTempRuleName(rs,kb, j, "PLAYERS", "is_OUTSIDER");
-        }
-        addConditionToTempRuleName(rs,kb, baseOutsiders, "METADATA", "is_NOT_BARON_in_PLAY");
-        pushTempRule(rs);
-
-        //Counting too many outsiders implies the existence of a baron
-        //<PLAYER_1>is_OUTSIDER AND ... <PLAYER_[num outsider players]>is_OUTSIDER => <METADATA>is_BARON_in_PLAY
-        setTempRuleParams(rs, baseOutsiders+1,1);
-        
-        setTempRuleResultName(rs, kb, -1, "METADATA", "is_BARON_in_PLAY"); 
-        for (int j = 0; j < baseOutsiders+1; j++)
-        {
-            addConditionToTempRuleName(rs,kb, j, "PLAYERS", "is_OUTSIDER");
-        }
-        pushTempRule(rs);
-        */
+        addConditionToTempRuleName(rs,kb, j, "PLAYERS", buff);
     }
+    pushTempRule(rs);
+
+    //If all evil players have been found the rest are good
+    //<PLAYER_1>is_EVIL AND ... <PLAYER_[num evil players]>is_EVIL => <PLAYER_A>is_GOOD
+    setTempRuleParams(rs, numEvil,1);
+    snprintf(buff, STRING_BUFF_SIZE, "is_GOOD_[NIGHT%d]", night);
+    setTempRuleResultName(rs, kb, -1, "PLAYERS", buff); 
+    for (int j = 0; j < numEvil; j++)
+    {
+        snprintf(buff, STRING_BUFF_SIZE, "is_EVIL_[NIGHT%d]", night);
+        addConditionToTempRuleName(rs,kb, j, "PLAYERS", buff);
+    }
+    pushTempRule(rs);
+
+    //If all minion players have been found the rest are not minions
+    //<PLAYER_1>is_MINION AND ... <PLAYER_[num minion players]>is_MINION => <PLAYER_A>is_NOT_MINION
+    setTempRuleParams(rs, numMinions,1);
+    snprintf(buff, STRING_BUFF_SIZE, "is_NOT_MINION_[NIGHT%d]", night);
+    setTempRuleResultName(rs, kb, -1, "PLAYERS", buff); 
+    for (int j = 0; j < numMinions; j++)
+    {
+        snprintf(buff, STRING_BUFF_SIZE, "is_MINION_[NIGHT%d]", night);
+        addConditionToTempRuleName(rs,kb, j, "PLAYERS", buff);
+    }
+    pushTempRule(rs);
+
+    //If all demon players have been found the rest are not demons
+    //<PLAYER_1>is_DEMON AND ... <PLAYER_[num minion players]>is_DEMON => <PLAYER_A>is_NOT_DEMON
+    setTempRuleParams(rs, numDemons,1);
+    snprintf(buff, STRING_BUFF_SIZE, "is_NOT_DEMON_[NIGHT%d]", night);
+    setTempRuleResultName(rs, kb, -1, "PLAYERS", buff); 
+    for (int j = 0; j < numDemons; j++)
+    {
+        snprintf(buff, STRING_BUFF_SIZE, "is_DEMON_[NIGHT%d]", night);
+        addConditionToTempRuleName(rs,kb, j, "PLAYERS", buff);
+    }
+    pushTempRule(rs);
+    
 }
 
 static void classDeductionArguments(RuleSet* rs, KnowledgeBase* kb, int numPlayers, int numMinions, int numDemons, int baseOutsiders, int numDays)
@@ -1045,12 +1044,14 @@ static void roleContinuityArguments(RuleSet* rs, KnowledgeBase* kb, int numPlaye
     */
     for (int startNight = 0; startNight < numDays; startNight++)
     {
-        for (int nextNight = startNight+1; nextNight < numDays; nextNight++)
+        int nextNight = startNight+1;
+        if (nextNight < numDays)
         {
             for (int i = 0; i < NUM_BOTCT_ROLES; i++)
             {
                 if (strcmp(ROLE_NAMES[i], "IMP") == 0)
                 { //Imps can star pass
+                    /*
                     //<PLAYER>is_NOT_<ROLE> => <PLAYER>is_NOT_<ROLE>[Night x]
                     setTempRuleParams(rs, 2,0);
                     snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s_[NIGHT%d]", ROLE_NAMES[i], nextNight);
@@ -1066,9 +1067,11 @@ static void roleContinuityArguments(RuleSet* rs, KnowledgeBase* kb, int numPlaye
                     snprintf(buff, STRING_BUFF_SIZE, "is_NOT_PIT_HAG_in_PLAY_[NIGHT%d]", startNight);
                     addConditionToTempRuleName(rs,kb, 1, "METADATA", buff);
                     pushTempRule(rs);
+                    */
                 }
                 else if (strcmp(ROLE_NAMES[i], "SCARLET_WOMAN") == 0)
                 { //Scarlet womans can become the imp
+                    /*
                     //<PLAYER>is_NOT_<ROLE> => <PLAYER>is_NOT_<ROLE>[Night x]
                     setTempRuleParams(rs, 2,0);
                     snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s_[NIGHT%d]", ROLE_NAMES[i], nextNight);
@@ -1082,6 +1085,7 @@ static void roleContinuityArguments(RuleSet* rs, KnowledgeBase* kb, int numPlaye
                     snprintf(buff, STRING_BUFF_SIZE, "is_NOT_PIT_HAG_in_PLAY_[NIGHT%d]", startNight);
                     addConditionToTempRuleName(rs,kb, 1, "METADATA", buff);
                     pushTempRule(rs);
+                    */
                 }
                 else if (strcmp(ROLE_NAMES[i], "SNAKE_CHARMER") == 0)
                 { //Snake charmers swap roles with demons
@@ -1102,7 +1106,7 @@ static void roleContinuityArguments(RuleSet* rs, KnowledgeBase* kb, int numPlaye
                     snprintf(buff, STRING_BUFF_SIZE, "is_NOT_PIT_HAG_in_PLAY_[NIGHT%d]", startNight);
                     addConditionToTempRuleName(rs,kb, 1, "METADATA", buff);
                     pushTempRule(rs);
-
+                    /*
                     //<PLAYER>is_NOT_<ROLE> => <PLAYER>is_NOT_<ROLE>[Night x]
                     setTempRuleParams(rs, 2,0);
                     snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s_[NIGHT%d]", ROLE_NAMES[i], nextNight);
@@ -1118,6 +1122,7 @@ static void roleContinuityArguments(RuleSet* rs, KnowledgeBase* kb, int numPlaye
                     snprintf(buff, STRING_BUFF_SIZE, "is_NOT_PIT_HAG_in_PLAY_[NIGHT%d]", startNight);
                     addConditionToTempRuleName(rs,kb, 1, "METADATA", buff);
                     pushTempRule(rs);
+                    */
                 }
                 else
                 { //Everyone else is affected by barbers and pit hags
@@ -1132,7 +1137,7 @@ static void roleContinuityArguments(RuleSet* rs, KnowledgeBase* kb, int numPlaye
                     snprintf(buff, STRING_BUFF_SIZE, "is_NOT_PIT_HAG_in_PLAY_[NIGHT%d]", startNight);
                     addConditionToTempRuleName(rs,kb, 1, "METADATA", buff);
                     pushTempRule(rs);
-
+                    
                     //<PLAYER>is_NOT_<ROLE> => <PLAYER>is_NOT_<ROLE>[Night x]
                     setTempRuleParams(rs, 2,0);
                     snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s_[NIGHT%d]", ROLE_NAMES[i], nextNight);
@@ -1146,10 +1151,8 @@ static void roleContinuityArguments(RuleSet* rs, KnowledgeBase* kb, int numPlaye
                     snprintf(buff, STRING_BUFF_SIZE, "is_NOT_PIT_HAG_in_PLAY_[NIGHT%d]", startNight);
                     addConditionToTempRuleName(rs,kb, 1, "METADATA", buff);
                     pushTempRule(rs);
+                    
                 }
-                
-
-
             }
             //<PLAYER>is_GOOD => <PLAYER>is_GOOD[Night x]
             setTempRuleParams(rs, 2,0);
@@ -1167,7 +1170,7 @@ static void roleContinuityArguments(RuleSet* rs, KnowledgeBase* kb, int numPlaye
             addConditionToTempRuleName(rs,kb, 1, "METADATA", buff);
             pushTempRule(rs);
 
-            //<PLAYER>is_GOOD => <PLAYER>is_GOOD[Night x]
+            //<PLAYER>is_EVIL_ => <PLAYER>is_EVIL_[Night x]
             setTempRuleParams(rs, 2,0);
             snprintf(buff, STRING_BUFF_SIZE, "is_EVIL_[NIGHT%d]", nextNight);
             setTempRuleResultName(rs, kb, 0, "PLAYERS", buff);
@@ -1183,7 +1186,7 @@ static void roleContinuityArguments(RuleSet* rs, KnowledgeBase* kb, int numPlaye
             addConditionToTempRuleName(rs,kb, 1, "METADATA", buff);
             pushTempRule(rs);
 
-            //<PLAYER>is_GOOD => <PLAYER>is_GOOD[Night x]
+            //<PLAYER>is_TOWNSFOLK_ => <PLAYER>is_TOWNSFOLK_[Night x]
             setTempRuleParams(rs, 2,0);
             snprintf(buff, STRING_BUFF_SIZE, "is_TOWNSFOLK_[NIGHT%d]", nextNight);
             setTempRuleResultName(rs, kb, 0, "PLAYERS", buff);
@@ -1197,7 +1200,7 @@ static void roleContinuityArguments(RuleSet* rs, KnowledgeBase* kb, int numPlaye
             addConditionToTempRuleName(rs,kb, 1, "METADATA", buff);
             pushTempRule(rs);
 
-            //<PLAYER>is_GOOD => <PLAYER>is_GOOD[Night x]
+            //<PLAYER>is_OUTSIDER_ => <PLAYER>is_OUTSIDER_[Night x]
             setTempRuleParams(rs, 2,0);
             snprintf(buff, STRING_BUFF_SIZE, "is_OUTSIDER_[NIGHT%d]", nextNight);
             setTempRuleResultName(rs, kb, 0, "PLAYERS", buff);
@@ -1211,7 +1214,7 @@ static void roleContinuityArguments(RuleSet* rs, KnowledgeBase* kb, int numPlaye
             addConditionToTempRuleName(rs,kb, 1, "METADATA", buff);
             pushTempRule(rs);
 
-            //<PLAYER>is_GOOD => <PLAYER>is_GOOD[Night x]
+            //<PLAYER>is_DEMON_ => <PLAYER>is_DEMON_[Night x]
             setTempRuleParams(rs, 2,0);
             snprintf(buff, STRING_BUFF_SIZE, "is_DEMON_[NIGHT%d]", nextNight);
             setTempRuleResultName(rs, kb, 0, "PLAYERS", buff);
@@ -1225,7 +1228,7 @@ static void roleContinuityArguments(RuleSet* rs, KnowledgeBase* kb, int numPlaye
             addConditionToTempRuleName(rs,kb, 1, "METADATA", buff);
             pushTempRule(rs);
 
-            //<PLAYER>is_GOOD => <PLAYER>is_GOOD[Night x]
+            //<PLAYER>is_MINION_ => <PLAYER>is_MINION_[Night x]
             setTempRuleParams(rs, 2,0);
             snprintf(buff, STRING_BUFF_SIZE, "is_MINION_[NIGHT%d]", nextNight);
             setTempRuleResultName(rs, kb, 0, "PLAYERS", buff);
@@ -1340,7 +1343,7 @@ static void poisonRules(RuleSet* rs, KnowledgeBase* kb, int numPlayers, int numM
             //LHS
             setTempRuleParams(rs, 1,0);
             snprintf(buff, STRING_BUFF_SIZE, "is_POISONED_[NIGHT%d]", night);
-            setTempRuleResultName(rs, kb, LHS-1000, "PLAYERS", buff);
+            setTempRuleResultName(rs, kb, -LHS-1000, "PLAYERS", buff);
             snprintf(buff, STRING_BUFF_SIZE, "is_NO_DASHII_[NIGHT%d]", night);
             addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff, player);
             snprintf(buff, STRING_BUFF_SIZE, "is_ALIVE_[NIGHT%d]", night);
@@ -1349,7 +1352,7 @@ static void poisonRules(RuleSet* rs, KnowledgeBase* kb, int numPlayers, int numM
             //RHS
             setTempRuleParams(rs, 1,0);
             snprintf(buff, STRING_BUFF_SIZE, "is_POISONED_[NIGHT%d]", night);
-            setTempRuleResultName(rs, kb, RHS-1000, "PLAYERS", buff);
+            setTempRuleResultName(rs, kb, -RHS-1000, "PLAYERS", buff);
             snprintf(buff, STRING_BUFF_SIZE, "is_NO_DASHII_[NIGHT%d]", night);
             addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff, player);
             snprintf(buff, STRING_BUFF_SIZE, "is_ALIVE_[NIGHT%d]", night);
@@ -1508,6 +1511,39 @@ static void deathRules(RuleSet* rs, KnowledgeBase* kb, int numPlayers, int numMi
             snprintf(buff, STRING_BUFF_SIZE, "is_DEAD_[NIGHT%d]", previousNight);
             addConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff);
             pushTempRule(rs);
+
+            //Demon Dying -> Scarlett Woman becomes Demon (If atleast 5 players are alive)
+            setTempRuleParams(rs, 5,1);
+            snprintf(buff, STRING_BUFF_SIZE, "is_IMP_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 1, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_ROLE_CHANGED_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 1, "PLAYERS", buff);
+            //EVIL Demon died
+            snprintf(buff, STRING_BUFF_SIZE, "HANGING_DEATH_[NIGHT%d]", night);
+            addConditionToTempRuleName(rs, kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_DEMON_[NIGHT%d]", night);
+            addConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_EVIL_[NIGHT%d]", night);
+            addConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff);
+            //EVIL Scarlet Woman Is Alive
+            snprintf(buff, STRING_BUFF_SIZE, "is_SCARLET_WOMAN_[NIGHT%d]", previousNight);
+            addConditionToTempRuleName(rs,kb, 1, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_ALIVE_[NIGHT%d]", night);
+            addConditionToTempRuleName(rs,kb, 1, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_EVIL_[NIGHT%d]", night);
+            addConditionToTempRuleName(rs,kb, 1, "PLAYERS", buff);
+
+            snprintf(buff, STRING_BUFF_SIZE, "is_ALIVE_[NIGHT%d]", night);
+            addConditionToTempRuleName(rs,kb, 2, "PLAYERS", buff);
+
+            snprintf(buff, STRING_BUFF_SIZE, "is_ALIVE_[NIGHT%d]", night);
+            addConditionToTempRuleName(rs,kb, 3, "PLAYERS", buff);
+
+            snprintf(buff, STRING_BUFF_SIZE, "is_ALIVE_[NIGHT%d]", night);
+            addConditionToTempRuleName(rs,kb, 4, "PLAYERS", buff);
+            pushTempRule(rs);
+
+            //Need to add star passing rules
         }
         else
         {
@@ -1524,6 +1560,7 @@ static void deathRules(RuleSet* rs, KnowledgeBase* kb, int numPlayers, int numMi
             addConditionToTempRuleName(rs, kb, 0, "PLAYERS", buff);
             pushTempRule(rs);
         }
+        
         
 
     }

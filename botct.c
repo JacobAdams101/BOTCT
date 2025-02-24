@@ -22,6 +22,12 @@
  * SOFTWARE.
  */
 
+ /*
+ *
+ * | SEEN ROLE | NIGHT | DAYTIME | VOTING | NIGHT | DAYTIME | VOTING | NIGHT | DAYTIME |
+ * |_NIGHT 0_____________________|_NIGHT 1__________________|_NIGHT 2__________________|
+ */
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -340,8 +346,9 @@ int main()
     initScript(&rs, &kb, SCRIPT, NUM_PLAYERS, NUM_MINIONS, NUM_DEMONS, BASE_OUTSIDERS, NUM_DAYS);
 
     getNames(kb->ELEMENT_NAMES, NUM_PLAYERS);
-
-    printRules(rs, kb);
+    
+    //Don't print rules
+    //printRules(rs, kb);
 
     solve(kb, rs, NUM_PLAYERS, NUM_MINIONS, NUM_DEMONS, BASE_OUTSIDERS, NUM_DAYS);
 
