@@ -35,5 +35,6 @@ void getNames(char* names[NUM_SETS][MAX_SET_ELEMENTS], int numPlayers);
 int getRoleIdFromString(char* roleName);
 int getRoleIDInput(char* message);
 int getPlayerIDInput(KnowledgeBase* kb, char* message);
+int getInt(char* message, int min, int max);
 
 int add_info(KnowledgeBase* kb, RuleSet* rs, int numDays);

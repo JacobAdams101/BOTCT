@@ -1037,7 +1037,6 @@ void printProbRoleTable(KnowledgeBase* kb, ProbKnowledgeBase* probkb, int night)
             printf("-------|");
         }
     }
-    //printf("-----------|------|");
     printf("\n");
     int element = 0;
     printf("IN GAME  |");
