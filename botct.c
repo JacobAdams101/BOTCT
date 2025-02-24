@@ -69,18 +69,22 @@
 
 
 
-
+/**
+ * main() - Main function
+ *
+*/
 int main()
 {
     initRand();
 
+    //Variables
     int NUM_PLAYERS;
     int NUM_MINIONS;
     int NUM_DEMONS;
     int BASE_OUTSIDERS;
     int SCRIPT;
+    int NUM_DAYS = 5; //Max number of days
 
-    int NUM_DAYS = 5;
     setup(&NUM_PLAYERS, &NUM_MINIONS, &NUM_DEMONS, &BASE_OUTSIDERS, &SCRIPT);
 
     printHeading("CREATING GAME..."); //UI HEADING
@@ -90,6 +94,7 @@ int main()
     printf("There are %d(+2) outsiders in the game\n", BASE_OUTSIDERS);
 
     printf("INITIALIZE KNOWLEDGE BASE...\n");
+    //Make knowlegde base
     KnowledgeBase* kb = NULL;
     RuleSet* rs = NULL;
 

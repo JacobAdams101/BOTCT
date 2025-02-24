@@ -31,7 +31,12 @@
 #include "scripts.h"
 
 
-
+/**
+ * initStrings() - init all the strings in an array
+ *
+ * @funcName - array to init
+ * @maxLen - max len of strings
+*/
 static void initStrings(char *funcName[NUM_SETS][FUNCTION_RESULT_SIZE*INT_LENGTH], int maxLen)
 {
     int SIZE = maxLen*sizeof(char);
@@ -44,6 +49,12 @@ static void initStrings(char *funcName[NUM_SETS][FUNCTION_RESULT_SIZE*INT_LENGTH
     }
 }
 
+/**
+ * initElementStrings() - init all the strings in an array
+ *
+ * @elementName - array to init
+ * @maxLen - max len of strings
+*/
 static void initElementStrings(char *elementName[NUM_SETS][MAX_SET_ELEMENTS], int maxLen)
 {
     int SIZE = maxLen*sizeof(char);
@@ -55,6 +66,17 @@ static void initElementStrings(char *elementName[NUM_SETS][MAX_SET_ELEMENTS], in
         }
     }
 }
+
+/**
+ * writeFunc() - write the name of a function (and it's negation) into funcName
+ *
+ * @funcName - array to write name to
+ * @set - the setID for the function
+ * @index - the indicies for different sets to write into
+ * @str the name of the function
+ * @strNegation the name of the negation of the function
+ * @maxLen - max len of strings
+*/
 static void writeFunc(char *funcName[NUM_SETS][FUNCTION_RESULT_SIZE*INT_LENGTH], int set, int index[], char *str, char *strNegation, int maxLen)
 {
     int SIZE = maxLen*sizeof(char);
@@ -64,6 +86,18 @@ static void writeFunc(char *funcName[NUM_SETS][FUNCTION_RESULT_SIZE*INT_LENGTH],
     index[set] += 1;
 }
 
+/**
+ * writeFunc() - write the name of a function (and it's negation) into funcName
+ * Also append a night identifier in the form _[NIGHT%d]
+ *
+ * @funcName - array to write name to
+ * @set - the setID for the function
+ * @index - the indicies for different sets to write into
+ * @str the name of the function
+ * @strNegation the name of the negation of the function
+ * @night - the night of the function
+ * @maxLen - max len of strings
+*/
 static void writeFuncNight(char *funcName[NUM_SETS][FUNCTION_RESULT_SIZE*INT_LENGTH], int set, int index[], char *str, char *strNegation, int night, int maxLen)
 {
     int SIZE = maxLen*sizeof(char);
@@ -73,6 +107,17 @@ static void writeFuncNight(char *funcName[NUM_SETS][FUNCTION_RESULT_SIZE*INT_LEN
     index[set] += 1;
 }
 
+/**
+ * writeRoleFunc() - write the name of a role function (and it's negation) into funcName
+ * Also append a night identifier in the form _[NIGHT%d]
+ *
+ * @funcName - array to write name to
+ * @set - the setID for the function
+ * @index - the indicies for different sets to write into
+ * @name the role name
+ * @night - the night of the function
+ * @maxLen - max len of strings
+*/
 static void writeRoleFunc(char *funcName[NUM_SETS][FUNCTION_RESULT_SIZE*INT_LENGTH], int set, int index[], char *name, char* postfix, int night, int maxLen)
 {
     char str[maxLen]; // Declare a character array to hold the string 
@@ -83,42 +128,68 @@ static void writeRoleFunc(char *funcName[NUM_SETS][FUNCTION_RESULT_SIZE*INT_LENG
     writeFuncNight(funcName, set, index, str, strNeg, night, maxLen);
 }
 
-
+/**
+ * writeDeathFunc() - write the name of a death function (and it's negation) into funcName
+ * Also append a night identifier in the form _[NIGHT%d]
+ *
+ * @funcName - array to write name to
+ * @set - the setID for the function
+ * @index - the indicies for different sets to write into
+ * @night - the night of the function
+ * @maxLen - max len of strings
+*/
 static void writeDeathFunc(char *funcName[NUM_SETS][FUNCTION_RESULT_SIZE*INT_LENGTH], int set, int index[], int night, int maxLen)
 {
     writeFuncNight(funcName, set, index, "is_DEAD", "is_ALIVE", night, maxLen);
 }
 
+/**
+ * writePoisonFunc() - write the name of a poison function (and it's negation) into funcName
+ * Also append a night identifier in the form _[NIGHT%d]
+ *
+ * @funcName - array to write name to
+ * @set - the setID for the function
+ * @index - the indicies for different sets to write into
+ * @night - the night of the function
+ * @maxLen - max len of strings
+*/
 static void writePoisonFunc(char *funcName[NUM_SETS][FUNCTION_RESULT_SIZE*INT_LENGTH], int set, int index[], int night, int maxLen)
 {
     writeFuncNight(funcName, set, index, "is_POISONED", "is_NOT_POISONED", night, maxLen);
 }
 
-
-
-KnowledgeBase* initKB(int NUM_PLAYERS, int NUM_DAYS)
+/**
+ * initKB() - allocate and initilise a knowledge base structure
+ *
+ * @NUM_PLAYERS - num players in game
+ * @NUM_DAYS - num days in game
+ * 
+ * @return the KB
+*/
+KnowledgeBase* initKB(const int NUM_PLAYERS, const int NUM_DAYS)
 {
     //Allocate memory
     KnowledgeBase* kb = (KnowledgeBase*) malloc(sizeof(KnowledgeBase));
 
-    
+    //Fill knowlegde base with zeroes
+    resetKnowledgeBase(kb);
 
-    resetKnowledgeBase(kb->KNOWLEDGE_BASE);
-
-    //Sets
+    //Set names
     kb->SET_NAMES[0] = "PLAYERS";
     kb->SET_NAMES[1] = "DAYS";
     kb->SET_NAMES[2] = "METADATA";
-
+    //Set sizes
     kb->SET_SIZES[0] = NUM_PLAYERS; //NUM PLAYERS
     kb->SET_SIZES[1] = NUM_DAYS; //NUM DAYS
     kb->SET_SIZES[2] = 1; //Metadata
 
+    //Store index of next unwritten element
     int index[3] = {0, 0, 0};
 
-
+    //Allocate function name strings memory
     initStrings(kb->FUNCTION_NAME, 64);
     initElementStrings(kb->ELEMENT_NAMES, 255);
+
     // ===========================================
     //  PLAYER FUNCTIONS
     // ===========================================
@@ -175,9 +246,14 @@ KnowledgeBase* initKB(int NUM_PLAYERS, int NUM_DAYS)
         }
     }
 
-    return kb;
+    return kb; //Return initilized knowledge base
 }
 
+/**
+ * initProbKB() - allocate and initilise a probabalistic knowledge base structure
+ * 
+ * @return the Probabilistic KB
+*/
 ProbKnowledgeBase* initProbKB()
 {
     //Allocate memory
@@ -188,32 +264,47 @@ ProbKnowledgeBase* initProbKB()
     return tally;
 }
 
+/**
+ * copyTo() - deep copy (mostly) a knowledge base object
+ * 
+ * @dest - destination knowledge base
+ * @src - source knowledge base
+*/
 void copyTo(KnowledgeBase* dest, KnowledgeBase* src)
 {
     //Deep copy knowlegde base (these might change)
     memcpy(dest->KNOWLEDGE_BASE, src->KNOWLEDGE_BASE, sizeof(long)*NUM_SETS*MAX_SET_ELEMENTS*FUNCTION_RESULT_SIZE);
     memcpy(dest->SET_SIZES, src->SET_SIZES, sizeof(int)*NUM_SETS);
-    for (int i = 0; i < NUM_SETS; i++)
+    for (int set = 0; set < NUM_SETS; set++)
     {
         //Shallow copy names (these will not change)
-        dest->SET_NAMES[i] = src->SET_NAMES[i];
+        dest->SET_NAMES[set] = src->SET_NAMES[set];
         //strcpy(dest->SET_NAMES[i], src->SET_NAMES[i]); //Deep copy version
 
-        for (int j = 0; j < MAX_SET_ELEMENTS; j++)
+        for (int element = 0; element < MAX_SET_ELEMENTS; element++)
         {
             //Shallow copy names (these will not change)
-            dest->ELEMENT_NAMES[i][j] = src->ELEMENT_NAMES[i][j];
+            dest->ELEMENT_NAMES[set][element] = src->ELEMENT_NAMES[set][element];
         }
 
-        for (int j = 0; j < FUNCTION_RESULT_SIZE*INT_LENGTH; j++)
+        for (int function = 0; function < FUNCTION_RESULT_SIZE*INT_LENGTH; function++)
         {
             //Shallow copy names (these will not change)
-            dest->FUNCTION_NAME[i][j] = src->FUNCTION_NAME[i][j];
+            dest->FUNCTION_NAME[set][function] = src->FUNCTION_NAME[set][function];
            //strcpy(dest->FUNCTION_NAME[i][j], src->FUNCTION_NAME[i][j]); //Deep copy version
         }
     }
 }
 
+/**
+ * getSetIDWithName() - finds the setID (index) given the string name identifer
+ * 
+ * @kb - knowledge base containing the set
+ * @set - the name of the set
+ * @validate - if TRUE if the set if not found crash the program throwing an error
+ * 
+ * @return the setID/index of the set -1 if not found
+*/
 int getSetIDWithName(KnowledgeBase* kb, char* set, int validate)
 {
     for (int i = 0; i < NUM_SETS; i++)
@@ -231,6 +322,16 @@ int getSetIDWithName(KnowledgeBase* kb, char* set, int validate)
     return -1;
 }
 
+/**
+ * getSetFunctionIDWithName() - finds the functionID (index) given the string name identifer
+ * 
+ * @kb - knowledge base containing the set
+ * @setID - the ID of the set
+ * @function - the name of the function
+ * @validate - if TRUE if the function if not found crash the program throwing an error
+ * 
+ * @return the functionID/index of the function -1 if not found
+*/
 int getSetFunctionIDWithName(KnowledgeBase* kb, int setID, char* function, int validate)
 {
     for (int i = 0; i < FUNCTION_RESULT_SIZE*INT_LENGTH; i++)
@@ -253,6 +354,16 @@ int getSetFunctionIDWithName(KnowledgeBase* kb, int setID, char* function, int v
     return -1;
 }
 
+/**
+ * getSetElementIDWithName() - finds the elementID (index) given the string name identifer
+ * 
+ * @kb - knowledge base containing the set
+ * @setID - the ID of the set
+ * @element - the name of the element
+ * @validate - if TRUE if the element if not found crash the program throwing an error
+ * 
+ * @return the elementID/index of the element -1 if not found
+*/
 int getSetElementIDWithName(KnowledgeBase* kb, int setID, char* element, int validate)
 {
     for (int i = 0; i < MAX_SET_ELEMENTS; i++)
@@ -275,15 +386,25 @@ int getSetElementIDWithName(KnowledgeBase* kb, int setID, char* element, int val
     return -1;
 }
 
+/**
+ * getIndexAndBit() - write into index and bit the location of the functionID
+ * 
+ * @index - functionID location array index output destination
+ * @bit - functionID location array[index] bit index output destination
+ * @functionID - the functionID/index
+*/
 void getIndexAndBit(int* index, int* bit, int functionID)
 {
     *index = functionID / INT_LENGTH;
     *bit = functionID - (*index * INT_LENGTH);
 }
 
-
-
-void resetKnowledgeBase(long knowledgeBase[NUM_SETS][MAX_SET_ELEMENTS][FUNCTION_RESULT_SIZE])
+/**
+ * resetKnowledgeBase() - reset the knowledge in the knowledge base
+ * 
+ * @kb - the knowledge base to reset
+*/
+void resetKnowledgeBase(KnowledgeBase* kb)
 {
     for (int set = 0; set < NUM_SETS; set++)
     {
@@ -291,12 +412,17 @@ void resetKnowledgeBase(long knowledgeBase[NUM_SETS][MAX_SET_ELEMENTS][FUNCTION_
         {
             for (int i = 0; i < FUNCTION_RESULT_SIZE; i++)
             {
-                knowledgeBase[set][element][i] = 0;
+                kb->KNOWLEDGE_BASE[set][element][i] = 0;
             }
         }
     }
 }
 
+/**
+ * resetProbKnowledgeBase() - reset the knowledge in the probablistic knowledge base
+ * 
+ * @tally - the probabalistic knowledge base to reset
+*/
 void resetProbKnowledgeBase(ProbKnowledgeBase* tally)
 {
     for (int set = 0; set < NUM_SETS; set++)
@@ -312,6 +438,13 @@ void resetProbKnowledgeBase(ProbKnowledgeBase* tally)
     tally->tally = 0;
 }
 
+/**
+ * resetElement() - resets an element within the knowledge base
+ * 
+ * @kb - the knowledge base to reset
+ * @set - the setID/index the element belongs to
+ * @element - the elementID/index the element belongs to
+*/
 void resetElement(KnowledgeBase* kb, int set, int element)
 {
     for (int i = 0; i < FUNCTION_RESULT_SIZE; i++)
@@ -320,6 +453,12 @@ void resetElement(KnowledgeBase* kb, int set, int element)
     }
 }
 
+/**
+ * mergeKnowledge() - merge the knowledge from 2 different bases into 1 (inline)
+ * 
+ * @kb - the knowledge base to merge into
+ * @x - the extra knowledge to add into kb (inline)
+*/
 void mergeKnowledge(KnowledgeBase* kb, KnowledgeBase* x)
 {
     for (int set = 0; set < NUM_SETS; set++)
@@ -334,6 +473,12 @@ void mergeKnowledge(KnowledgeBase* kb, KnowledgeBase* x)
     }
 }
 
+/**
+ * mergeProbKnowledge() - merge the probabalistic knowledge from 2 different bases into 1 (inline)
+ * 
+ * @probkb - the probabalistic knowledge base to merge into
+ * @x - the extra probabalistic knowledge to add into kb (inline)
+*/
 void mergeProbKnowledge(ProbKnowledgeBase* probkb, ProbKnowledgeBase* x)
 {
     for (int set = 0; set < NUM_SETS; set++)
@@ -349,6 +494,14 @@ void mergeProbKnowledge(ProbKnowledgeBase* probkb, ProbKnowledgeBase* x)
     probkb->tally += x->tally;
 }
 
+/**
+ * addKnowledge() - add some knowlegde to the KB (set a function to true)
+ * 
+ * @kb - the knowledge base to add into (inline)
+ * @set - the setID/index of the element to add knowledge to
+ * @element - the elementID/index to add knowledge to
+ * @function - the functionID/index to set to true
+*/
 void addKnowledge(KnowledgeBase* kb, int set, int element, int function)
 {
     int index, bit;
@@ -359,22 +512,14 @@ void addKnowledge(KnowledgeBase* kb, int set, int element, int function)
     kb->KNOWLEDGE_BASE[set][element][index] |= mask;
 }
 
-int isKnown(KnowledgeBase* kb, int set, int element, int function)
-{
-    int index, bit;
-    getIndexAndBit(&index, &bit, function);
-
-    return (kb->KNOWLEDGE_BASE[set][element][index] >> bit) & 1;
-}
-
-int isKnownName(KnowledgeBase* kb, char* set, int element, char* function)
-{
-    int setID = getSetIDWithName(kb, set, 1);
-    int functionID = getSetFunctionIDWithName(kb, setID, function, 1);
-
-    return isKnown(kb, setID, element, functionID);
-}
-
+/**
+ * addKnowledgeName() - add some knowlegde to the KB (set a function to true)
+ * 
+ * @kb - the knowledge base to add into (inline)
+ * @set - the NAME of the set of the element to add knowledge to
+ * @element - the elementID/index to add knowledge to
+ * @function - the NAME of the function to set to true
+*/
 void addKnowledgeName(KnowledgeBase* kb, char* set, int element, char* function)
 {
     int setID = getSetIDWithName(kb, set, 1);
@@ -383,7 +528,51 @@ void addKnowledgeName(KnowledgeBase* kb, char* set, int element, char* function)
     addKnowledge(kb, setID, element, functionID);
 }
 
+/**
+ * isKnown() - returns if something is known to be true
+ * 
+ * @kb - the knowledge base to check
+ * @set - the the setID/index of the element to check
+ * @element - the elementID/index to check
+ * @function - the functionID/index to check if true
+ * 
+ * @return the value of the function in the knowledge base
+*/
+int isKnown(KnowledgeBase* kb, int set, int element, int function)
+{
+    int index, bit;
+    getIndexAndBit(&index, &bit, function);
 
+    return (kb->KNOWLEDGE_BASE[set][element][index] >> bit) & 1;
+}
+
+/**
+ * isKnownName() - returns if something is known to be true
+ * 
+ * @kb - the knowledge base to check
+ * @set - the NAME of the set of the element to check
+ * @element - the elementID/index to check
+ * @function - the NAME of the function to check if true
+ * 
+ * @return the value of the function in the knowledge base
+*/
+int isKnownName(KnowledgeBase* kb, char* set, int element, char* function)
+{
+    int setID = getSetIDWithName(kb, set, 1);
+    int functionID = getSetFunctionIDWithName(kb, setID, function, 1);
+
+    return isKnown(kb, setID, element, functionID);
+}
+
+/**
+ * hasExplicitContradiction() - returns if an explict contradiction is found
+ * An explicit contradiction is described is if X AND NOT(X) evaluates to true
+ * Can be modified to working implicitly by first running infer steps
+ * 
+ * @kb - the knowledge base to check
+ * 
+ * @return TRUE (1) if there is a contradiction in the knowledge base
+*/
 int hasExplicitContradiction(KnowledgeBase* kb)
 {
     //[NUM_SETS][MAX_SET_ELEMENTS][FUNCTION_RESULT_SIZE];
@@ -404,6 +593,12 @@ int hasExplicitContradiction(KnowledgeBase* kb)
     return 0;
 }
 
+/**
+ * addKBtoProbTally() - add a tally of 1 to each function which evaluates to true in the knowledge base
+ * 
+ * @kb - the knowledge base to add to the tally
+ * @tally - the tally to add to
+*/
 void addKBtoProbTally(KnowledgeBase* kb, ProbKnowledgeBase* tally)
 {
 
@@ -423,11 +618,31 @@ void addKBtoProbTally(KnowledgeBase* kb, ProbKnowledgeBase* tally)
     tally->tally++;
 }
 
+/**
+ * getProbIntPercentage() - get an estimation for the probability of somethign being true in the tally
+ * 
+ * @tally - the probablistic knowledge base to extra the percentage from
+ * @set - the setID/index of the element to get the percentage from
+ * @element - the elementID/index to get the percentage from
+ * @function - the functionID/index to get the percentage from
+ * 
+ * @return as a percentage P(ELEMENT in SET F(ELEMENT) = TRUE) * 100
+*/
 int getProbIntPercentage(ProbKnowledgeBase* tally, int set, int element, int function)
 {
     return (tally->KNOWLEDGE_BASE[set][element][function]*100) / tally->tally;
 }
 
+/**
+ * getProbIntPercentage() - get an estimation for the probability of somethign being true in the tally
+ * 
+ * @tally - the probablistic knowledge base to extra the percentage from
+ * @set - the NAME of the set of the element to get the percentage from
+ * @element - the elementID/index to get the percentage from
+ * @function - the NAME of the function to get the percentage from
+ * 
+ * @return as a percentage P(ELEMENT in SET F(ELEMENT) = TRUE) * 100
+*/
 int getProbIntPercentageName(ProbKnowledgeBase* tally, KnowledgeBase* kb, char* set, int element, char* function)
 {
     int setID = getSetIDWithName(kb, set, 1);
@@ -436,6 +651,11 @@ int getProbIntPercentageName(ProbKnowledgeBase* tally, KnowledgeBase* kb, char* 
     return getProbIntPercentage(tally, setID, element, functionID);
 }
 
+/**
+ * printKnowledgeBase() - print the knowledge base to the terminal
+ * 
+ * @kb - the knowledge base to print to the termial
+*/
 void printKnowledgeBase(KnowledgeBase* kb)
 {
 
@@ -456,14 +676,19 @@ void printKnowledgeBase(KnowledgeBase* kb)
     printf("\n");
 }
 
-
-void printPlayerName(char* name, int maxLen)
+/**
+ * printTrucatedStr() - print a trucated string
+ * 
+ * @str - the string to print
+ * @maxLen - max length to print
+*/
+static void printTrucatedStr(char* str, int maxLen)
 {
     for (int c = 0; c < maxLen; c++)
     {
-        if (c < strlen(name))
+        if (c < strlen(str))
         {
-            printf("%c", name[c]);
+            printf("%c", str[c]);
         }
         else
         {
@@ -472,6 +697,13 @@ void printPlayerName(char* name, int maxLen)
     }
 }
 
+/**
+ * printPlayerTable() - print the knowledge base to the terminal
+ * Print in the form of a player table
+ * 
+ * @kb - the knowledge base to print to the termial
+ * @night - night to print
+*/
 void printPlayerTable(KnowledgeBase* kb, int night)
 {
     char buff[64];
@@ -482,10 +714,7 @@ void printPlayerTable(KnowledgeBase* kb, int night)
         //Only print roles in the script
         if (ROLE_IN_SCRIPT[role] == 1)
         {
-            for (int c = 0; c < 3; c++)
-            {
-                printf("%c", ROLE_NAMES[role][c]);
-            }
+            printTrucatedStr(ROLE_NAMES[role], 3);
             printf("|");
         }
     }
@@ -527,9 +756,7 @@ void printPlayerTable(KnowledgeBase* kb, int night)
         snprintf(buff, 64, "is_DEAD_[NIGHT%d]", night);
         int isDead = isKnownName(kb, "PLAYERS", element, buff); 
 
-        //printf("PLAYER %d |", element);
-        //printf("%s |", kb->ELEMENT_NAMES[0][element]);
-        printPlayerName(kb->ELEMENT_NAMES[0][element], 9);
+        printTrucatedStr(kb->ELEMENT_NAMES[0][element], 9);
         printf("|");
         for (int role = 0; role < NUM_BOTCT_ROLES; role++)
         {
@@ -618,6 +845,13 @@ void printPlayerTable(KnowledgeBase* kb, int night)
     }
 }
 
+/**
+ * printRoleTable() - print the knowledge base to the terminal
+ * Print in the form of a role table
+ * 
+ * @kb - the knowledge base to print to the termial
+ * @night - night to print
+*/
 void printRoleTable(KnowledgeBase* kb, int night)
 {
     char buff[64];
@@ -628,10 +862,7 @@ void printRoleTable(KnowledgeBase* kb, int night)
         //Only print roles in the script
         if (ROLE_IN_SCRIPT[role] == 1)
         {
-            for (int c = 0; c < 3; c++)
-            {
-                printf("%c", ROLE_NAMES[role][c]);
-            }
+            printTrucatedStr(ROLE_NAMES[role], 3);
             printf("|");
         }
     }
@@ -705,6 +936,14 @@ void printRoleTable(KnowledgeBase* kb, int night)
     
 }
 
+/**
+ * printProbPlayerTable() - print the probablistic knowledge base to the terminal
+ * Print in the form of a prob player table
+ * 
+ * @kb - the knowledge base that the prob tally is based off of to print to the termial
+ * @kb - the probabalistic knowledge base to use for percentages (%) to print to the termial
+ * @night - night to print
+*/
 void printProbPlayerTable(KnowledgeBase* kb, ProbKnowledgeBase* probkb, int night)
 {
     char buff[64];
@@ -715,10 +954,7 @@ void printProbPlayerTable(KnowledgeBase* kb, ProbKnowledgeBase* probkb, int nigh
         //Only print roles in the script
         if (ROLE_IN_SCRIPT[role] == 1)
         {
-            for (int c = 0; c < 3; c++)
-            {
-                printf("%c", ROLE_NAMES[role][c]);
-            }
+            printTrucatedStr(ROLE_NAMES[role], 3);
             printf("  |  ");
         }
     }
@@ -738,7 +974,7 @@ void printProbPlayerTable(KnowledgeBase* kb, ProbKnowledgeBase* probkb, int nigh
     {
 
 
-        printPlayerName(kb->ELEMENT_NAMES[0][element], 9);
+        printTrucatedStr(kb->ELEMENT_NAMES[0][element], 9);
         printf("|");
         for (int role = 0; role < NUM_BOTCT_ROLES; role++)
         {
@@ -769,6 +1005,14 @@ void printProbPlayerTable(KnowledgeBase* kb, ProbKnowledgeBase* probkb, int nigh
     }
 }
 
+/**
+ * printProbRoleTable() - print the probablistic knowledge base to the terminal
+ * Print in the form of a prob role table
+ * 
+ * @kb - the knowledge base that the prob tally is based off of to print to the termial
+ * @kb - the probabalistic knowledge base to use for percentages (%) to print to the termial
+ * @night - night to print
+*/
 void printProbRoleTable(KnowledgeBase* kb, ProbKnowledgeBase* probkb, int night)
 {
     char buff[64];
@@ -779,10 +1023,7 @@ void printProbRoleTable(KnowledgeBase* kb, ProbKnowledgeBase* probkb, int night)
         //Only print roles in the script
         if (ROLE_IN_SCRIPT[role] == 1)
         {
-            for (int c = 0; c < 3; c++)
-            {
-                printf("%c", ROLE_NAMES[role][c]);
-            }
+            printTrucatedStr(ROLE_NAMES[role], 3);
             printf("  |  ");
         }
     }

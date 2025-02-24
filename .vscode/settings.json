@@ -6,6 +6,12 @@
         "chrono": "c",
         "ui.h": "c",
         "ios": "cpp",
-        "typeinfo": "c"
+        "typeinfo": "c",
+        "limits": "c",
+        "ratio": "c",
+        "algorithm": "c",
+        "__tuple": "c",
+        "array": "c",
+        "string": "c"
     }
 }
