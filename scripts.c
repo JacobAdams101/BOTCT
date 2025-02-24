@@ -1256,14 +1256,42 @@ static void poisonRules(RuleSet* rs, KnowledgeBase* kb, int numPlayers, int numM
     /*
      * IDEA: There can be one red herring for the fortune teller
      * red herrings do not change with night
+     * 
+     * ROLES THAT CAUSE POISONING
+     * ===TB
+     * Poisoner (Anyone)
+     * 
+     * ===BMR
+     * Sailor (Either someone or themselves)
+     * Innkeeper
+     * COURTIER
+     * MINSTREL
+     * GOON
+     * PUKKA
+     * 
+     * ===S&V
+     * SNAKE_CHARMER
+     * PHILOSOPHER
+     * SWEETHEART
+     * VORTOX [WRONG INFO so not really poisoned but assumed wrong]
+     * NO_DASHII
+     * VIGORMORTIS
+     * 
     */
     for (int night = 0; night < numDays; night++)
     {
-        //<METADATA>is_NOT_POISONER_in_PLAY => <PLAYER>is_NOT_poisoned_NIGHT<i>
+        //<METADATA>is_NOT_POISONER_in_PLAY AND ...=> <PLAYER>is_NOT_poisoned_NIGHT<i>
+        //IDEA: If no roles that cause poisoning are in play... no one can be poisoned
         setTempRuleParams(rs, 1,0);
         snprintf(buff, STRING_BUFF_SIZE, "is_NOT_POISONED_[NIGHT%d]", night);
         setTempRuleResultName(rs, kb, -1, "PLAYERS", buff);
+        //TB
         snprintf(buff, STRING_BUFF_SIZE, "is_NOT_POISONER_in_PLAY_[NIGHT%d]", night);
+        addConditionToTempRuleName(rs,kb, 0, "METADATA", buff);
+        //BMR
+        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_SAILOR_in_PLAY_[NIGHT%d]", night);
+        addConditionToTempRuleName(rs,kb, 0, "METADATA", buff);
+        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_INNKEEPER_in_PLAY_[NIGHT%d]", night);
         addConditionToTempRuleName(rs,kb, 0, "METADATA", buff);
         snprintf(buff, STRING_BUFF_SIZE, "is_NOT_COURTIER_in_PLAY_[NIGHT%d]", night);
         addConditionToTempRuleName(rs,kb, 0, "METADATA", buff);
@@ -1273,6 +1301,13 @@ static void poisonRules(RuleSet* rs, KnowledgeBase* kb, int numPlayers, int numM
         addConditionToTempRuleName(rs,kb, 0, "METADATA", buff);
         snprintf(buff, STRING_BUFF_SIZE, "is_NOT_PUKKA_in_PLAY_[NIGHT%d]", night);
         addConditionToTempRuleName(rs,kb, 0, "METADATA", buff);
+        //S&V
+        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_SNAKE_CHARMER_in_PLAY_[NIGHT%d]", night);
+        addConditionToTempRuleName(rs,kb, 0, "METADATA", buff);
+        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_PHILOSOPHER_in_PLAY_[NIGHT%d]", night);
+        addConditionToTempRuleName(rs,kb, 0, "METADATA", buff);
+        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_SWEETHEART_in_PLAY_[NIGHT%d]", night);
+        addConditionToTempRuleName(rs,kb, 0, "METADATA", buff);
         snprintf(buff, STRING_BUFF_SIZE, "is_NOT_VORTOX_in_PLAY_[NIGHT%d]", night);
         addConditionToTempRuleName(rs,kb, 0, "METADATA", buff);
         snprintf(buff, STRING_BUFF_SIZE, "is_NOT_NO_DASHII_in_PLAY_[NIGHT%d]", night);
@@ -1280,8 +1315,50 @@ static void poisonRules(RuleSet* rs, KnowledgeBase* kb, int numPlayers, int numM
         snprintf(buff, STRING_BUFF_SIZE, "is_NOT_VIGORMORTIS_in_PLAY_[NIGHT%d]", night);
         addConditionToTempRuleName(rs,kb, 0, "METADATA", buff);
         pushTempRule(rs);
+
+        //Specific poisoning
+        //An Alive VORTOX poisons everyone
+        setTempRuleParams(rs, 1,0);
+        snprintf(buff, STRING_BUFF_SIZE, "is_POISONED_[NIGHT%d]", night);
+        setTempRuleResultName(rs, kb, -1, "PLAYERS", buff);
+        snprintf(buff, STRING_BUFF_SIZE, "is_VORTOX_ALIVE_[NIGHT%d]", night);
+        addConditionToTempRuleName(rs,kb, 0, "METADATA", buff);
+        pushTempRule(rs);
+        //An Alive NO_DASHII Poisons to the left and right of himself
+        for (int player = 0; player < numPlayers; player++)
+        {
+            int LHS = player - 1;
+            int RHS = player + 1;
+            if (LHS < 0)
+            {
+                LHS += numPlayers;
+            }
+            if (RHS >= numPlayers)
+            {
+                RHS -= numPlayers;
+            }
+            //LHS
+            setTempRuleParams(rs, 1,0);
+            snprintf(buff, STRING_BUFF_SIZE, "is_POISONED_[NIGHT%d]", night);
+            setTempRuleResultName(rs, kb, LHS-1000, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NO_DASHII_[NIGHT%d]", night);
+            addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff, player);
+            snprintf(buff, STRING_BUFF_SIZE, "is_ALIVE_[NIGHT%d]", night);
+            addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff, player);
+            pushTempRule(rs);
+            //RHS
+            setTempRuleParams(rs, 1,0);
+            snprintf(buff, STRING_BUFF_SIZE, "is_POISONED_[NIGHT%d]", night);
+            setTempRuleResultName(rs, kb, RHS-1000, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NO_DASHII_[NIGHT%d]", night);
+            addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff, player);
+            snprintf(buff, STRING_BUFF_SIZE, "is_ALIVE_[NIGHT%d]", night);
+            addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff, player);
+            pushTempRule(rs);
+        }
         /*
         //Contrapositive logic
+        //Disabled due to a large amount of roles in play
         // <PLAYER>is_poisoned_NIGHT<i> => <METADATA>is_POISONER_in_PLAY
         setTempRuleParams(rs, 1,0);
         snprintf(buff, STRING_BUFF_SIZE, "is_POISONER_in_PLAY_[NIGHT%d]", night);
@@ -1291,6 +1368,8 @@ static void poisonRules(RuleSet* rs, KnowledgeBase* kb, int numPlayers, int numM
         pushTempRule(rs);
         */
         /*
+        //This is not true in scripts other than tb and technically 
+        //the poisoner could poison they're own team
         //<PLAYER>is_EVIL => <PLAYER>is_NOT_poisoned_NIGHT<i>
         setTempRuleParams(rs, 1,0);
         
@@ -1309,6 +1388,7 @@ static void poisonRules(RuleSet* rs, KnowledgeBase* kb, int numPlayers, int numM
         pushTempRule(rs);
 
         //Only one player can be poisoned at once
+        //Also not true
         //<PLAYER_A>is_poisoned_NIGHT<i> => <PLAYER_B>is_NOT_poisoned_NIGHT<i>
         setTempRuleParams(rs, 1,0);
         
@@ -1385,19 +1465,66 @@ static void deathRules(RuleSet* rs, KnowledgeBase* kb, int numPlayers, int numMi
         snprintf(buff, STRING_BUFF_SIZE, "is_ALIVE_[NIGHT%d]", night);
         addConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff);
         pushTempRule(rs);
+        int previousNight = night-1;
+        if (previousNight >= 0)
+        {
+            //Case Analysis for remaining alive
+            //<PLAYER>NOT_SLEEP_DEATH_NIGHT<i> AND <PLAYER>NOT_HANGING_DEATH_NIGHT<i> AND <PLAYER>NOT_NOMINATION_DEATH_NIGHT<i> AND <PLAYER>is_ALIVE_NIGHT<"j<i">=> <METADATA>is_ALIVE_NIGHT
+            setTempRuleParams(rs, 1,0);
+            snprintf(buff, STRING_BUFF_SIZE, "is_ALIVE_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "NOT_NOMINATION_DEATH_[NIGHT%d]", night);
+            addConditionToTempRuleName(rs, kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "NOT_HANGING_DEATH_[NIGHT%d]", night);
+            addConditionToTempRuleName(rs, kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "NOT_SLEEP_DEATH_[NIGHT%d]", night);
+            addConditionToTempRuleName(rs, kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_ALIVE_[NIGHT%d]", previousNight);
+            addConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff);
+            pushTempRule(rs);
 
-        //Case Analysis
-        //<PLAYER>NOT_SLEEP_DEATH_NIGHT<i> AND <PLAYER>NOT_HANGING_DEATH_NIGHT<i> AND  <PLAYER>NOT_NOMINATION_DEATH_NIGHT<i> => <METADATA>is_ALIVE_NIGHT
-        setTempRuleParams(rs, 1,0);
-        snprintf(buff, STRING_BUFF_SIZE, "is_ALIVE_[NIGHT%d]", night);
-        setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
-        snprintf(buff, STRING_BUFF_SIZE, "NOT_NOMINATION_DEATH_[NIGHT%d]", night);
-        addConditionToTempRuleName(rs, kb, 0, "PLAYERS", buff);
-        snprintf(buff, STRING_BUFF_SIZE, "NOT_HANGING_DEATH_[NIGHT%d]", night);
-        addConditionToTempRuleName(rs, kb, 0, "PLAYERS", buff);
-        snprintf(buff, STRING_BUFF_SIZE, "NOT_SLEEP_DEATH_[NIGHT%d]", night);
-        addConditionToTempRuleName(rs, kb, 0, "PLAYERS", buff);
-        pushTempRule(rs);
+            //Case Analysis for remaining dead
+            setTempRuleParams(rs, 1,0);
+            snprintf(buff, STRING_BUFF_SIZE, "is_DEAD_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_DEAD_[NIGHT%d]", previousNight);
+            addConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "NOT_RESURRECTED_[NIGHT%d]", night);
+            addConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff);
+            pushTempRule(rs);
+
+            //Case Analysis for coming back to life
+            setTempRuleParams(rs, 1,0);
+            snprintf(buff, STRING_BUFF_SIZE, "is_ALIVE_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "RESURRECTED_[NIGHT%d]", night);
+            addConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "NOT_NOMINATION_DEATH_[NIGHT%d]", night);
+            addConditionToTempRuleName(rs, kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "NOT_HANGING_DEATH_[NIGHT%d]", night);
+            addConditionToTempRuleName(rs, kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "NOT_SLEEP_DEATH_[NIGHT%d]", night);
+            addConditionToTempRuleName(rs, kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_DEAD_[NIGHT%d]", previousNight);
+            addConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff);
+            pushTempRule(rs);
+        }
+        else
+        {
+            //Case Analysis for remaining alive
+            //<PLAYER>NOT_SLEEP_DEATH_NIGHT<i> AND <PLAYER>NOT_HANGING_DEATH_NIGHT<i> AND <PLAYER>NOT_NOMINATION_DEATH_NIGHT<i> AND <PLAYER>is_ALIVE_NIGHT<"j<i">=> <METADATA>is_ALIVE_NIGHT
+            setTempRuleParams(rs, 1,0);
+            snprintf(buff, STRING_BUFF_SIZE, "is_ALIVE_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "NOT_NOMINATION_DEATH_[NIGHT%d]", night);
+            addConditionToTempRuleName(rs, kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "NOT_HANGING_DEATH_[NIGHT%d]", night);
+            addConditionToTempRuleName(rs, kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "NOT_SLEEP_DEATH_[NIGHT%d]", night);
+            addConditionToTempRuleName(rs, kb, 0, "PLAYERS", buff);
+            pushTempRule(rs);
+        }
+        
 
     }
 

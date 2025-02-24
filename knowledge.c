@@ -147,6 +147,7 @@ KnowledgeBase* initKB(int NUM_PLAYERS, int NUM_DAYS)
         writeFuncNight(kb->FUNCTION_NAME, 0, index, "SLEEP_DEATH", "NOT_SLEEP_DEATH", night, 64);
         writeFuncNight(kb->FUNCTION_NAME, 0, index, "HANGING_DEATH", "NOT_HANGING_DEATH", night, 64);
         writeFuncNight(kb->FUNCTION_NAME, 0, index, "NOMINATION_DEATH", "NOT_NOMINATION_DEATH", night, 64);
+        writeFuncNight(kb->FUNCTION_NAME, 0, index, "RESURRECTED", "NOT_RESURRECTED", night, 64);
         //Role changed
         writeFuncNight(kb->FUNCTION_NAME, 0, index, "is_ROLE_CHANGED", "is_NOT_ROLE_CHANGED", night, 64);
     }

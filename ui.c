@@ -465,6 +465,47 @@ static void nominationDeath(KnowledgeBase* kb)
     }
 }
 
+static void resurrected(KnowledgeBase* kb)
+{
+    char buff[STRING_BUFF_SIZE]; // Declare a character array to hold the string 
+
+    int night;
+
+    printf("ENERTING: PLAYER(s) RESURRECTED\n");
+
+    int n;
+    printf("Num Resurrections?:\n");
+    scanf("%d", &n); // Read player ID
+
+    printf("On night?:\n");
+    scanf("%d", &night); // Read player ID
+
+    int playerID[n];
+
+    for (int i = 0; i < n; i++)
+    {
+        playerID[i] = getPlayerIDInput(kb, "Which player(s) were resurrected?"); // Read player ID
+    }
+
+    for (int i = 0; i < kb->SET_SIZES[0]; i++)
+    {
+        int inSet = 0;
+        for (int j = 0; j < n; j++)
+        {
+            if (playerID[j] == i) inSet = 1;
+        }
+        if (inSet)
+        {
+            snprintf(buff, STRING_BUFF_SIZE, "RESURRECTED_[NIGHT%d]", night);
+            addKnowledgeName(kb, "PLAYERS", i, buff);
+        }
+        else
+        {
+            snprintf(buff, STRING_BUFF_SIZE, "NOT_RESURRECTED_[NIGHT%d]", night);
+            addKnowledgeName(kb, "PLAYERS", i, buff);
+        }
+    }
+}
 
 static void reset(KnowledgeBase* kb)
 {
@@ -1108,22 +1149,26 @@ int add_info(KnowledgeBase* kb, RuleSet* rs, int numDays)
         char HUNG[] = "H";
         char NOMINATION_DEATH[] = "ND";
         char FAILED_HANGING[] = "FH";
-        char ALIVE[] = "A";
+        char RESURRECTED[] = "R";
         char RESET[] = "RST";
         char FINISH[] = "SHOWDATA";
         char FINISH_PROB[] = "SHOWPROB";
         printf("ADD INFORMATION:\n");
         printf("- Type '%s' to enter what role a player was shown:\n", SHOWN_ROLE);
+        printf("\n");
         printf("- Type '%s' to enter a role not in the game:\n", ROLE_NOT_IN_GAME);
-        printf("- Type '%s' to submit a ping:\n", PING);
         printf("- Type '%s' to submit n possibilities for a player:\n", N_POSSIBILITIES);
+        printf("\n");
+        printf("- Type '%s' to submit a ping:\n", PING);
+        printf("\n");
         printf("- Type '%s' to submit that a player that is confirmed poisoned:\n", POISONED);
         printf("- Type '%s' to submit that a player that is confirmed red herring:\n", RED_HERRING);
-        printf("- Type '%s' to submit that a player died :\n", DIED);
-        printf("- Type '%s' to submit that a player that died when nominating a player:\n", NOMINATION_DEATH);
-        printf("- Type '%s' to submit that a player was hung and died:\n", HUNG);
-        printf("- Type '%s' to submit that a player was hung, but didn't die:\n", FAILED_HANGING);
-        printf("- Type '%s' to submit that everyone else is still alive:\n", ALIVE);
+        printf("\n");
+        printf("- Type '%s' to submit that a/some player(s) died :\n", DIED);
+        printf("- Type '%s' to submit that a/some player(s) that died when nominating a player:\n", NOMINATION_DEATH);
+        printf("- Type '%s' to submit that a/some player(s) was hung and died:\n", HUNG);
+        printf("- Type '%s' to submit that a/some player(s) was hung, but didn't die:\n", FAILED_HANGING);
+        printf("- Type '%s' to submit that a/some player(s) was resurrected:\n", RESURRECTED);
         printf("\n");
         printf("- Type '%s' to reset a players data:\n", RESET);
         printf("\n");
@@ -1174,9 +1219,9 @@ int add_info(KnowledgeBase* kb, RuleSet* rs, int numDays)
         {
             //TODO
         }
-        else if (strcmp(buff,ALIVE) == 0)
+        else if (strcmp(buff,RESURRECTED) == 0)
         {
-            //TODO
+            resurrected(kb);
         }
         else if (strcmp(buff,RESET) == 0)
         {
