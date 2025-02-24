@@ -572,13 +572,12 @@ static void addPingRule(KnowledgeBase* kb, RuleSet* rs)
 
     printf("ENERTING: PLAYER PING (Unreliable information)\n");
 
-
     playerIDinfoFrom = getPlayerIDInput(kb, "Info from player?"); // Read player ID 
-    //printf("Info from player?:\n");
-    //scanf("%d", &playerIDinfoFrom); // Read player ID
 
     printf("Ping Type?:\n");
     printf("- %s\n- %s\n- %s\n- %s\n- %s\n- %s\n- %s\n- %s\n", WASHERWOMAN_PING, LIBRARIAN_PING, INVESTIGATOR_PING, CHEF_PING, EMPATH_PING, FORTUNE_TELLER_PING, UNDERTAKER_PING, RAVENKEEPER_PING);
+    printf("- %s\n- %s\n- %s\n- %s\n- %s\n- %s\n- %s\n- %s\n- %s\n- %s\n- %s\n- %s\n- %s\n", CLOCKMAKER_PING, DREAMER_PING, SNAKE_CHARMER_PING, MATHEMATICIAN_PING, FLOWERGIRL_PING, TOWN_CRIER_PING, ORACLE_PING, SAVANT_PING, SEAMSTRESS_PING, PHILOSOPHER_PING, ARTIST_PING, JUGGLER_PING, SAGE_PING);
+    printf("- %s\n- %s\n- %s\n- %s\n- %s\n- %s\n", GRANDMOTHER_PING, CHAMBERMAID_PING, EXORCIST_PING, GAMBLER_PING, GOSSIP_PING, PROFESSOR_PING);
     while (pingTypeID == -1)
     {
         scanf("%255s", inputPingType); // Read a string (up to 99 characters to leave space for the null terminator)
@@ -766,12 +765,8 @@ static void addPingRule(KnowledgeBase* kb, RuleSet* rs)
         selectedRole = getRoleIDInput("Role Shown?");
 
         playerX = getPlayerIDInput(kb, "For player 1?"); // Read player ID 
-        //printf("For player 1?:\n");
-        //scanf("%d", &playerX); // Read player ID
 
         playerY = getPlayerIDInput(kb, "For player 2?"); // Read player ID 
-        //printf("For player 2?:\n");
-        //scanf("%d", &playerY); // Read player ID
 
         //Originally this but converted to the stronger argument
         //If <PLAYER_INFO>is_LIBRARIAN AND <PLAYER_INFO>is_NOT_poisonedNIGHT0 AND <METADATA>is_NOT_SPY_in_PLAY => <METADATA>is_<ROLE>_in_PLAY
@@ -952,32 +947,114 @@ static void addPingRule(KnowledgeBase* kb, RuleSet* rs)
 
         printf("Empath ping on %s and %s\n", kb->ELEMENT_NAMES[0][playerX], kb->ELEMENT_NAMES[0][playerY]);
         
-        /*
+        
         if (countEvil == 0)
         {
-        //For 0 evil 2 good 
-        //If <PLAYER_INFO>is_EMPATH AND <PLAYER_INFO>is_NOT_poisonedNIGHT<night> => <PLAYER_X & Y>is_NOT_<ROLE> (where ROLE != GOOD, ROLE != SPY) {player X and Y is either good or a spy}
-        for (int role = 0; role < 24; role++)
-        {
-            setTempRuleParams(rs, 3,0);
-            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s", ROLE_NAMES[role]);
-            setTempRuleResultName(rs, kb, -playerX-1000, "PLAYERS", "is_NOT_DEMON");
-            addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", "is_FORTUNE_TELLER", playerIDinfoFrom);
-            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_poisoned_NIGHT%d", night);
+            //For 0 evil 2 good 
+            setTempRuleParams(rs, 2,0);
+            snprintf(buff, STRING_BUFF_SIZE, "is_GOOD_[NIGHT%d]", night);
+            setTempRuleResultName(rs, kb, 1, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_FORTUNE_TELLER_[NIGHT%d]", night);
             addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff, playerIDinfoFrom);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_POISONED_[NIGHT%d]", night);
+            addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff, playerIDinfoFrom);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_SPY_[NIGHT%d]", night);
+            addFixedConditionToTempRuleName(rs,kb, 1, "PLAYERS", buff, playerX);
             pushTempRule(rs);
-        }
+
+            setTempRuleParams(rs, 2,0);
+            snprintf(buff, STRING_BUFF_SIZE, "is_GOOD_[NIGHT%d]", night);
+            setTempRuleResultName(rs, kb, 1, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_FORTUNE_TELLER_[NIGHT%d]", night);
+            addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff, playerIDinfoFrom);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_POISONED_[NIGHT%d]", night);
+            addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff, playerIDinfoFrom);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_SPY_[NIGHT%d]", night);
+            addFixedConditionToTempRuleName(rs,kb, 1, "PLAYERS", buff, playerY);
+            pushTempRule(rs);
         }
         else if (countEvil == 1)
         {
-        //For 1 evil 1 good 
+            //For 1 evil 1 good 
+            setTempRuleParams(rs, 2,0);
+            snprintf(buff, STRING_BUFF_SIZE, "is_EVIL_[NIGHT%d]", night);
+            setTempRuleResultName(rs, kb, 1, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_FORTUNE_TELLER_[NIGHT%d]", night);
+            addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff, playerIDinfoFrom);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_POISONED_[NIGHT%d]", night);
+            addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff, playerIDinfoFrom);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_RECLUSE_[NIGHT%d]", night);
+            addFixedConditionToTempRuleName(rs,kb, 1, "PLAYERS", buff, playerX);
+            snprintf(buff, STRING_BUFF_SIZE, "is_GOOD_[NIGHT%d]", night);
+            addFixedConditionToTempRuleName(rs,kb, 2, "PLAYERS", buff, playerY);
+            pushTempRule(rs);
+
+            setTempRuleParams(rs, 2,0);
+            snprintf(buff, STRING_BUFF_SIZE, "is_GOOD_[NIGHT%d]", night);
+            setTempRuleResultName(rs, kb, 1, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_FORTUNE_TELLER_[NIGHT%d]", night);
+            addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff, playerIDinfoFrom);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_POISONED_[NIGHT%d]", night);
+            addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff, playerIDinfoFrom);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_SPY_[NIGHT%d]", night);
+            addFixedConditionToTempRuleName(rs,kb, 1, "PLAYERS", buff, playerX);
+            snprintf(buff, STRING_BUFF_SIZE, "is_EVIL_[NIGHT%d]", night);
+            addFixedConditionToTempRuleName(rs,kb, 2, "PLAYERS", buff, playerY);
+            pushTempRule(rs);
+
+            setTempRuleParams(rs, 2,0);
+            snprintf(buff, STRING_BUFF_SIZE, "is_EVIL_[NIGHT%d]", night);
+            setTempRuleResultName(rs, kb, 1, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_FORTUNE_TELLER_[NIGHT%d]", night);
+            addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff, playerIDinfoFrom);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_POISONED_[NIGHT%d]", night);
+            addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff, playerIDinfoFrom);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_RECLUSE_[NIGHT%d]", night);
+            addFixedConditionToTempRuleName(rs,kb, 1, "PLAYERS", buff, playerY);
+            snprintf(buff, STRING_BUFF_SIZE, "is_GOOD_[NIGHT%d]", night);
+            addFixedConditionToTempRuleName(rs,kb, 2, "PLAYERS", buff, playerX);
+            pushTempRule(rs);
+
+            setTempRuleParams(rs, 2,0);
+            snprintf(buff, STRING_BUFF_SIZE, "is_GOOD_[NIGHT%d]", night);
+            setTempRuleResultName(rs, kb, 1, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_FORTUNE_TELLER_[NIGHT%d]", night);
+            addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff, playerIDinfoFrom);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_POISONED_[NIGHT%d]", night);
+            addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff, playerIDinfoFrom);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_SPY_[NIGHT%d]", night);
+            addFixedConditionToTempRuleName(rs,kb, 1, "PLAYERS", buff, playerY);
+            snprintf(buff, STRING_BUFF_SIZE, "is_EVIL_[NIGHT%d]", night);
+            addFixedConditionToTempRuleName(rs,kb, 2, "PLAYERS", buff, playerX);
+            pushTempRule(rs);
         }
         else if (countEvil == 2)
         {
-        //For 2 evil 0 good 
-        //If <PLAYER_INFO>is_EMPATH AND <PLAYER_INFO>is_NOT_poisonedNIGHT<night> => <PLAYER_X & Y>is_NOT_<ROLE> (where ROLE != EVIL, ROLE != RECLUSE) {player X and Y is either evil or a recluse}
+            //For 2 evil 0 good 
+            //If <PLAYER_INFO>is_EMPATH AND <PLAYER_INFO>is_NOT_poisonedNIGHT<night> => <PLAYER_X & Y>is_EVIL
+            setTempRuleParams(rs, 2,0);
+            snprintf(buff, STRING_BUFF_SIZE, "is_EVIL_[NIGHT%d]", night);
+            setTempRuleResultName(rs, kb, 1, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_FORTUNE_TELLER_[NIGHT%d]", night);
+            addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff, playerIDinfoFrom);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_POISONED_[NIGHT%d]", night);
+            addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff, playerIDinfoFrom);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_RECLUSE_[NIGHT%d]", night);
+            addFixedConditionToTempRuleName(rs,kb, 1, "PLAYERS", buff, playerX);
+            pushTempRule(rs);
+
+            setTempRuleParams(rs, 2,0);
+            snprintf(buff, STRING_BUFF_SIZE, "is_EVIL_[NIGHT%d]", night);
+            setTempRuleResultName(rs, kb, 1, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_FORTUNE_TELLER_[NIGHT%d]", night);
+            addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff, playerIDinfoFrom);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_POISONED_[NIGHT%d]", night);
+            addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff, playerIDinfoFrom);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_RECLUSE_[NIGHT%d]", night);
+            addFixedConditionToTempRuleName(rs,kb, 1, "PLAYERS", buff, playerY);
+            pushTempRule(rs);
         }
-        */
+        
     }
     else if (pingTypeID == 5)
     { //FORTUNE_TELLER_PING
