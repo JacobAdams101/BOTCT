@@ -30,19 +30,36 @@
 #include "knowledge.h"
 #include "constants.h"
 
-
-
+/**
+ * getNumRules() - gets the number of rules stored
+ * 
+ * @ruleSet - the ruleset which stores the rules
+ * 
+ * @return the number of rules
+*/
 int getNumRules(RuleSet* ruleSet)
 {
     return ruleSet->NUM_RULES;
 }
 
+/**
+ * getRule() - gets the rule stored at index
+ * 
+ * @ruleSet - the ruleset which stores the rules
+ * @index - the location of the rule to get
+ * 
+ * @return the rule at index
+*/
 Rule* getRule(RuleSet* ruleSet, int index)
 {
     return ruleSet->RULES[index];
 }
 
-
+/**
+ * resetRule() - reset all the data in a rule back to default
+ * 
+ * @rule - the rule to reset
+*/
 static void resetRule(Rule* rule)
 {
     rule->varCount = 0;
@@ -65,6 +82,18 @@ static void resetRule(Rule* rule)
 
 }
 
+/**
+ * LHSSymmetric() - used to check if the LHS of a rule is of the form:
+ * EXP(w) AND EXP(x) AND EXP(y) AND EXP(z) AND ... => ...SOMETHING...
+ * -where EXP() represents some identical expression for w,x,y,z
+ * 
+ * NOTE: this is useful for various optimisations by opserving permuting w,x,y,z... is wasteful,
+ * saving O(n!) time complexity
+ * 
+ * @rule - the rule to test
+ * 
+ * @return TRUE if the left hand side of the rule impication is identical across all variables
+*/
 static int LHSSymmetric(Rule* rule)
 {
     //Check LHS Symmetric
@@ -89,6 +118,12 @@ static int LHSSymmetric(Rule* rule)
     return 1;
 }
 
+/**
+ * pushTempRule() - tempRule is a working space to build rules quickly
+ * temp rule is kindof similar toa  builder pattern
+ * 
+ * @ruleSet - the ruleset to put the temp rule
+*/
 void pushTempRule(RuleSet* ruleSet)
 {
     //See if LHS is symmetric for an optimisation to checker
@@ -102,6 +137,11 @@ void pushTempRule(RuleSet* ruleSet)
     resetRule(ruleSet->temp_rule);
 }
 
+/**
+ * initRS() - initialise the ruleset
+ * 
+ * @return returns the initilised ruleset
+*/
 RuleSet* initRS()
 {
     printf("--Make Memory...\n");
@@ -124,20 +164,37 @@ RuleSet* initRS()
     return ruleSet;
 }
 
-
-
-
+/**
+ * resetTempRule() - reset the temp rule
+ * 
+ * @rs the ruleset with the temp rule to reset
+*/
 void resetTempRule(RuleSet* rs)
 {
     resetRule(rs->temp_rule);
 }
 
+/**
+ * setTempRuleParams() - set the parameter of the rule to add
+ * 
+ * @rs the ruleset with the temp rule to set
+ * @varCount the number of variables in the rule
+ * @varsMutuallyExclusive 1 if variables are mutually exclusive 0 otherwise
+*/
 void setTempRuleParams(RuleSet* rs, int varCount, int varsMutuallyExclusive)
 {
     rs->temp_rule->varCount = varCount;
     rs->temp_rule->varsMutuallyExclusive = varsMutuallyExclusive;
 }
 
+/**
+ * setRuleResult() - set the result of a rule
+ * 
+ * @rule the rule to set the result of
+ * @resultVarName the var name on the RHS
+ * @set the set of the element of the var
+ * @function the function on the RHS
+*/
 static void setRuleResult(Rule* rule, int resultVarName, int set, int function)
 {
     rule->resultVarName = resultVarName;
@@ -151,11 +208,28 @@ static void setRuleResult(Rule* rule, int resultVarName, int set, int function)
     rule->result[index] |= mask;
 }
 
+/**
+ * setTempRuleResult() - set the result of a temprule
+ * 
+ * @rs the ruleset with the temp rule to set the result of
+ * @resultVarName the var name on the RHS
+ * @set the set of the element of the var
+ * @function the function on the RHS
+*/
 void setTempRuleResult(RuleSet* rs, int resultVarName, int set, int function)
 {
     setRuleResult(rs->temp_rule, resultVarName, set, function);
 }
 
+/**
+ * setRuleResultName() - 
+ * 
+ * @rule the rule to set the result of
+ * @kb the knowledge base the rule is for
+ * @resultVarName the var name on the RHS
+ * @set the NAME of the set of the element of the var
+ * @function the NAME of the function on the RHS
+*/
 static void setRuleResultName(Rule* rule, KnowledgeBase* kb, int resultVarName, char* set, char* function)
 {
     int setID = getSetIDWithName(kb, set, 1);
@@ -164,11 +238,29 @@ static void setRuleResultName(Rule* rule, KnowledgeBase* kb, int resultVarName, 
     setRuleResult(rule, resultVarName, setID, functionID);
 }
 
+/**
+ * setTempRuleResultName() - 
+ * 
+ * @rs the ruleset with the temprule to set the result of
+ * @kb the knowledge base the rule is for
+ * @resultVarName the var name on the RHS
+ * @set the NAME of the set of the element of the var
+ * @function the NAME of the function on the RHS
+*/
 void setTempRuleResultName(RuleSet* rs, KnowledgeBase* kb, int resultVarName, char* set, char* function)
 {
     setRuleResultName(rs->temp_rule, kb, resultVarName, set, function);
 }
 
+/**
+ * addConditionToRule() - 
+ * 
+ * @rule the rule to add the condition to
+ * @varName the var name on the LHS
+ * @set the set of the element of the var
+ * @function the function on the RHS
+ * @forcedSubstitution if the subsitution is forced to a specific element in the knowledge base
+*/
 static void addConditionToRule(Rule* rule, int varName, int set, int function, int forcedSubstitution)
 {
     int index, bit;
@@ -181,11 +273,29 @@ static void addConditionToRule(Rule* rule, int varName, int set, int function, i
     rule->varsForcedSubstitutions[varName] = forcedSubstitution;
 }
 
+/**
+ * addConditionToTempRule() - 
+ * 
+ * @rs the ruleset with the temprule to add the condition to
+ * @varName the var name on the LHS
+ * @set the set of the element of the var
+ * @function the function on the RHS
+ * @forcedSubstitution if the subsitution is forced to a specific element in the knowledge base
+*/
 void addConditionToTempRule(RuleSet* rs, int varName, int set, int function, int forcedSubstitution)
 {
     addConditionToRule(rs->temp_rule, varName, set, function, forcedSubstitution);
 }
 
+/**
+ * addConditionToRuleName() - 
+ * 
+ * @rule the rule to add the condition to
+ * @kb the knowledge base the rule is for
+ * @varName the var name on the LHS
+ * @set the NAME of the set of the element of the var
+ * @function the NAME of the function on the RHS
+*/
 static void addConditionToRuleName(Rule* rule, KnowledgeBase* kb, int varName, char* set, char* function)
 {
     int setID = getSetIDWithName(kb, set, 1);
@@ -194,11 +304,30 @@ static void addConditionToRuleName(Rule* rule, KnowledgeBase* kb, int varName, c
     addConditionToRule(rule, varName, setID, functionID, -1);
 }
 
+/**
+ * addConditionToTempRuleName() - 
+ * 
+ * @rs the ruleset with the temprule to add the condition to
+ * @kb the knowledge base the rule is for
+ * @varName the var name on the LHS
+ * @set the NAME of the set of the element of the var
+ * @function the NAME of the function on the RHS
+*/
 void addConditionToTempRuleName(RuleSet* rs, KnowledgeBase* kb, int varName, char* set, char* function)
 {
     addConditionToRuleName(rs->temp_rule, kb, varName, set, function);
 }
 
+/**
+ * addFixedConditionToRuleName() - 
+ * 
+ * @rule the rule to add the condition to
+ * @kb the knowledge base the rule is for
+ * @varName the var name on the LHS
+ * @set the NAME of the set of the element of the var
+ * @function the NAME of the function on the RHS
+ * @forcedSubstitution if the subsitution is forced to a specific element in the knowledge base
+*/
 static void addFixedConditionToRuleName(Rule* rule, KnowledgeBase* kb, int varName, char* set, char* function, int forcedSubstitution)
 {
     int setID = getSetIDWithName(kb, set, 1);
@@ -207,11 +336,27 @@ static void addFixedConditionToRuleName(Rule* rule, KnowledgeBase* kb, int varNa
     addConditionToRule(rule, varName, setID, functionID, forcedSubstitution);
 }
 
+/**
+ * addFixedConditionToRuleName() - 
+ * 
+ * @rs the ruleset with the temprule to add the condition to
+ * @kb the knowledge base the rule is for
+ * @varName the var name on the LHS
+ * @set the NAME of the set of the element of the var
+ * @function the NAME of the function on the RHS
+ * @forcedSubstitution if the subsitution is forced to a specific element in the knowledge base
+*/
 void addFixedConditionToTempRuleName(RuleSet* rs, KnowledgeBase* kb, int varName, char* set, char* function, int forcedSubstitution)
 {
     addFixedConditionToRuleName(rs->temp_rule, kb, varName, set, function, forcedSubstitution);
 }
 
+/**
+ * printRule() - 
+ * 
+ * @rule the rule to print
+ * @kb the knowledge base the rule is for
+*/
 void printRule(Rule* rule, KnowledgeBase* kb)
 {
     //printf("PR-0\n"); //Remove
@@ -289,6 +434,14 @@ void printRule(Rule* rule, KnowledgeBase* kb)
     printf("\n");
 }
 
+/**
+ * printRuleAssignment() - 
+ * 
+ * @rule the rule to print
+ * @kb the knowledge base the rule is for
+ * @assignement assignment for LHS
+ * @resultAssignement assignment for RHS
+*/
 void printRuleAssignment(Rule* rule, KnowledgeBase* kb, int assignement[MAX_VARS_IN_RULE], int resultAssignement)
 {
     int finalCount = 0;
@@ -356,7 +509,16 @@ void printRuleAssignment(Rule* rule, KnowledgeBase* kb, int assignement[MAX_VARS
     printf("\n");
 }
 
-void getAssignment(int satisfied[MAX_VARS_IN_RULE][MAX_SET_ELEMENTS], int lengths[MAX_VARS_IN_RULE], int assignment[MAX_VARS_IN_RULE], int var, long count)
+/**
+ * getAssignment() - recursivley assign variables by permuting the variables which are satisfied
+ * 
+ * @satisfied the variables elementIDs which satisfy condition [index]
+ * @lengths the lengths
+ * @assignment the output assignment array
+ * @var the variable for the recursive nature
+ * @count the seed which generates the permutation
+*/
+static void getAssignment(int satisfied[MAX_VARS_IN_RULE][MAX_SET_ELEMENTS], int lengths[MAX_VARS_IN_RULE], int assignment[MAX_VARS_IN_RULE], int var, long count)
 {
     int nextCount = count / lengths[var];
     int takeFromList = count - (nextCount * lengths[var]);
@@ -370,6 +532,16 @@ void getAssignment(int satisfied[MAX_VARS_IN_RULE][MAX_SET_ELEMENTS], int length
     
 }
 
+/**
+ * applyRule() - 
+ * 
+ * @rule
+ * @kb
+ * @assignment
+ * @verbose
+ * 
+ * @return
+*/
 static int applyRule(Rule* rule, KnowledgeBase* kb, int assignement[MAX_VARS_IN_RULE], int verbose)
 {
     int foundNovelInformation = 0;
@@ -468,6 +640,24 @@ static int applyRule(Rule* rule, KnowledgeBase* kb, int assignement[MAX_VARS_IN_
     return foundNovelInformation;
 }
 
+/**
+ * satisfiesRule() - check if a knowledge base satisfies a rules LHS in a novel way
+ * if it is add novel information to the KB
+ * 
+ * A novel solution is descibed as
+ * 
+ * X AND Y AND Z AND ... => A
+ * 
+ * WHERE KB already knows X,Y,Z,... but does NOT know A (so it's novel)
+ * 
+ * NOTE: this is used for optimisations with how many implication rounds to run when infering facts
+ * 
+ * @rule the rule to check if the LHS is satsified
+ * @kb the knowledge base
+ * @verbose print out information
+ * 
+ * @return TRUE if a novel solution is found
+*/
 int satisfiesRule(Rule* rule, KnowledgeBase* kb, int verbose)
 {
 
@@ -654,6 +844,16 @@ int satisfiesRule(Rule* rule, KnowledgeBase* kb, int verbose)
     return foundNovelSolution;
 }
 
+/**
+ * inferknowledgeBaseFromRules() - For all rules in a ruleset 
+ * check if any novel information can be infered
+ * 
+ * @rs the set of rules
+ * @kb the knowledge base
+ * @verbose print discoveries
+ * 
+ * @return TRUE if a novel solution is found
+*/
 int inferknowledgeBaseFromRules(RuleSet* rs, KnowledgeBase* kb, int verbose)
 {
     int foundNovelSolution = 0;
@@ -664,6 +864,12 @@ int inferknowledgeBaseFromRules(RuleSet* rs, KnowledgeBase* kb, int verbose)
     return foundNovelSolution;
 }
 
+/**
+ * printRules() - print all the rules in a ruleset
+ * 
+ * @rs the set of rules to print
+ * @kb the knowledge base
+*/
 void printRules(RuleSet* rs, KnowledgeBase* kb)
 {
     for (int i = 0; i < rs->NUM_RULES; i++)

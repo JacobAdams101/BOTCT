@@ -58,28 +58,165 @@ typedef struct
     Rule *temp_rule;
 } RuleSet;
 
+/**
+ * initRS() - initialise the ruleset
+ * 
+ * @return returns the initilised ruleset
+*/
 RuleSet* initRS();
 
+/**
+ * getNumRules() - gets the number of rules stored
+ * 
+ * @ruleSet - the ruleset which stores the rules
+ * 
+ * @return the number of rules
+*/
 int getNumRules(RuleSet* ruleSet);
 
+/**
+ * getRule() - gets the rule stored at index
+ * 
+ * @ruleSet - the ruleset which stores the rules
+ * @index - the location of the rule to get
+ * 
+ * @return the rule at index
+*/
 Rule* getRule(RuleSet* ruleSet, int index);
 
+/**
+ * pushTempRule() - tempRule is a working space to build rules quickly
+ * temp rule is kindof similar toa  builder pattern
+ * 
+ * @ruleSet - the ruleset to put the temp rule
+*/
 void pushTempRule(RuleSet* ruleSet);
 
-
+/**
+ * resetTempRule() - reset the temp rule
+ * 
+ * @rs the ruleset with the temp rule to reset
+*/
 void resetTempRule(RuleSet* rs);
+
+/**
+ * setTempRuleParams() - set the parameter of the rule to add
+ * 
+ * @rs the ruleset with the temp rule to set
+ * @varCount the number of variables in the rule
+ * @varsMutuallyExclusive 1 if variables are mutually exclusive 0 otherwise
+*/
 void setTempRuleParams(RuleSet* rs, int varCount, int varsMutuallyExclusive);
+
+/**
+ * setTempRuleResult() - set the result of a temprule
+ * 
+ * @rs the ruleset with the temp rule to set the result of
+ * @resultVarName the var name on the RHS
+ * @set the set of the element of the var
+ * @function the function on the RHS
+*/
 void setTempRuleResult(RuleSet* rs, int resultVarName, int set, int function);
+
+/**
+ * setTempRuleResultName() - 
+ * 
+ * @rs the ruleset with the temprule to set the result of
+ * @kb the knowledge base the rule is for
+ * @resultVarName the var name on the RHS
+ * @set the NAME of the set of the element of the var
+ * @function the NAME of the function on the RHS
+*/
 void setTempRuleResultName(RuleSet* rs, KnowledgeBase* kb, int resultVarName, char* set, char* function);
+
+/**
+ * addConditionToTempRule() - 
+ * 
+ * @rs the ruleset with the temprule to add the condition to
+ * @varName the var name on the LHS
+ * @set the set of the element of the var
+ * @function the function on the RHS
+ * @forcedSubstitution if the subsitution is forced to a specific element in the knowledge base
+*/
 void addConditionToTempRule(RuleSet* rs, int varName, int set, int function, int forcedSubstitution);
+
+/**
+ * addConditionToTempRuleName() - 
+ * 
+ * @rs the ruleset with the temprule to add the condition to
+ * @kb the knowledge base the rule is for
+ * @varName the var name on the LHS
+ * @set the NAME of the set of the element of the var
+ * @function the NAME of the function on the RHS
+*/
 void addConditionToTempRuleName(RuleSet* rs, KnowledgeBase* kb, int varName, char* set, char* function);
+
+/**
+ * addFixedConditionToRuleName() - 
+ * 
+ * @rs the ruleset with the temprule to add the condition to
+ * @kb the knowledge base the rule is for
+ * @varName the var name on the LHS
+ * @set the NAME of the set of the element of the var
+ * @function the NAME of the function on the RHS
+ * @forcedSubstitution if the subsitution is forced to a specific element in the knowledge base
+*/
 void addFixedConditionToTempRuleName(RuleSet* rs, KnowledgeBase* kb, int varName, char* set, char* function, int forcedSubstitution);
 
-
-
+/**
+ * printRule() - 
+ * 
+ * @rule the rule to print
+ * @kb the knowledge base the rule is for
+*/
 void printRule(Rule* rule, KnowledgeBase* kb);
+
+/**
+ * printRuleAssignment() - 
+ * 
+ * @rule the rule to print
+ * @kb the knowledge base the rule is for
+ * @assignement assignment for LHS
+ * @resultAssignement assignment for RHS
+*/
 void printRuleAssignment(Rule* rule, KnowledgeBase* kb, int assignement[MAX_VARS_IN_RULE], int resultAssignement);
+
+/**
+ * printRules() - print all the rules in a ruleset
+ * 
+ * @rs the set of rules to print
+ * @kb the knowledge base
+*/
 void printRules(RuleSet* rs, KnowledgeBase* kb);
 
+/**
+ * satisfiesRule() - check if a knowledge base satisfies a rules LHS in a novel way
+ * if it is add novel information to the KB
+ * 
+ * A novel solution is descibed as
+ * 
+ * X AND Y AND Z AND ... => A
+ * 
+ * WHERE KB already knows X,Y,Z,... but does NOT know A (so it's novel)
+ * 
+ * NOTE: this is used for optimisations with how many implication rounds to run when infering facts
+ * 
+ * @rule the rule to check if the LHS is satsified
+ * @kb the knowledge base
+ * @verbose print out information
+ * 
+ * @return TRUE if a novel solution is found
+*/
 int satisfiesRule(Rule* rule, KnowledgeBase* kb, int verbose);
+
+/**
+ * inferknowledgeBaseFromRules() - For all rules in a ruleset 
+ * check if any novel information can be infered
+ * 
+ * @rs the set of rules
+ * @kb the knowledge base
+ * @verbose print discoveries
+ * 
+ * @return TRUE if a novel solution is found
+*/
 int inferknowledgeBaseFromRules(RuleSet* rs, KnowledgeBase* kb, int verbose);
