@@ -28,9 +28,36 @@
 #include "rules.h"
 #include "knowledge.h"
 
+/**
+ * initScript() - initialise a script for blood on the clocktower
+ * 
+ * @rs the ruleset object to write to
+ * @kb the knoweledge base to write to
+ * @SCRIPT the script to play
+ * @NUM_PLAYERS the number of players playing
+ * @NUM_MINIONS the number of base minions in the script
+ * @NUM_DEMONS the number of base, starting demons in the script
+ * @BASE_OUTSIDERS the number of base starting outsiders in the script
+ * @NUM_DAYS the maximium number of days the game can run for
+*/
 void initScript(RuleSet** rs, KnowledgeBase** kb, const int SCRIPT, const int NUM_PLAYERS, const int NUM_MINIONS, const int NUM_DEMONS, const int BASE_OUTSIDERS, const int NUM_DAYS);
-void buildRules(RuleSet* rs, KnowledgeBase* kb, int numPlayers, int numMinions, int numDemons, int baseOutsiders, int numDays);
 
+/**
+ * buildRules() - add all the rules to the game
+ * 
+ * @rs the ruleset object to write to
+ * @kb the knoweledge base to write to
+ * @NUM_PLAYERS the number of players playing
+ * @NUM_MINIONS the number of base minions in the script
+ * @NUM_DEMONS the number of base, starting demons in the script
+ * @BASE_OUTSIDERS the number of base starting outsiders in the script
+ * @NUM_DAYS the maximium number of days the game can run for
+*/
+void buildRules(RuleSet* rs, KnowledgeBase* kb, const int NUM_PLAYERS, const int NUM_MINIONS, const int NUM_DEMONS, const int BASE_OUTSIDERS, const int NUM_DAYS);
+
+/*
+ * Global variables, ew
+*/
 extern char *ROLE_NAMES[NUM_BOTCT_ROLES];
 extern char *ROLE_TEAMS[NUM_BOTCT_ROLES];
 extern char *ROLE_CLASSES[NUM_BOTCT_ROLES]; 

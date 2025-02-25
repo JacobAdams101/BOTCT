@@ -41,7 +41,12 @@ int TOTAL_OUTSIDERS = 12;
 int FIRST_MINION_INDEX = 1;
 int FIRST_OUTSIDER_INDEX = 18;
 
-void initRoleStrings(int maxLen)
+/**
+ * initRoleStrings() - allocate memory to the strings
+ * 
+ * @maxLen max length of strings
+*/
+static void initRoleStrings(int maxLen)
 {
     int SIZE = maxLen*sizeof(char);
     for (int i = 0; i < NUM_BOTCT_ROLES; i++)
@@ -52,7 +57,17 @@ void initRoleStrings(int maxLen)
     }
 }
 
-void addRole(int *index, char* name, char* team, char* class, int roleInScript, int maxLen)
+/**
+ * addRole() - Add a role name, team and class to the role descriptors
+ * 
+ * @index the index of the next empty space will be updated after calling this function
+ * @name the name of the role
+ * @team the team of the role
+ * @class the class of the role
+ * @roleInScript is the role in the script
+ * @maxLen the maximum length a sctring can be
+*/
+static void addRole(int *index, char* name, char* team, char* class, int roleInScript, int maxLen)
 {
     int SIZE = maxLen*sizeof(char);
     snprintf(ROLE_NAMES[*index], SIZE, "%s", name);
@@ -63,6 +78,18 @@ void addRole(int *index, char* name, char* team, char* class, int roleInScript, 
     *index = *index + 1;
 }
 
+/**
+ * initScript() - initialise a script for blood on the clocktower
+ * 
+ * @rs the ruleset object to write to
+ * @kb the knoweledge base to write to
+ * @SCRIPT the script to play
+ * @NUM_PLAYERS the number of players playing
+ * @NUM_MINIONS the number of base minions in the script
+ * @NUM_DEMONS the number of base, starting demons in the script
+ * @BASE_OUTSIDERS the number of base starting outsiders in the script
+ * @NUM_DAYS the maximium number of days the game can run for
+*/
 void initScript(RuleSet** rs, KnowledgeBase** kb, const int SCRIPT, const int NUM_PLAYERS, const int NUM_MINIONS, const int NUM_DEMONS, const int BASE_OUTSIDERS, const int NUM_DAYS)
 {
     //Temporary string buffer for writing names into
@@ -202,7 +229,18 @@ void initScript(RuleSet** rs, KnowledgeBase** kb, const int SCRIPT, const int NU
     buildRules(*rs, *kb, NUM_PLAYERS, NUM_MINIONS, NUM_DEMONS, BASE_OUTSIDERS, NUM_DAYS);
 }
 
-static void roleAssociation(RuleSet* rs, KnowledgeBase* kb, int numPlayers, int numMinions, int numDemons, int baseOutsiders, int numDays)
+/**
+ * roleAssociation() - add rules to the game
+ * 
+ * @rs the ruleset object to write to
+ * @kb the knoweledge base to write to
+ * @NUM_PLAYERS the number of players playing
+ * @NUM_MINIONS the number of base minions in the script
+ * @NUM_DEMONS the number of base, starting demons in the script
+ * @BASE_OUTSIDERS the number of base starting outsiders in the script
+ * @NUM_DAYS the maximium number of days the game can run for
+*/
+static void roleAssociation(RuleSet* rs, KnowledgeBase* kb, const int NUM_PLAYERS, const int NUM_MINIONS, const int NUM_DEMONS, const int BASE_OUTSIDERS, const int NUM_DAYS)
 {
     //Temporary string buffer for writing names into
     char buff[STRING_BUFF_SIZE];
@@ -214,7 +252,7 @@ static void roleAssociation(RuleSet* rs, KnowledgeBase* kb, int numPlayers, int 
      * IDEA: Roles have associated data with them
      * For the most part!! a Player IS Demon => player IS Evil etc. etc.
     */
-    for (int night = 0; night < numDays; night++)
+    for (int night = 0; night < NUM_DAYS; night++)
     {
         for (int i = 0; i < NUM_BOTCT_ROLES; i++)
         {
@@ -394,7 +432,19 @@ static void roleAssociation(RuleSet* rs, KnowledgeBase* kb, int numPlayers, int 
         pushTempRule(rs);
     }
 }
-static void roleMutuallyExclusive(RuleSet* rs, KnowledgeBase* kb, int numPlayers, int numMinions, int numDemons, int baseOutsiders, int numDays)
+
+/**
+ * roleMutuallyExclusive() - add rules to the game
+ * 
+ * @rs the ruleset object to write to
+ * @kb the knoweledge base to write to
+ * @NUM_PLAYERS the number of players playing
+ * @NUM_MINIONS the number of base minions in the script
+ * @NUM_DEMONS the number of base, starting demons in the script
+ * @BASE_OUTSIDERS the number of base starting outsiders in the script
+ * @NUM_DAYS the maximium number of days the game can run for
+*/
+static void roleMutuallyExclusive(RuleSet* rs, KnowledgeBase* kb, const int NUM_PLAYERS, const int NUM_MINIONS, const int NUM_DEMONS, const int BASE_OUTSIDERS, const int NUM_DAYS)
 {
     //Temporary string buffer for writing names into
     char buff[STRING_BUFF_SIZE];
@@ -405,7 +455,7 @@ static void roleMutuallyExclusive(RuleSet* rs, KnowledgeBase* kb, int numPlayers
      * IDEA: Every player has exactly one role and only one player can have that role
      * For the most part (excluding dead players)
     */
-    for (int night = 0; night < numDays; night++)
+    for (int night = 0; night < NUM_DAYS; night++)
     {
         for (int i = 0; i < NUM_BOTCT_ROLES; i++)
         {
@@ -454,7 +504,19 @@ static void roleMutuallyExclusive(RuleSet* rs, KnowledgeBase* kb, int numPlayers
         }
     }
 }
-static void roleMetaData(RuleSet* rs, KnowledgeBase* kb, int numPlayers, int numMinions, int numDemons, int baseOutsiders, int numDays)
+
+/**
+ * roleMetaData() - add rules to the game
+ * 
+ * @rs the ruleset object to write to
+ * @kb the knoweledge base to write to
+ * @NUM_PLAYERS the number of players playing
+ * @NUM_MINIONS the number of base minions in the script
+ * @NUM_DEMONS the number of base, starting demons in the script
+ * @BASE_OUTSIDERS the number of base starting outsiders in the script
+ * @NUM_DAYS the maximium number of days the game can run for
+*/
+static void roleMetaData(RuleSet* rs, KnowledgeBase* kb, const int NUM_PLAYERS, const int NUM_MINIONS, const int NUM_DEMONS, const int BASE_OUTSIDERS, const int NUM_DAYS)
 {
     //Temporary string buffer for writing names into
     char buff[STRING_BUFF_SIZE];
@@ -465,17 +527,17 @@ static void roleMetaData(RuleSet* rs, KnowledgeBase* kb, int numPlayers, int num
      * IDEA: The game has metadata associated with it Roles can imply metadata and metadata can imply roles
      * 
     */
-    for (int night = 0; night < numDays; night++)
+    for (int night = 0; night < NUM_DAYS; night++)
     {
         for (int i = 0; i < NUM_BOTCT_ROLES; i++)
         {
             //<PLAYER_0>is_NOT_<ROLE> AND <PLAYER_1>is_NOT_<ROLE> AND .. => <METADATA>is_NOT_ROLE_in_PLAY
             // IDEA: If no one is a role, that role is not in play
-            setTempRuleParams(rs, numPlayers,1);
+            setTempRuleParams(rs, NUM_PLAYERS,1);
             snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s_in_PLAY_[NIGHT%d]", ROLE_NAMES[i], night);
             setTempRuleResultName(rs, kb, -1, "METADATA", buff);
             snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s_[NIGHT%d]", ROLE_NAMES[i], night);
-            for (int j = 0; j < numPlayers; j++)
+            for (int j = 0; j < NUM_PLAYERS; j++)
             {
                 addConditionToTempRuleName(rs,kb, j, "PLAYERS", buff);
             }
@@ -540,10 +602,22 @@ static void roleMetaData(RuleSet* rs, KnowledgeBase* kb, int numPlayers, int num
         }
     }
 }
+
 /*
 NOTE: I think this function my need to be updated
 */
-static void roleMetaDataCounting(RuleSet* rs, KnowledgeBase* kb, int numPlayers, int numMinions, int numDemons, int baseOutsiders, int numDays)
+/**
+ * roleMetaDataCounting() - add rules to the game
+ * 
+ * @rs the ruleset object to write to
+ * @kb the knoweledge base to write to
+ * @NUM_PLAYERS the number of players playing
+ * @NUM_MINIONS the number of base minions in the script
+ * @NUM_DEMONS the number of base, starting demons in the script
+ * @BASE_OUTSIDERS the number of base starting outsiders in the script
+ * @NUM_DAYS the maximium number of days the game can run for
+*/
+static void roleMetaDataCounting(RuleSet* rs, KnowledgeBase* kb, const int NUM_PLAYERS, const int NUM_MINIONS, const int NUM_DEMONS, const int BASE_OUTSIDERS, const int NUM_DAYS)
 {
     //Temporary string buffer for writing names into
     char buff[STRING_BUFF_SIZE];
@@ -559,8 +633,8 @@ static void roleMetaDataCounting(RuleSet* rs, KnowledgeBase* kb, int numPlayers,
     */
     int night = 0; //Set night to 0
     //If found all minions in play set all unused minions to is_NOT_<MINION>_in_PLAY
-    int numUnusedMinions = TOTAL_MINIONS-numMinions;
-    if (0 < numMinions && numMinions < TOTAL_MINIONS)
+    int numUnusedMinions = TOTAL_MINIONS-NUM_MINIONS;
+    if (0 < NUM_MINIONS && NUM_MINIONS < TOTAL_MINIONS)
     {
         for (int i = 0; i < 4096; i++)
         {
@@ -573,7 +647,7 @@ static void roleMetaDataCounting(RuleSet* rs, KnowledgeBase* kb, int numPlayers,
                     count++;
                 }
             }
-            if (count == numMinions)
+            if (count == NUM_MINIONS)
             {
                 //<METADATA>is_NOT_<MINION>_in_PLAY => <METADATA>is_<MINION>_in_PLAY
                 setTempRuleParams(rs, 1,0);
@@ -625,7 +699,7 @@ static void roleMetaDataCounting(RuleSet* rs, KnowledgeBase* kb, int numPlayers,
         int isVigormortisInPlay = (k>>2)&1;
         int isGodFatherInPlay = 0;
 
-        int numOutsiders = baseOutsiders;
+        int numOutsiders = BASE_OUTSIDERS;
         if (isBaronInPlay)
         {
             numOutsiders += 2;
@@ -796,16 +870,28 @@ static void roleMetaDataCounting(RuleSet* rs, KnowledgeBase* kb, int numPlayers,
     }
     
 }
+
 /*
 NOTE: I think this function my need to be updated
 */
-static void teamAndClassCountingArguments(RuleSet* rs, KnowledgeBase* kb, int numPlayers, int numMinions, int numDemons, int baseOutsiders, int numDays)
+/**
+ * teamAndClassCountingArguments() - add rules to the game
+ * 
+ * @rs the ruleset object to write to
+ * @kb the knoweledge base to write to
+ * @NUM_PLAYERS the number of players playing
+ * @NUM_MINIONS the number of base minions in the script
+ * @NUM_DEMONS the number of base, starting demons in the script
+ * @BASE_OUTSIDERS the number of base starting outsiders in the script
+ * @NUM_DAYS the maximium number of days the game can run for
+*/
+static void teamAndClassCountingArguments(RuleSet* rs, KnowledgeBase* kb, const int NUM_PLAYERS, const int NUM_MINIONS, const int NUM_DEMONS, const int BASE_OUTSIDERS, const int NUM_DAYS)
 {
     //Temporary string buffer for writing names into
     char buff[STRING_BUFF_SIZE];
 
-    int numEvil = numDemons + numMinions;
-    int numGood = numPlayers - numEvil;
+    int numEvil = NUM_DEMONS + NUM_MINIONS;
+    int numGood = NUM_PLAYERS - numEvil;
     // ===========================================
     //  Team Counting Arguments
     // ===========================================
@@ -847,10 +933,10 @@ static void teamAndClassCountingArguments(RuleSet* rs, KnowledgeBase* kb, int nu
 
     //If all minion players have been found the rest are not minions
     //<PLAYER_1>is_MINION AND ... <PLAYER_[num minion players]>is_MINION => <PLAYER_A>is_NOT_MINION
-    setTempRuleParams(rs, numMinions,1);
+    setTempRuleParams(rs, NUM_MINIONS,1);
     snprintf(buff, STRING_BUFF_SIZE, "is_NOT_MINION_[NIGHT%d]", night);
     setTempRuleResultName(rs, kb, -1, "PLAYERS", buff); 
-    for (int j = 0; j < numMinions; j++)
+    for (int j = 0; j < NUM_MINIONS; j++)
     {
         snprintf(buff, STRING_BUFF_SIZE, "is_MINION_[NIGHT%d]", night);
         addConditionToTempRuleName(rs,kb, j, "PLAYERS", buff);
@@ -859,10 +945,10 @@ static void teamAndClassCountingArguments(RuleSet* rs, KnowledgeBase* kb, int nu
 
     //If all demon players have been found the rest are not demons
     //<PLAYER_1>is_DEMON AND ... <PLAYER_[num minion players]>is_DEMON => <PLAYER_A>is_NOT_DEMON
-    setTempRuleParams(rs, numDemons,1);
+    setTempRuleParams(rs, NUM_DEMONS,1);
     snprintf(buff, STRING_BUFF_SIZE, "is_NOT_DEMON_[NIGHT%d]", night);
     setTempRuleResultName(rs, kb, -1, "PLAYERS", buff); 
-    for (int j = 0; j < numDemons; j++)
+    for (int j = 0; j < NUM_DEMONS; j++)
     {
         snprintf(buff, STRING_BUFF_SIZE, "is_DEMON_[NIGHT%d]", night);
         addConditionToTempRuleName(rs,kb, j, "PLAYERS", buff);
@@ -871,7 +957,18 @@ static void teamAndClassCountingArguments(RuleSet* rs, KnowledgeBase* kb, int nu
     
 }
 
-static void classDeductionArguments(RuleSet* rs, KnowledgeBase* kb, int numPlayers, int numMinions, int numDemons, int baseOutsiders, int numDays)
+/**
+ * classDeductionArguments() - add rules to the game
+ * 
+ * @rs the ruleset object to write to
+ * @kb the knoweledge base to write to
+ * @NUM_PLAYERS the number of players playing
+ * @NUM_MINIONS the number of base minions in the script
+ * @NUM_DEMONS the number of base, starting demons in the script
+ * @BASE_OUTSIDERS the number of base starting outsiders in the script
+ * @NUM_DAYS the maximium number of days the game can run for
+*/
+static void classDeductionArguments(RuleSet* rs, KnowledgeBase* kb, const int NUM_PLAYERS, const int NUM_MINIONS, const int NUM_DEMONS, const int BASE_OUTSIDERS, const int NUM_DAYS)
 {
     //Temporary string buffer for writing names into
     char buff[STRING_BUFF_SIZE];
@@ -882,7 +979,7 @@ static void classDeductionArguments(RuleSet* rs, KnowledgeBase* kb, int numPlaye
      * IDEA: If we know what class a player isn't,
      * then we know what class the player is
     */
-    for (int night = 0; night < numDays; night++)
+    for (int night = 0; night < NUM_DAYS; night++)
     {
         //A player can only have one class
         //<PLAYER>is_TOWNSFOLK => <PLAYER>is_NOT_DEMON AND <PLAYER>is_NOT_MINION AND <PLAYER>is_NOT_OUTSIDER
@@ -990,7 +1087,18 @@ static void classDeductionArguments(RuleSet* rs, KnowledgeBase* kb, int numPlaye
     }
 }
 
-static void redHerringRules(RuleSet* rs, KnowledgeBase* kb, int numPlayers, int numMinions, int numDemons, int baseOutsiders, int numDays)
+/**
+ * redHerringRules() - add rules to the game
+ * 
+ * @rs the ruleset object to write to
+ * @kb the knoweledge base to write to
+ * @NUM_PLAYERS the number of players playing
+ * @NUM_MINIONS the number of base minions in the script
+ * @NUM_DEMONS the number of base, starting demons in the script
+ * @BASE_OUTSIDERS the number of base starting outsiders in the script
+ * @NUM_DAYS the maximium number of days the game can run for
+*/
+static void redHerringRules(RuleSet* rs, KnowledgeBase* kb, const int NUM_PLAYERS, const int NUM_MINIONS, const int NUM_DEMONS, const int BASE_OUTSIDERS, const int NUM_DAYS)
 {
     //Temporary string buffer for writing names into
     char buff[STRING_BUFF_SIZE];
@@ -1010,7 +1118,7 @@ static void redHerringRules(RuleSet* rs, KnowledgeBase* kb, int numPlayers, int 
 
     //<PLAYER>is_REDHERRING => <PLAYER>is_GOOD
     setTempRuleParams(rs, 2,0);
-    for (int night = 0; night < numDays; night++)
+    for (int night = 0; night < NUM_DAYS; night++)
     {
         snprintf(buff, STRING_BUFF_SIZE, "is_GOOD_[NIGHT%d]", night);
         setTempRuleResultName(rs, kb, 0, "PLAYERS", buff);
@@ -1023,7 +1131,7 @@ static void redHerringRules(RuleSet* rs, KnowledgeBase* kb, int numPlayers, int 
     setTempRuleParams(rs, 2,0);
     
     setTempRuleResultName(rs, kb, 0, "PLAYERS", "is_NOT_REDHERRING");
-    for (int night = 0; night < numDays; night++)
+    for (int night = 0; night < NUM_DAYS; night++)
     {
         snprintf(buff, STRING_BUFF_SIZE, "is_EVIL_[NIGHT%d]", night);
         addConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff);
@@ -1031,7 +1139,18 @@ static void redHerringRules(RuleSet* rs, KnowledgeBase* kb, int numPlayers, int 
     pushTempRule(rs);
 }
 
-static void roleContinuityArguments(RuleSet* rs, KnowledgeBase* kb, int numPlayers, int numMinions, int numDemons, int baseOutsiders, int numDays)
+/**
+ * roleContinuityArguments() - add rules to the game
+ * 
+ * @rs the ruleset object to write to
+ * @kb the knoweledge base to write to
+ * @NUM_PLAYERS the number of players playing
+ * @NUM_MINIONS the number of base minions in the script
+ * @NUM_DEMONS the number of base, starting demons in the script
+ * @BASE_OUTSIDERS the number of base starting outsiders in the script
+ * @NUM_DAYS the maximium number of days the game can run for
+*/
+static void roleContinuityArguments(RuleSet* rs, KnowledgeBase* kb, const int NUM_PLAYERS, const int NUM_MINIONS, const int NUM_DEMONS, const int BASE_OUTSIDERS, const int NUM_DAYS)
 {
     //Temporary string buffer for writing names into
     char buff[STRING_BUFF_SIZE];
@@ -1042,10 +1161,10 @@ static void roleContinuityArguments(RuleSet* rs, KnowledgeBase* kb, int numPlaye
      * IDEA: For most games peoples roles don't change throughout the game
      * 
     */
-    for (int startNight = 0; startNight < numDays; startNight++)
+    for (int startNight = 0; startNight < NUM_DAYS; startNight++)
     {
         int nextNight = startNight+1;
-        if (nextNight < numDays)
+        if (nextNight < NUM_DAYS)
         {
             for (int i = 0; i < NUM_BOTCT_ROLES; i++)
             {
@@ -1249,7 +1368,18 @@ static void roleContinuityArguments(RuleSet* rs, KnowledgeBase* kb, int numPlaye
     }
 }
 
-static void poisonRules(RuleSet* rs, KnowledgeBase* kb, int numPlayers, int numMinions, int numDemons, int baseOutsiders, int numDays)
+/**
+ * poisonRules() - add rules to the game
+ * 
+ * @rs the ruleset object to write to
+ * @kb the knoweledge base to write to
+ * @NUM_PLAYERS the number of players playing
+ * @NUM_MINIONS the number of base minions in the script
+ * @NUM_DEMONS the number of base, starting demons in the script
+ * @BASE_OUTSIDERS the number of base starting outsiders in the script
+ * @NUM_DAYS the maximium number of days the game can run for
+*/
+static void poisonRules(RuleSet* rs, KnowledgeBase* kb, const int NUM_PLAYERS, const int NUM_MINIONS, const int NUM_DEMONS, const int BASE_OUTSIDERS, const int NUM_DAYS)
 {
     //Temporary string buffer for writing names into
     char buff[STRING_BUFF_SIZE];
@@ -1281,7 +1411,7 @@ static void poisonRules(RuleSet* rs, KnowledgeBase* kb, int numPlayers, int numM
      * VIGORMORTIS
      * 
     */
-    for (int night = 0; night < numDays; night++)
+    for (int night = 0; night < NUM_DAYS; night++)
     {
         //<METADATA>is_NOT_POISONER_in_PLAY AND ...=> <PLAYER>is_NOT_poisoned_NIGHT<i>
         //IDEA: If no roles that cause poisoning are in play... no one can be poisoned
@@ -1328,17 +1458,17 @@ static void poisonRules(RuleSet* rs, KnowledgeBase* kb, int numPlayers, int numM
         addConditionToTempRuleName(rs,kb, 0, "METADATA", buff);
         pushTempRule(rs);
         //An Alive NO_DASHII Poisons to the left and right of himself
-        for (int player = 0; player < numPlayers; player++)
+        for (int player = 0; player < NUM_PLAYERS; player++)
         {
             int LHS = player - 1;
             int RHS = player + 1;
             if (LHS < 0)
             {
-                LHS += numPlayers;
+                LHS += NUM_PLAYERS;
             }
-            if (RHS >= numPlayers)
+            if (RHS >= NUM_PLAYERS)
             {
-                RHS -= numPlayers;
+                RHS -= NUM_PLAYERS;
             }
             //LHS
             setTempRuleParams(rs, 1,0);
@@ -1405,7 +1535,18 @@ static void poisonRules(RuleSet* rs, KnowledgeBase* kb, int numPlayers, int numM
 
 }
 
-static void deathRules(RuleSet* rs, KnowledgeBase* kb, int numPlayers, int numMinions, int numDemons, int baseOutsiders, int numDays)
+/**
+ * deathRules() - add rules to the game
+ * 
+ * @rs the ruleset object to write to
+ * @kb the knoweledge base to write to
+ * @NUM_PLAYERS the number of players playing
+ * @NUM_MINIONS the number of base minions in the script
+ * @NUM_DEMONS the number of base, starting demons in the script
+ * @BASE_OUTSIDERS the number of base starting outsiders in the script
+ * @NUM_DAYS the maximium number of days the game can run for
+*/
+static void deathRules(RuleSet* rs, KnowledgeBase* kb, const int NUM_PLAYERS, const int NUM_MINIONS, const int NUM_DEMONS, const int BASE_OUTSIDERS, const int NUM_DAYS)
 {
     //Temporary string buffer for writing names into
     char buff[STRING_BUFF_SIZE];
@@ -1418,7 +1559,7 @@ static void deathRules(RuleSet* rs, KnowledgeBase* kb, int numPlayers, int numMi
     */
 
     //If a player died: the player is dead
-    for (int night = 0; night < numDays; night++)
+    for (int night = 0; night < NUM_DAYS; night++)
     {
         //<METADATA>SLEEP_DEATH_NIGHT<i> => <PLAYER>is_DEAD_NIGHT<i>
         setTempRuleParams(rs, 1,0);
@@ -1567,27 +1708,38 @@ static void deathRules(RuleSet* rs, KnowledgeBase* kb, int numPlayers, int numMi
 
 }
 
-void buildRules(RuleSet* rs, KnowledgeBase* kb, int numPlayers, int numMinions, int numDemons, int baseOutsiders, int numDays)
+/**
+ * buildRules() - add all the rules to the game
+ * 
+ * @rs the ruleset object to write to
+ * @kb the knoweledge base to write to
+ * @NUM_PLAYERS the number of players playing
+ * @NUM_MINIONS the number of base minions in the script
+ * @NUM_DEMONS the number of base, starting demons in the script
+ * @BASE_OUTSIDERS the number of base starting outsiders in the script
+ * @NUM_DAYS the maximium number of days the game can run for
+*/
+void buildRules(RuleSet* rs, KnowledgeBase* kb, const int NUM_PLAYERS, const int NUM_MINIONS, const int NUM_DEMONS, const int BASE_OUTSIDERS, const int NUM_DAYS)
 {
     //ROLE RULES
-    roleAssociation(rs, kb, numPlayers, numMinions, numDemons, baseOutsiders, numDays);
-    roleMutuallyExclusive(rs, kb, numPlayers, numMinions, numDemons, baseOutsiders, numDays);
+    roleAssociation(rs, kb, NUM_PLAYERS, NUM_MINIONS, NUM_DEMONS, BASE_OUTSIDERS, NUM_DAYS);
+    roleMutuallyExclusive(rs, kb, NUM_PLAYERS, NUM_MINIONS, NUM_DEMONS, BASE_OUTSIDERS, NUM_DAYS);
     //META DATA RULES
-    roleMetaData(rs, kb, numPlayers, numMinions, numDemons, baseOutsiders, numDays);
-    roleMetaDataCounting(rs, kb, numPlayers, numMinions, numDemons, baseOutsiders, numDays);
+    roleMetaData(rs, kb, NUM_PLAYERS, NUM_MINIONS, NUM_DEMONS, BASE_OUTSIDERS, NUM_DAYS);
+    roleMetaDataCounting(rs, kb, NUM_PLAYERS, NUM_MINIONS, NUM_DEMONS, BASE_OUTSIDERS, NUM_DAYS);
     //CLASS RULES
-    teamAndClassCountingArguments(rs, kb, numPlayers, numMinions, numDemons, baseOutsiders, numDays);
-    classDeductionArguments(rs, kb, numPlayers, numMinions, numDemons, baseOutsiders, numDays);
+    teamAndClassCountingArguments(rs, kb, NUM_PLAYERS, NUM_MINIONS, NUM_DEMONS, BASE_OUTSIDERS, NUM_DAYS);
+    classDeductionArguments(rs, kb, NUM_PLAYERS, NUM_MINIONS, NUM_DEMONS, BASE_OUTSIDERS, NUM_DAYS);
     
     //RED HERRING RULES
-    redHerringRules(rs, kb, numPlayers, numMinions, numDemons, baseOutsiders, numDays);
+    redHerringRules(rs, kb, NUM_PLAYERS, NUM_MINIONS, NUM_DEMONS, BASE_OUTSIDERS, NUM_DAYS);
     //POISON RULES
-    poisonRules(rs, kb, numPlayers, numMinions, numDemons, baseOutsiders, numDays);
+    poisonRules(rs, kb, NUM_PLAYERS, NUM_MINIONS, NUM_DEMONS, BASE_OUTSIDERS, NUM_DAYS);
 
     //ROLE CONTINUITY ARGUMENTS
-    roleContinuityArguments(rs, kb, numPlayers, numMinions, numDemons, baseOutsiders, numDays);
+    roleContinuityArguments(rs, kb, NUM_PLAYERS, NUM_MINIONS, NUM_DEMONS, BASE_OUTSIDERS, NUM_DAYS);
 
     //DEATH RULES
-    deathRules(rs, kb, numPlayers, numMinions, numDemons, baseOutsiders, numDays);
+    deathRules(rs, kb, NUM_PLAYERS, NUM_MINIONS, NUM_DEMONS, BASE_OUTSIDERS, NUM_DAYS);
     
 }

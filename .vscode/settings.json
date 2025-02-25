@@ -12,6 +12,9 @@
         "algorithm": "c",
         "__tuple": "c",
         "array": "c",
-        "string": "c"
+        "string": "c",
+        "__locale": "c",
+        "string_view": "c",
+        "__string": "c"
     }
 }
