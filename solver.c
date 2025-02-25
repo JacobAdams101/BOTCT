@@ -37,6 +37,17 @@
 #include "util.h"
 #include "solver.h"
 
+/**
+ * inferImplicitFacts() - helper function to iterate inferknowledgeBaseFromRules()
+ * with some basic optimisations
+ * 
+ * @rs the ruleset object
+ * @kb the knoweledge base
+ * @numRounds the maximium number of infer steps (less steps may be taken if a contradiction is found early or if no new information is found)
+ * @verbose if 1 print results
+ * 
+ * @return TRUE if a contradiction was found
+*/
 static int inferImplicitFacts(KnowledgeBase* kb, RuleSet* rs, int numRounds, int verbose)
 {
         
@@ -51,6 +62,9 @@ static int inferImplicitFacts(KnowledgeBase* kb, RuleSet* rs, int numRounds, int
     return 0;
 }
 
+/*
+ * struct to store function args for getProbApprox()
+*/
 struct getProbApproxArgs
 {
     KnowledgeBase* kb;
@@ -60,6 +74,16 @@ struct getProbApproxArgs
     RuleSet* rs;
     int numIterations;
 };
+
+/**
+ * buildWorld() - true to build some random world,
+ * if the world is without any detectable contradictin add to determinedInNWorlds
+ * 
+ * @possibleWorldKB the knowledge base to build the world in
+ * @possibleWorldRevertKB a working memory space to store backups for backtracking
+ * @determinedInNWorlds the tally to add the score to if the world works
+ * @rs the ruleset
+*/
 static void buildWorld(KnowledgeBase* possibleWorldKB, KnowledgeBase* possibleWorldRevertKB, ProbKnowledgeBase* determinedInNWorlds, RuleSet* rs)
 {
     char buff[64];
@@ -144,6 +168,15 @@ static void buildWorld(KnowledgeBase* possibleWorldKB, KnowledgeBase* possibleWo
     printf("FOUND WORLD!\n");
     addKBtoProbTally(possibleWorldKB, determinedInNWorlds);
 }
+
+/**
+ * getProbApprox() - tries to randomly build worlds to approximate the probability
+ * of different events
+ * 
+ * @void_arg the arguments
+ * 
+ * @return NULL
+*/
 static void* getProbApprox(void* void_arg)
 {
     //Arguments
@@ -165,6 +198,17 @@ static void* getProbApprox(void* void_arg)
     return NULL;
 }
 
+/**
+ * solve() - a function to ask the user for informaiton and tries to solve the game
+ * 
+ * @kb the knowledge base to use
+ * @rs the ruleset
+ * @NUM_PLAYERS the number of players in the game
+ * @NUM_MINIONS the number of base starting minions in the game
+ * @NUM_DEMONS the number of base starting demons in the game
+ * @BASE_OUTSIDERS the number of abse starting outsiders in the game
+ * @NUM_DAYS the maxium number of days the game can go on for
+*/
 void solve(KnowledgeBase* kb, RuleSet* rs, const int NUM_PLAYERS, const int NUM_MINIONS, const int NUM_DEMONS, const int BASE_OUTSIDERS, const int NUM_DAYS)
 {
     char buff[STRING_BUFF_SIZE];

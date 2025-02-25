@@ -32,6 +32,12 @@
 #include "scripts.h"
 #include "ui.h"
 
+/**
+ * printTitle() - prints a title to the terminal
+ * 
+ * @title the title string
+ * @subheading the subheading string
+*/
 void printTitle(char *title, char *subheading)
 {
     printf("======================================================================================================\n");
@@ -40,6 +46,12 @@ void printTitle(char *title, char *subheading)
     printf("                                                                  %s\n", subheading);
     printf("======================================================================================================\n");
 }
+
+/**
+ * printHeading() - prints a heading to the terminal
+ * 
+ * @title the title string
+*/
 void printHeading(char *title)
 {
     printf("\n");
@@ -47,6 +59,16 @@ void printHeading(char *title)
     printf("‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\n");
 }
 
+/**
+ * setup() - ask the questions to the user to sertup a game
+ * and write the results into function parameters
+ * 
+ * @numPlayers OUTPUTS the number of players in the game
+ * @numMinions OUTPUTS the number of base starting minions in the game
+ * @numDemons OUTPUTS the number of base starting demons in the game
+ * @baseOutsiders OUTPUTS the number of base starting outsiders in the game
+ * @script OUTPUTS the scriptID
+*/
 void setup(int *numPlayers, int *numMinions, int *numDemons, int *baseOutsiders, int *script)
 {
 
@@ -66,6 +88,12 @@ void setup(int *numPlayers, int *numMinions, int *numDemons, int *baseOutsiders,
     *baseOutsiders = getInt("How many outsiders would there be in the game without a Baron?", 0, 5);
 }
 
+/**
+ * getNames() - gets a list of names
+ * 
+ * @names stores the strings enters
+ * @numPlayers OUTPUTS the number of players to get the names of
+*/
 void getNames(char* names[NUM_SETS][MAX_SET_ELEMENTS], int numPlayers)
 {
     char input[STRING_BUFF_SIZE]; // Declare a character array to hold the string
@@ -80,6 +108,13 @@ void getNames(char* names[NUM_SETS][MAX_SET_ELEMENTS], int numPlayers)
     
 }
 
+/**
+ * getRoleIdFromString() - used to convert the role name into an index
+ * 
+ * @roleName the NAME of the role
+ * 
+ * @return returns the roleID/index associated with the string, -1 if no role is found
+*/
 int getRoleIdFromString(char* roleName)
 {
     for (int roleID = 0; roleID < NUM_BOTCT_ROLES; roleID++)
@@ -95,6 +130,9 @@ int getRoleIdFromString(char* roleName)
     return -1;
 }
 
+/**
+ * printRolesInScript() - prints all the roles to the terminal
+*/
 static void printRolesInScript()
 {
     for (int i = 0; i < NUM_BOTCT_ROLES; i++)
@@ -106,6 +144,13 @@ static void printRolesInScript()
     }
 }
 
+/**
+ * getRoleIDInput() - get a role input from the user
+ * 
+ * @message the message to ask the user
+ * 
+ * @return the roleID/index of the entered role
+*/
 int getRoleIDInput(char* message)
 {
     char input[STRING_BUFF_SIZE]; // Declare a character array to hold the string
@@ -124,7 +169,14 @@ int getRoleIDInput(char* message)
     return roleID;
 }
 
-
+/**
+ * getPlayerIDInput() - get the name of the player from the user
+ * 
+ * @kb the knowledge base
+ * @message the message to ask the user
+ * 
+ * @return the playerID/index of the entered player
+*/
 int getPlayerIDInput(KnowledgeBase* kb, char* message)
 {
     char input[STRING_BUFF_SIZE]; // Declare a character array to hold the string
@@ -143,6 +195,15 @@ int getPlayerIDInput(KnowledgeBase* kb, char* message)
     return roleID;
 }
 
+/**
+ * getInt() - get an integer between min (inclusive) and max (exclusive)
+ * 
+ * @min min number (inclusive)
+ * @max max number (exclusive)
+ * @message the message to ask the user
+ * 
+ * @return a number between min <= NUM < max
+*/
 int getInt(char* message, int min, int max)
 {
     int input;
@@ -166,6 +227,13 @@ int getInt(char* message, int min, int max)
     return -1;
 }
 
+/**
+ * shown_role() - used to update the knowledge base assuming a player was shown a certain role
+ * this function also takes into account the innacuracies of being shown roles (drunk, lunatic etc.)
+ * 
+ * @kb the knowledge base to update
+ * @NUM_DAYS the max number of days the game can go on for
+*/
 static void shown_role(KnowledgeBase* kb, const int NUM_DAYS)
 {
     int playerID;
@@ -223,6 +291,12 @@ static void shown_role(KnowledgeBase* kb, const int NUM_DAYS)
     }
 }
 
+/**
+ * roleNotInGame() - used to update the knowledge base assuming a role is not in the game
+ * 
+ * @kb the knowledge base to update
+ * @NUM_DAYS the max number of days the game can go on for
+*/
 static  void roleNotInGame(KnowledgeBase* kb, const int NUM_DAYS)
 {
     char buff[STRING_BUFF_SIZE]; // Declare a character array to hold the string 
@@ -250,6 +324,15 @@ static  void roleNotInGame(KnowledgeBase* kb, const int NUM_DAYS)
     }
 }
 
+/**
+ * noptions() - given that a player gives you n options ("Three for Three" etc.)
+ * update the knowledge base
+ * Assume good "not mad" players always tell the truth (to the best of their knowledge [drunk etc])
+ * Assume bad players will be lying about a good role
+ * 
+ * @kb the knowledge base to update
+ * @NUM_DAYS the max number of days the game can go on for
+*/
 static void noptions(KnowledgeBase* kb, const int NUM_DAYS)
 {
     
@@ -317,6 +400,12 @@ static void noptions(KnowledgeBase* kb, const int NUM_DAYS)
     }
 }
 
+/**
+ * poisoned() - assume that a player is poisoned
+ * 
+ * @kb the knowledge base to update
+ * @NUM_DAYS the max number of days the game can go on for
+*/
 static void poisoned(KnowledgeBase* kb, const int NUM_DAYS)
 {
     char buff[STRING_BUFF_SIZE]; // Declare a character array to hold the string 
@@ -334,6 +423,12 @@ static void poisoned(KnowledgeBase* kb, const int NUM_DAYS)
     addKnowledgeName(kb, "PLAYERS", playerID, buff);
 }
 
+/**
+ * redHerring() - assume that a player is a red herring
+ * 
+ * @kb the knowledge base to update
+ * @NUM_DAYS the max number of days the game can go on for
+*/
 static void redHerring(KnowledgeBase* kb)
 {
     int playerID;
@@ -345,6 +440,12 @@ static void redHerring(KnowledgeBase* kb)
     addKnowledgeName(kb, "PLAYERS", playerID, "is_REDHERRING");
 }
 
+/**
+ * diedInNight() - assume that a player died in the night
+ * 
+ * @kb the knowledge base to update
+ * @NUM_DAYS the max number of days the game can go on for
+*/
 static void diedInNight(KnowledgeBase* kb, const int NUM_DAYS)
 {
     char buff[STRING_BUFF_SIZE]; // Declare a character array to hold the string 
@@ -385,6 +486,12 @@ static void diedInNight(KnowledgeBase* kb, const int NUM_DAYS)
     }
 }
 
+/**
+ * hung() - assume that a player was hung
+ * 
+ * @kb the knowledge base to update
+ * @NUM_DAYS the max number of days the game can go on for
+*/
 static void hung(KnowledgeBase* kb, const int NUM_DAYS)
 {
     char buff[STRING_BUFF_SIZE]; // Declare a character array to hold the string 
@@ -425,6 +532,12 @@ static void hung(KnowledgeBase* kb, const int NUM_DAYS)
     }
 }
 
+/**
+ * nominationDeath() - assume that a player died instantly when nominating another player
+ * 
+ * @kb the knowledge base to update
+ * @NUM_DAYS the max number of days the game can go on for
+*/
 static void nominationDeath(KnowledgeBase* kb, const int NUM_DAYS)
 {
     char buff[STRING_BUFF_SIZE]; // Declare a character array to hold the string 
@@ -465,6 +578,12 @@ static void nominationDeath(KnowledgeBase* kb, const int NUM_DAYS)
     }
 }
 
+/**
+ * nominationDeath() - assume that a player was ressurrected
+ * 
+ * @kb the knowledge base to update
+ * @NUM_DAYS the max number of days the game can go on for
+*/
 static void resurrected(KnowledgeBase* kb, const int NUM_DAYS)
 {
     char buff[STRING_BUFF_SIZE]; // Declare a character array to hold the string 
@@ -505,6 +624,12 @@ static void resurrected(KnowledgeBase* kb, const int NUM_DAYS)
     }
 }
 
+/**
+ * nominationDeath() - reset a player's entire knowledge to "Unknown"
+ * X(P) = FALSE and NOT_X(P) = FALSE FOR ALL X FOR SOME player P
+ * 
+ * @kb the knowledge base to update
+*/
 static void reset(KnowledgeBase* kb)
 {
     int playerID;
@@ -516,11 +641,26 @@ static void reset(KnowledgeBase* kb)
     resetElement(kb, 0, playerID);
 }
 
+/**
+ * resetMetaData() - reset the metadata's entire knowledge to "Unknown"
+ * X(METADATA) = FALSE and NOT_X(METADATA) = FALSE FOR ALL X FOR METADATA
+ * 
+ * @kb the knowledge base to update
+*/
 static void resetMetaData(KnowledgeBase* kb)
 {
     resetElement(kb, 2, 0);
 }
 
+/**
+ * addPingRule() - add a player ping to the game
+ * ASSUME NOTHING other than if that player actually is who they say they are 
+ * they were telling the truth about their ping 
+ * 
+ * @kb the knowledge base to update
+ * @rs the ruleset to update
+ * @NUM_DAYS the max number of days the game can go on for
+*/
 static void addPingRule(KnowledgeBase* kb, RuleSet* rs, const int NUM_DAYS)
 {
     char inputPingType[STRING_BUFF_SIZE]; // Declare a character array to hold the string 
@@ -1230,6 +1370,13 @@ static void addPingRule(KnowledgeBase* kb, RuleSet* rs, const int NUM_DAYS)
     }
 }
 
+/**
+ * add_info() - add info to the knowledge base based on what the player adds
+ * 
+ * @kb the knowledge base to update
+ * @rs the ruleset to update
+ * @NUM_DAYS the max number of days the game can go on for
+*/
 int add_info(KnowledgeBase* kb, RuleSet* rs, const int NUM_DAYS)
 {
     char buff[STRING_BUFF_SIZE]; // Declare a character array to hold the string 
