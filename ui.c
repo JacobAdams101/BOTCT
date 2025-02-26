@@ -1913,6 +1913,55 @@ static void addPingRule(KnowledgeBase* kb, RuleSet* rs, const int NUM_DAYS)
     }
 }
 
+static void printTodoList(KnowledgeBase* kb, RuleSet* rs, const int NUM_DAYS)
+{
+    char buff[STRING_BUFF_SIZE];
+    char buffNeg[STRING_BUFF_SIZE];
+    int foundSomethingToDo = 0;
+    int night = 0;
+    while (foundSomethingToDo == 0 && night < NUM_DAYS)
+    {
+        snprintf(buff, STRING_BUFF_SIZE, "SLEEP_DEATH_[NIGHT%d]", night);
+        snprintf(buffNeg, STRING_BUFF_SIZE, "NOT_SLEEP_DEATH_[NIGHT%d]", night);
+        if (isKnownName(kb, "PLAYERS", 0, buff) == 0 && isKnownName(kb, "PLAYERS", 0, buffNeg) == 0)
+        {
+            printf("%d. - ENTER WHO DIED IN THE NIGHT\n", foundSomethingToDo);
+            foundSomethingToDo++;
+        }
+        snprintf(buff, STRING_BUFF_SIZE, "HANGING_DEATH_[NIGHT%d]", night);
+        snprintf(buffNeg, STRING_BUFF_SIZE, "NOT_HANGING_DEATH_[NIGHT%d]", night);
+        if (isKnownName(kb, "PLAYERS", 0, buff) == 0 && isKnownName(kb, "PLAYERS", 0, buffNeg) == 0)
+        {
+            printf("%d. - ENTER WHO WAS HUNG\n", foundSomethingToDo);
+            foundSomethingToDo++;
+        }
+        snprintf(buff, STRING_BUFF_SIZE, "NOMINATION_DEATH_[NIGHT%d]", night);
+        snprintf(buffNeg, STRING_BUFF_SIZE, "NOT_NOMINATION_DEATH_[NIGHT%d]", night);
+        if (isKnownName(kb, "PLAYERS", 0, buff) == 0 && isKnownName(kb, "PLAYERS", 0, buffNeg) == 0)
+        {
+            printf("%d. - ENTER IF ANYONE DIED WHEN NOMINATING\n", foundSomethingToDo);
+            foundSomethingToDo++;
+        }
+        snprintf(buff, STRING_BUFF_SIZE, "RESURRECTED_[NIGHT%d]", night);
+        snprintf(buffNeg, STRING_BUFF_SIZE, "NOT_RESURRECTED_[NIGHT%d]", night);
+        if (isKnownName(kb, "PLAYERS", 0, buff) == 0 && isKnownName(kb, "PLAYERS", 0, buffNeg) == 0)
+        {
+            printf("%d. - ENTER IF ANYONE WAS RESURRECTED\n", foundSomethingToDo);
+            foundSomethingToDo++;
+        }
+        if (foundSomethingToDo != 0)
+        {
+            if (night == 0)
+            {
+                printf("%d. - ENTER IF ANYONE WAS RESURRECTED\n", foundSomethingToDo);
+                foundSomethingToDo++;
+            }
+            printf("[TASKS FOR NIGHT %d]\n", night);
+        }
+        night++;
+    }
+}
+
 /**
  * add_info() - add info to the knowledge base based on what the player adds
  * 
@@ -1963,6 +2012,9 @@ int add_info(KnowledgeBase* kb, RuleSet* rs, const int NUM_DAYS)
         printf("\n");
         printf("- Type '%s' to finish entering data:\n", FINISH);
         printf("- Type '%s' to finish entering data and calculate the probabaility:\n", FINISH_PROB);
+        printf("\n");
+        printf("TODO LIST:\n");
+        printTodoList(kb, rs, NUM_DAYS);
 
         
  
