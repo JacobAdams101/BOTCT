@@ -87,6 +87,8 @@ struct getProbApproxArgs
 static void buildWorld(KnowledgeBase* possibleWorldKB, KnowledgeBase* possibleWorldRevertKB, ProbKnowledgeBase* determinedInNWorlds, RuleSet* rs)
 {
     char buff[64];
+
+    int avaliable[5][MAX_SET_ELEMENTS];
     /*
      * IDEA: Loop through all important information to try 
      * and build some worlds where every play is assigned a role
@@ -99,8 +101,6 @@ static void buildWorld(KnowledgeBase* possibleWorldKB, KnowledgeBase* possibleWo
     { 
         for (int player = 0; player < possibleWorldKB->SET_SIZES[0]; player++)
         {
-            //printf("NIGHT %d PLAYER %d!\n", night, player);
-            //printf("NIGHT %d PLAYER %d\n", night, player);
             int avaliableRoles = 0;
             int roleAvalaliable[NUM_BOTCT_ROLES];
             for (int roleID = 0; roleID < NUM_BOTCT_ROLES; roleID++)
@@ -163,10 +163,27 @@ static void buildWorld(KnowledgeBase* possibleWorldKB, KnowledgeBase* possibleWo
                     return;
                 }
             }
+
+            avaliable[night][player] = 0;
+            for (int i = 0; i < NUM_BOTCT_ROLES; i++)
+            {
+                if (roleAvalaliable[i]) avaliable[night][player]++;
+            }
         }
     }
-    printf("FOUND WORLD!\n");
-    addKBtoProbTally(possibleWorldKB, determinedInNWorlds);
+    //Compute weight to account for changes in probability due to backtracking
+    double weight = 1000000000.0;
+    for (int night = 0; night < 1; night++) //ONLY LOOK AT FIRST NIGHT and only consider roles in script
+    {
+        for (int player = 0; player < possibleWorldKB->SET_SIZES[0]; player++)
+        {
+            double term = (float)(avaliable[night][player]) / (float)(NUM_ROLES_IN_SCRIPT);
+            weight *= term;
+        }
+    }
+    printf("FOUND WORLD (Scaling Weight=%f)!\n", weight);
+    //Add weighted tally
+    addKBtoProbTally(possibleWorldKB, determinedInNWorlds, weight);
 }
 
 /**
@@ -218,7 +235,7 @@ void solve(KnowledgeBase* kb, RuleSet* rs, const int NUM_PLAYERS, const int NUM_
     KnowledgeBase* revertKB = initKB(NUM_PLAYERS, NUM_DAYS); //For backup incase of contradictions
 
 
-    const int NUM_THREADS = 16;
+    const int NUM_THREADS = 32;
     const int NUM_ITERATIONS = 16;
 
     ProbKnowledgeBase* threadTallies[NUM_THREADS];

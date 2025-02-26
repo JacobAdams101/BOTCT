@@ -62,3 +62,5 @@ extern char *ROLE_NAMES[NUM_BOTCT_ROLES];
 extern char *ROLE_TEAMS[NUM_BOTCT_ROLES];
 extern char *ROLE_CLASSES[NUM_BOTCT_ROLES]; 
 extern int ROLE_IN_SCRIPT[NUM_BOTCT_ROLES]; 
+
+extern int NUM_ROLES_IN_SCRIPT;

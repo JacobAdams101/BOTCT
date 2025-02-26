@@ -36,6 +36,8 @@ char *ROLE_CLASSES[NUM_BOTCT_ROLES];
 
 int ROLE_IN_SCRIPT[NUM_BOTCT_ROLES];
 
+int NUM_ROLES_IN_SCRIPT;
+
 int TOTAL_MINIONS = 12;
 int TOTAL_OUTSIDERS = 12;
 int FIRST_MINION_INDEX = 1;
@@ -209,6 +211,7 @@ void initScript(RuleSet** rs, KnowledgeBase** kb, const int SCRIPT, const int NU
     printf("-DONE!..\n");
 
     printf("BUILD RULES...\n");
+    NUM_ROLES_IN_SCRIPT = 0;
     for (int night = 0; night < NUM_DAYS; night++)
     {
         for (int i = 0; i < NUM_BOTCT_ROLES; i++)
@@ -217,6 +220,10 @@ void initScript(RuleSet** rs, KnowledgeBase** kb, const int SCRIPT, const int NU
             {
                 snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s_in_PLAY_[NIGHT%d]", ROLE_NAMES[i], night);
                 addKnowledgeName(*kb, "METADATA", 0, buff);
+            }
+            else
+            {
+                NUM_ROLES_IN_SCRIPT++;
             }
         }
     }

@@ -431,11 +431,11 @@ void resetProbKnowledgeBase(ProbKnowledgeBase* tally)
         {
             for (int function = 0; function < FUNCTION_RESULT_SIZE*INT_LENGTH; function++)
             {
-                tally->KNOWLEDGE_BASE[set][element][function] = 0;
+                tally->KNOWLEDGE_BASE[set][element][function] = 0.0;
             }
         }
     }
-    tally->tally = 0;
+    tally->tally = 0.0;
 }
 
 /**
@@ -594,12 +594,13 @@ int hasExplicitContradiction(KnowledgeBase* kb)
 }
 
 /**
- * addKBtoProbTally() - add a tally of 1 to each function which evaluates to true in the knowledge base
+ * addKBtoProbTally() - add a tally of [+weight] to each function which evaluates to true in the knowledge base
  * 
  * @kb - the knowledge base to add to the tally
  * @tally - the tally to add to
+ * @weight - the weight to add
 */
-void addKBtoProbTally(KnowledgeBase* kb, ProbKnowledgeBase* tally)
+void addKBtoProbTally(KnowledgeBase* kb, ProbKnowledgeBase* tally, double weight)
 {
 
     for (int set = 0; set < NUM_SETS; set++)
@@ -610,14 +611,15 @@ void addKBtoProbTally(KnowledgeBase* kb, ProbKnowledgeBase* tally)
             {
                 if (isKnown(kb, set, element, function))
                 {
-                    tally->KNOWLEDGE_BASE[set][element][function]++;
+                    tally->KNOWLEDGE_BASE[set][element][function] += weight;
                 }
             }
         }
     }
-    tally->tally++;
+    tally->tally += weight;
 }
-
+//Used to accomodate for floating point rounding
+#define EPSILON 1.0
 /**
  * getProbIntPercentage() - get an estimation for the probability of somethign being true in the tally
  * 
@@ -630,7 +632,13 @@ void addKBtoProbTally(KnowledgeBase* kb, ProbKnowledgeBase* tally)
 */
 int getProbIntPercentage(ProbKnowledgeBase* tally, int set, int element, int function)
 {
-    return (tally->KNOWLEDGE_BASE[set][element][function]*100) / tally->tally;
+    double percentage = (tally->KNOWLEDGE_BASE[set][element][function]*100.0) / tally->tally;
+
+    //Floating point rounding correction
+    if (percentage > 100.0 - EPSILON) return 100;
+    if (percentage < EPSILON) return 0;
+
+    return (int) percentage; //Cast to int
 }
 
 /**

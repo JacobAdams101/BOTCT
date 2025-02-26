@@ -36,8 +36,8 @@ typedef struct {
 } KnowledgeBase;
 
 typedef struct {
-    int KNOWLEDGE_BASE[NUM_SETS][MAX_SET_ELEMENTS][FUNCTION_RESULT_SIZE*INT_LENGTH];
-    int tally;
+    double KNOWLEDGE_BASE[NUM_SETS][MAX_SET_ELEMENTS][FUNCTION_RESULT_SIZE*INT_LENGTH];
+    double tally;
 } ProbKnowledgeBase;
 /**
  * initKB() - allocate and initilise a knowledge base structure
@@ -203,12 +203,13 @@ int isKnownName(KnowledgeBase* kb,  char* set, int element, char* function);
 int hasExplicitContradiction(KnowledgeBase* kb);
 
 /**
- * addKBtoProbTally() - add a tally of 1 to each function which evaluates to true in the knowledge base
+ * addKBtoProbTally() - add a tally of [+weight] to each function which evaluates to true in the knowledge base
  * 
  * @kb - the knowledge base to add to the tally
  * @tally - the tally to add to
+ * @weight - the weight to add
 */
-void addKBtoProbTally(KnowledgeBase* kb, ProbKnowledgeBase* tally);
+void addKBtoProbTally(KnowledgeBase* kb, ProbKnowledgeBase* tally, double weight);
 
 /**
  * getProbIntPercentage() - get an estimation for the probability of somethign being true in the tally
