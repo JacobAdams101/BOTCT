@@ -722,7 +722,12 @@ void printPlayerTable(KnowledgeBase* kb, int night)
         //Only print roles in the script
         if (ROLE_IN_SCRIPT[role] == 1)
         {
+            if (strcmp(ROLE_CLASSES[role], "DEMON") == 0) PRINT_RED
+            else if (strcmp(ROLE_CLASSES[role], "MINION") == 0) PRINT_YELLOW
+            else if (strcmp(ROLE_CLASSES[role], "OUTSIDER") == 0) PRINT_PURPLE
+            else if (strcmp(ROLE_CLASSES[role], "TOWNSFOLK") == 0) PRINT_GREEN
             printTrucatedStr(ROLE_NAMES[role], 3);
+            PRINT_END
             printf("|");
         }
     }
@@ -734,6 +739,7 @@ void printPlayerTable(KnowledgeBase* kb, int night)
         if (ROLE_IN_SCRIPT[role] == 1)
         {
             printf("---|");
+            
         }
     }
     printf("-----------|------|----------|-------|\n");
@@ -771,12 +777,17 @@ void printPlayerTable(KnowledgeBase* kb, int night)
             //Only print roles in the script
             if (ROLE_IN_SCRIPT[role] == 1)
             {
+                if (strcmp(ROLE_CLASSES[role], "DEMON") == 0) PRINT_RED
+                else if (strcmp(ROLE_CLASSES[role], "MINION") == 0) PRINT_YELLOW
+                else if (strcmp(ROLE_CLASSES[role], "OUTSIDER") == 0) PRINT_PURPLE
+                else if (strcmp(ROLE_CLASSES[role], "TOWNSFOLK") == 0) PRINT_GREEN
                 snprintf(buff, 64, "is_%s_[NIGHT%d]", ROLE_NAMES[role], night);
                 int isRole = isKnownName(kb, "PLAYERS", element, buff); 
                 snprintf(buff, 64, "is_NOT_%s_[NIGHT%d]", ROLE_NAMES[role], night);
                 int isNotRole = isKnownName(kb, "PLAYERS", element, buff);
                 if (isRole == 1)
                 {
+                    PRINT_TITLE
                     printf(" * ");
                 }
                 else if (isNotRole == 1)
@@ -787,24 +798,33 @@ void printPlayerTable(KnowledgeBase* kb, int night)
                 {
                     printf(" ? ");
                 }
+                PRINT_END
                 printf("|");
             }
         }
         if (isTownsfolk == 1)
         {
+            PRINT_GREEN
             printf(" TOWNSFOLK ");
+            PRINT_END
         }
         else if (isOutsider == 1)
         {
+            PRINT_PURPLE
             printf("  OUTSIDER ");
+            PRINT_END
         }
         else if (isMinion == 1)
         {
+            PRINT_YELLOW
             printf("   MINION  ");
+            PRINT_END
         }
         else if (isDemon == 1)
         {
+            PRINT_RED
             printf("   DEMON   ");
+            PRINT_END
         }
         else
         {
@@ -813,11 +833,15 @@ void printPlayerTable(KnowledgeBase* kb, int night)
         printf("|");
         if (isGood == 1)
         {
+            PRINT_GREEN
             printf(" GOOD ");
+            PRINT_END
         }
         else if (isEvil == 1)
         {
+            PRINT_RED
             printf(" EVIL ");
+            PRINT_END
         }
         else
         {
@@ -870,8 +894,13 @@ void printRoleTable(KnowledgeBase* kb, int night)
         //Only print roles in the script
         if (ROLE_IN_SCRIPT[role] == 1)
         {
+            if (strcmp(ROLE_CLASSES[role], "DEMON") == 0) PRINT_RED
+            else if (strcmp(ROLE_CLASSES[role], "MINION") == 0) PRINT_YELLOW
+            else if (strcmp(ROLE_CLASSES[role], "OUTSIDER") == 0) PRINT_PURPLE
+            else if (strcmp(ROLE_CLASSES[role], "TOWNSFOLK") == 0) PRINT_GREEN
             printTrucatedStr(ROLE_NAMES[role], 3);
             printf("|");
+            PRINT_END
         }
     }
     printf("\n");
@@ -893,6 +922,10 @@ void printRoleTable(KnowledgeBase* kb, int night)
         //Only print roles in the script
         if (ROLE_IN_SCRIPT[role] == 1)
         {
+            if (strcmp(ROLE_CLASSES[role], "DEMON") == 0) PRINT_RED
+            else if (strcmp(ROLE_CLASSES[role], "MINION") == 0) PRINT_YELLOW
+            else if (strcmp(ROLE_CLASSES[role], "OUTSIDER") == 0) PRINT_PURPLE
+            else if (strcmp(ROLE_CLASSES[role], "TOWNSFOLK") == 0) PRINT_GREEN
             snprintf(buff, 64, "is_%s_in_PLAY_[NIGHT%d]", ROLE_NAMES[role], night);
             int isRoleInPlay = isKnownName(kb, "METADATA", element, buff); 
             snprintf(buff, 64, "is_NOT_%s_in_PLAY_[NIGHT%d]", ROLE_NAMES[role], night);
@@ -900,6 +933,7 @@ void printRoleTable(KnowledgeBase* kb, int night)
 
             if (isRoleInPlay == 1)
             {
+                PRINT_TITLE
                 printf(" * ");
             }
             else if (isNotRoleInPlay == 1)
@@ -910,6 +944,7 @@ void printRoleTable(KnowledgeBase* kb, int night)
             {
                 printf(" ? ");
             }
+            PRINT_END
             printf("|");
         }
     }
@@ -920,6 +955,10 @@ void printRoleTable(KnowledgeBase* kb, int night)
         //Only print roles in the script
         if (ROLE_IN_SCRIPT[role] == 1)
         {
+            if (strcmp(ROLE_CLASSES[role], "DEMON") == 0) PRINT_RED
+            else if (strcmp(ROLE_CLASSES[role], "MINION") == 0) PRINT_YELLOW
+            else if (strcmp(ROLE_CLASSES[role], "OUTSIDER") == 0) PRINT_PURPLE
+            else if (strcmp(ROLE_CLASSES[role], "TOWNSFOLK") == 0) PRINT_GREEN
             snprintf(buff, 64, "is_%s_ALIVE_[NIGHT%d]", ROLE_NAMES[role], night);
             int isRoleInPlay = isKnownName(kb, "METADATA", element, buff); 
             snprintf(buff, 64, "is_NOT_%s_ALIVE_[NIGHT%d]", ROLE_NAMES[role], night);
@@ -927,6 +966,7 @@ void printRoleTable(KnowledgeBase* kb, int night)
 
             if (isRoleInPlay == 1)
             {
+                PRINT_TITLE
                 printf(" * ");
             }
             else if (isNotRoleInPlay == 1)
@@ -937,6 +977,7 @@ void printRoleTable(KnowledgeBase* kb, int night)
             {
                 printf(" ? ");
             }
+            PRINT_END
             printf("|");
         }
     }
@@ -962,7 +1003,12 @@ void printProbPlayerTable(KnowledgeBase* kb, ProbKnowledgeBase* probkb, int nigh
         //Only print roles in the script
         if (ROLE_IN_SCRIPT[role] == 1)
         {
+            if (strcmp(ROLE_CLASSES[role], "DEMON") == 0) PRINT_RED
+            else if (strcmp(ROLE_CLASSES[role], "MINION") == 0) PRINT_YELLOW
+            else if (strcmp(ROLE_CLASSES[role], "OUTSIDER") == 0) PRINT_PURPLE
+            else if (strcmp(ROLE_CLASSES[role], "TOWNSFOLK") == 0) PRINT_GREEN
             printTrucatedStr(ROLE_NAMES[role], 3);
+            PRINT_END
             printf("  |  ");
         }
     }
@@ -989,6 +1035,10 @@ void printProbPlayerTable(KnowledgeBase* kb, ProbKnowledgeBase* probkb, int nigh
             //Only print roles in the script
             if (ROLE_IN_SCRIPT[role] == 1)
             {
+                if (strcmp(ROLE_CLASSES[role], "DEMON") == 0) PRINT_RED
+                else if (strcmp(ROLE_CLASSES[role], "MINION") == 0) PRINT_YELLOW
+                else if (strcmp(ROLE_CLASSES[role], "OUTSIDER") == 0) PRINT_PURPLE
+                else if (strcmp(ROLE_CLASSES[role], "TOWNSFOLK") == 0) PRINT_GREEN
                 snprintf(buff, 64, "is_%s_[NIGHT%d]", ROLE_NAMES[role], night);
                 int isRole = getProbIntPercentageName(probkb, kb, "PLAYERS", element, buff); 
                 snprintf(buff, 64, "is_NOT_%s_[NIGHT%d]", ROLE_NAMES[role], night);
@@ -996,6 +1046,7 @@ void printProbPlayerTable(KnowledgeBase* kb, ProbKnowledgeBase* probkb, int nigh
                 
                 if (isRole == 100)
                 {
+                    PRINT_TITLE
                     printf("   *   ");
                 }
                 else if (isNotRole == 100)
@@ -1006,8 +1057,9 @@ void printProbPlayerTable(KnowledgeBase* kb, ProbKnowledgeBase* probkb, int nigh
                 {
                     printf("%03d-%03d", isRole, isNotRole);
                 }
+                PRINT_END
                 printf("|");
-                }
+            }
         }
         printf("\n");
     }
@@ -1031,7 +1083,12 @@ void printProbRoleTable(KnowledgeBase* kb, ProbKnowledgeBase* probkb, int night)
         //Only print roles in the script
         if (ROLE_IN_SCRIPT[role] == 1)
         {
+            if (strcmp(ROLE_CLASSES[role], "DEMON") == 0) PRINT_RED
+            else if (strcmp(ROLE_CLASSES[role], "MINION") == 0) PRINT_YELLOW
+            else if (strcmp(ROLE_CLASSES[role], "OUTSIDER") == 0) PRINT_PURPLE
+            else if (strcmp(ROLE_CLASSES[role], "TOWNSFOLK") == 0) PRINT_GREEN
             printTrucatedStr(ROLE_NAMES[role], 3);
+            PRINT_END
             printf("  |  ");
         }
     }
@@ -1053,6 +1110,10 @@ void printProbRoleTable(KnowledgeBase* kb, ProbKnowledgeBase* probkb, int night)
         //Only print roles in the script
         if (ROLE_IN_SCRIPT[role] == 1)
         {
+            if (strcmp(ROLE_CLASSES[role], "DEMON") == 0) PRINT_RED
+            else if (strcmp(ROLE_CLASSES[role], "MINION") == 0) PRINT_YELLOW
+            else if (strcmp(ROLE_CLASSES[role], "OUTSIDER") == 0) PRINT_PURPLE
+            else if (strcmp(ROLE_CLASSES[role], "TOWNSFOLK") == 0) PRINT_GREEN
             snprintf(buff, 64, "is_%s_in_PLAY_[NIGHT%d]", ROLE_NAMES[role], night);
             int isRoleInPlay = getProbIntPercentageName(probkb, kb, "METADATA", element, buff); 
             snprintf(buff, 64, "is_NOT_%s_in_PLAY_[NIGHT%d]", ROLE_NAMES[role], night);
@@ -1060,6 +1121,7 @@ void printProbRoleTable(KnowledgeBase* kb, ProbKnowledgeBase* probkb, int night)
 
             if (isRoleInPlay == 100)
             {
+                PRINT_TITLE
                 printf("   *   ");
             }
             else if (isNotRoleInPlay == 100)
@@ -1070,6 +1132,7 @@ void printProbRoleTable(KnowledgeBase* kb, ProbKnowledgeBase* probkb, int night)
             {
                 printf("%03d-%03d", isRoleInPlay, isNotRoleInPlay);
             }
+            PRINT_END
             printf("|");
         }
     }
@@ -1080,6 +1143,10 @@ void printProbRoleTable(KnowledgeBase* kb, ProbKnowledgeBase* probkb, int night)
         //Only print roles in the script
         if (ROLE_IN_SCRIPT[role] == 1)
         {
+            if (strcmp(ROLE_CLASSES[role], "DEMON") == 0) PRINT_RED
+            else if (strcmp(ROLE_CLASSES[role], "MINION") == 0) PRINT_YELLOW
+            else if (strcmp(ROLE_CLASSES[role], "OUTSIDER") == 0) PRINT_PURPLE
+            else if (strcmp(ROLE_CLASSES[role], "TOWNSFOLK") == 0) PRINT_GREEN
             snprintf(buff, 64, "is_%s_ALIVE_[NIGHT%d]", ROLE_NAMES[role], night);
             int isRoleInPlay = getProbIntPercentageName(probkb, kb, "METADATA", element, buff); 
             snprintf(buff, 64, "is_NOT_%s_ALIVE_[NIGHT%d]", ROLE_NAMES[role], night);
@@ -1087,6 +1154,7 @@ void printProbRoleTable(KnowledgeBase* kb, ProbKnowledgeBase* probkb, int night)
 
             if (isRoleInPlay == 100)
             {
+                PRINT_TITLE
                 printf("   *   ");
             }
             else if (isNotRoleInPlay == 100)
@@ -1097,6 +1165,7 @@ void printProbRoleTable(KnowledgeBase* kb, ProbKnowledgeBase* probkb, int night)
             {
                 printf("%03d-%03d", isRoleInPlay, isNotRoleInPlay);
             }
+            PRINT_END
             printf("|");
         }
     }

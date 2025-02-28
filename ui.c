@@ -40,11 +40,13 @@
 */
 void printTitle(char *title, char *subheading)
 {
+    PRINT_TITLE
     printf("======================================================================================================\n");
     printf("\n");
     printf("                                 %s\n", title);
     printf("                                                                  %s\n", subheading);
     printf("======================================================================================================\n");
+    PRINT_END
 }
 
 /**
@@ -54,9 +56,11 @@ void printTitle(char *title, char *subheading)
 */
 void printHeading(char *title)
 {
+    PRINT_TITLE
     printf("\n");
     printf("   %s\n", title);
     printf("‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\n");
+    PRINT_END
 }
 
 /**
@@ -420,6 +424,29 @@ static void poisoned(KnowledgeBase* kb, const int NUM_DAYS)
     night = getInt("On night?", 0, NUM_DAYS);
 
     snprintf(buff, STRING_BUFF_SIZE, "is_POISONED_[NIGHT%d]", night);
+    addKnowledgeName(kb, "PLAYERS", playerID, buff);
+}
+
+/**
+ * notPoisoned() - assume that a player is poisoned
+ * 
+ * @kb the knowledge base to update
+ * @NUM_DAYS the max number of days the game can go on for
+*/
+static void notPoisoned(KnowledgeBase* kb, const int NUM_DAYS)
+{
+    char buff[STRING_BUFF_SIZE]; // Declare a character array to hold the string 
+
+    int playerID;
+    int night;
+
+    printf("ENERTING: PLAYER POISONED\n");
+
+    playerID = getPlayerIDInput(kb, "Which player is not poisoned?"); // Read player ID
+
+    night = getInt("On night?", 0, NUM_DAYS);
+
+    snprintf(buff, STRING_BUFF_SIZE, "is_NOT_POISONED_[NIGHT%d]", night);
     addKnowledgeName(kb, "PLAYERS", playerID, buff);
 }
 
@@ -1326,7 +1353,7 @@ static void dreamerPing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs, co
             setTempRuleResultName(rs, kb, -playerX-1000, "PLAYERS", buff);
         }
     }
-    snprintf(buff, STRING_BUFF_SIZE, "is_DREAMER_[NIGHT0%d]", night);
+    snprintf(buff, STRING_BUFF_SIZE, "is_DREAMER_[NIGHT%d]", night);
     addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff, playerIDinfoFrom);
     snprintf(buff, STRING_BUFF_SIZE, "is_NOT_POISONED_[NIGHT%d]", night);
     addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff, playerIDinfoFrom);
@@ -1359,8 +1386,32 @@ static void snakeCharmerPing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* r
 */
 static void mathematicianPing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs, const int NUM_DAYS)
 {
-    //char buff[STRING_BUFF_SIZE]; // Declare a character array to hold the string
-    printf("NOT SUPPORTED!\n"); 
+    char buff[STRING_BUFF_SIZE]; // Declare a character array to hold the string 
+
+    int numAbilitiesWorkedAbnormally = -1;
+    int night = -1;
+
+    numAbilitiesWorkedAbnormally = getInt("How many abilities worked abnormally?", 0, kb->SET_SIZES[0]+1);
+
+    night = getInt("On night?", 0, NUM_DAYS);
+    
+
+    //Player must be one of those two roles
+    setTempRuleParams(rs, numAbilitiesWorkedAbnormally+1,1);
+
+    snprintf(buff, STRING_BUFF_SIZE, "is_NOT_POISONED_[NIGHT%d]", night);
+    setTempRuleResultName(rs, kb, -1, "PLAYERS", buff);
+
+    for (int i = 0; i < numAbilitiesWorkedAbnormally; i++)
+    {
+        snprintf(buff, STRING_BUFF_SIZE, "is_POISONED_[NIGHT%d]", night);
+        addConditionToTempRuleName(rs,kb, i, "PLAYERS", buff);
+    }
+    snprintf(buff, STRING_BUFF_SIZE, "is_MATHEMATICIAN_[NIGHT%d]", night);
+    addFixedConditionToTempRuleName(rs,kb, numAbilitiesWorkedAbnormally, "PLAYERS", buff, playerIDinfoFrom);
+    snprintf(buff, STRING_BUFF_SIZE, "is_NOT_POISONED_[NIGHT%d]", night);
+    addFixedConditionToTempRuleName(rs,kb, numAbilitiesWorkedAbnormally, "PLAYERS", buff, playerIDinfoFrom);
+    pushTempRule(rs);
 }
 
 /**
@@ -1486,7 +1537,7 @@ static void townCrierPing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs, 
             setTempRuleParams(rs, 2,0);
             snprintf(buff, STRING_BUFF_SIZE, "is_NOT_MINION_[NIGHT%d]", night);
             setTempRuleResultName(rs, kb, 1, "PLAYERS", buff);
-            snprintf(buff, STRING_BUFF_SIZE, "is_FLOWERGIRL_[NIGHT%d]", night);
+            snprintf(buff, STRING_BUFF_SIZE, "is_TOWN_CRIER_[NIGHT%d]", night);
             addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff, playerIDinfoFrom);
             snprintf(buff, STRING_BUFF_SIZE, "is_NOT_POISONED_[NIGHT%d]", night);
             addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff, playerIDinfoFrom);
@@ -1510,16 +1561,50 @@ static void townCrierPing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs, 
 */
 static void oraclePing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs, const int NUM_DAYS)
 {
-    //char buff[STRING_BUFF_SIZE]; // Declare a character array to hold the string 
-    //char buff[STRING_BUFF_SIZE]; // Declare a character array to hold the string 
-    //char input[STRING_BUFF_SIZE]; // Declare a character array to hold the string 
+    char buff[STRING_BUFF_SIZE]; // Declare a character array to hold the string 
 
     int numEvil;
+    int numGood;
     int night = -1;
 
     numEvil = getInt("How many players evil?", 0, kb->SET_SIZES[0]); // Read player ID 
 
     night = getInt("On night?", 0, NUM_DAYS);
+
+    int numDead = 0;
+
+    for (int player = 0; player < kb->SET_SIZES[0]; player++)
+    {
+        snprintf(buff, STRING_BUFF_SIZE, "is_DEAD_[NIGHT%d]", night);
+        if (isKnownName(kb, "PLAYERS", player, buff) == 1) numDead++;
+    }
+
+    setTempRuleParams(rs, numEvil+2,1);
+    snprintf(buff, STRING_BUFF_SIZE, "is_NOT_EVIL_[NIGHT%d]", night);
+    setTempRuleResultName(rs, kb, numEvil, "PLAYERS", buff);
+    for (int i = 0; i < numEvil; i++)
+    {
+        snprintf(buff, STRING_BUFF_SIZE, "is_DEAD_[NIGHT%d]", night);
+        addConditionToTempRuleName(rs,kb, i, "PLAYERS", buff);
+        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_RECLUSE_[NIGHT%d]", night);
+        addConditionToTempRuleName(rs,kb, i, "PLAYERS", buff);
+        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_SPY_[NIGHT%d]", night);
+        addConditionToTempRuleName(rs,kb, i, "PLAYERS", buff);
+        snprintf(buff, STRING_BUFF_SIZE, "is_EVIL_[NIGHT%d]", night);
+        addConditionToTempRuleName(rs,kb, i, "PLAYERS", buff);
+    }
+    snprintf(buff, STRING_BUFF_SIZE, "is_DEAD_[NIGHT%d]", night);
+    addConditionToTempRuleName(rs,kb, numEvil, "PLAYERS", buff);
+    snprintf(buff, STRING_BUFF_SIZE, "is_NOT_RECLUSE_[NIGHT%d]", night);
+    addConditionToTempRuleName(rs,kb, numEvil, "PLAYERS", buff);
+    snprintf(buff, STRING_BUFF_SIZE, "is_NOT_SPY_[NIGHT%d]", night);
+    addConditionToTempRuleName(rs,kb, numEvil, "PLAYERS", buff);
+ 
+    snprintf(buff, STRING_BUFF_SIZE, "is_ORACLE_[NIGHT%d]", night);
+    addFixedConditionToTempRuleName(rs,kb, numEvil+1, "PLAYERS", buff, playerIDinfoFrom);
+    snprintf(buff, STRING_BUFF_SIZE, "is_NOT_POISONED_[NIGHT%d]", night);
+    addFixedConditionToTempRuleName(rs,kb, numEvil+1, "PLAYERS", buff, playerIDinfoFrom);
+    pushTempRule(rs);
 }
 
 /**
@@ -1539,7 +1624,7 @@ static void savantPing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs, con
 
 /**
  * seamstressPing() - runs a ping
- * 
+ * Once per game, at night, choose 2 players (not yourself: you learn if they are the same alignment.
  * 
  * @playerIDinfoFrom the playerID/index the ping is from
  * @kb the knowledge base to update
@@ -1548,8 +1633,47 @@ static void savantPing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs, con
 */
 static void seamstressPing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs, const int NUM_DAYS)
 {
-    //char buff[STRING_BUFF_SIZE]; // Declare a character array to hold the string 
-    printf("NOT SUPPORTED!\n");
+    char buff[STRING_BUFF_SIZE]; // Declare a character array to hold the string 
+    
+    int playerX;
+    int playerY;
+    int night = -1;
+
+    int sameAlignment = -1;
+
+    playerX = getPlayerIDInput(kb, "Chosen player 1?"); // Read player ID 
+    playerY = getPlayerIDInput(kb, "Chosen player 1?"); // Read player ID 
+
+    night = getInt("On night?", 0, NUM_DAYS);
+
+    sameAlignment = getInt("Same alignment? (1: Yes 0: No)", 0, 2);
+
+    for (int align = 0; align <= 1; align++)
+    {
+        for (int lhsPlayer = 0; lhsPlayer <= 1; lhsPlayer++)
+        {
+            setTempRuleParams(rs, 2,0);
+            if (align == 0) snprintf(buff, STRING_BUFF_SIZE, "is_EVIL_[NIGHT%d]", night);
+            else snprintf(buff, STRING_BUFF_SIZE, "is_GOOD_[NIGHT%d]", night);
+            
+            if (lhsPlayer == 0) setTempRuleResultName(rs, kb, -playerX-1000, "PLAYERS", buff);
+            else setTempRuleResultName(rs, kb, -playerY-1000, "PLAYERS", buff);
+
+            int lhsAlign = (align + sameAlignment + 1) % 2; 
+
+            if (lhsAlign == 0) snprintf(buff, STRING_BUFF_SIZE, "is_EVIL_[NIGHT%d]", night);
+            else snprintf(buff, STRING_BUFF_SIZE, "is_GOOD_[NIGHT%d]", night);
+
+            if (lhsPlayer == 0) addFixedConditionToTempRuleName(rs, kb, 0, "PLAYERS", buff, playerY);
+            else addFixedConditionToTempRuleName(rs, kb, 0, "PLAYERS", buff, playerX);
+            
+            snprintf(buff, STRING_BUFF_SIZE, "is_SEAMSTRESS_[NIGHT%d]", night);
+            addFixedConditionToTempRuleName(rs,kb, 1, "PLAYERS", buff, playerIDinfoFrom);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_POISONED_[NIGHT%d]", night);
+            addFixedConditionToTempRuleName(rs,kb, 1, "PLAYERS", buff, playerIDinfoFrom);
+            pushTempRule(rs);
+        }
+    }
 }
 
 /**
@@ -1569,7 +1693,7 @@ static void philosopherPing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs
 
 /**
  * artistPing() - runs a ping
- * 
+ * Once per game, during the day, privately ask the Storyteller any yes/ no question
  * 
  * @playerIDinfoFrom the playerID/index the ping is from
  * @kb the knowledge base to update
@@ -1599,7 +1723,7 @@ static void jugglerPing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs, co
 
 /**
  * sagePing() - runs a ping
- * 
+ * If the Demon kills you, you learn that it is 1 of 2 players.
  * 
  * @playerIDinfoFrom the playerID/index the ping is from
  * @kb the knowledge base to update
@@ -1608,8 +1732,41 @@ static void jugglerPing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs, co
 */
 static void sagePing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs, const int NUM_DAYS)
 {
-    //char buff[STRING_BUFF_SIZE]; // Declare a character array to hold the string 
-    printf("NOT SUPPORTED!\n");
+    char buff[STRING_BUFF_SIZE]; // Declare a character array to hold the string 
+    
+    int playerX;
+    int playerY;
+    int night = -1;
+
+    playerX = getPlayerIDInput(kb, "Potential demon 1?"); // Read player ID 
+    playerY = getPlayerIDInput(kb, "Potential demon 2?"); // Read player ID 
+
+    night = getInt("On night?", 0, NUM_DAYS);
+
+    setTempRuleParams(rs, 2,0);
+    snprintf(buff, STRING_BUFF_SIZE, "is_DEMON_[NIGHT%d]", night);
+    setTempRuleResultName(rs, kb, -playerX-1000, "PLAYERS", buff);
+
+    snprintf(buff, STRING_BUFF_SIZE, "is_NOT_DEMON_[NIGHT%d]", night);
+    addFixedConditionToTempRuleName(rs,kb, 1, "PLAYERS", buff, playerY);
+
+    snprintf(buff, STRING_BUFF_SIZE, "is_SAGE_[NIGHT%d]", night);
+    addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff, playerIDinfoFrom);
+    snprintf(buff, STRING_BUFF_SIZE, "is_NOT_POISONED_[NIGHT%d]", night);
+    addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff, playerIDinfoFrom);
+    pushTempRule(rs);
+
+    snprintf(buff, STRING_BUFF_SIZE, "is_DEMON_[NIGHT%d]", night);
+    setTempRuleResultName(rs, kb, -playerY-1000, "PLAYERS", buff);
+
+    snprintf(buff, STRING_BUFF_SIZE, "is_NOT_DEMON_[NIGHT%d]", night);
+    addFixedConditionToTempRuleName(rs,kb, 1, "PLAYERS", buff, playerX);
+
+    snprintf(buff, STRING_BUFF_SIZE, "is_SAGE_[NIGHT%d]", night);
+    addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff, playerIDinfoFrom);
+    snprintf(buff, STRING_BUFF_SIZE, "is_NOT_POISONED_[NIGHT%d]", night);
+    addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff, playerIDinfoFrom);
+    pushTempRule(rs);
 }
 
 /**
@@ -1982,6 +2139,7 @@ int add_info(KnowledgeBase* kb, RuleSet* rs, const int NUM_DAYS)
         char PING[] = "PNG";
         char N_POSSIBILITIES[] = "TFT";
         char POISONED[] = "PS";
+        char NOT_POISONED[] = "NPS";
         char RED_HERRING[] = "RH";
         char DIED[] = "D";
         char HUNG[] = "H";
@@ -2000,6 +2158,7 @@ int add_info(KnowledgeBase* kb, RuleSet* rs, const int NUM_DAYS)
         printf("- Type '%s' to submit a ping:\n", PING);
         printf("\n");
         printf("- Type '%s' to submit that a player that is confirmed poisoned:\n", POISONED);
+        printf("- Type '%s' to submit that a player that is confirmed not poisoned:\n", NOT_POISONED);
         printf("- Type '%s' to submit that a player that is confirmed red herring:\n", RED_HERRING);
         printf("\n");
         printf("- Type '%s' to submit that a/some player(s) died :\n", DIED);
@@ -2039,6 +2198,10 @@ int add_info(KnowledgeBase* kb, RuleSet* rs, const int NUM_DAYS)
         else if (strcmp(buff,POISONED) == 0)
         {
             poisoned(kb, NUM_DAYS);
+        }
+        else if (strcmp(buff,NOT_POISONED) == 0)
+        {
+            notPoisoned(kb, NUM_DAYS);
         }
         else if (strcmp(buff,RED_HERRING) == 0)
         {

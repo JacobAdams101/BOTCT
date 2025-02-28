@@ -32,3 +32,20 @@
 #define FUNCTION_RESULT_SIZE 24
 #define MAX_VARS_IN_RULE 16
 #define MAX_NUM_RULES 65536
+
+//UI Constants
+#define RED_COLOUR_START "\033[31m"
+#define YELLOW_COLOUR_START "\033[33m"
+#define GREEN_COLOUR_START "\033[32m"
+#define PURPLE_COLOUR_START "\033[35m"
+#define TITLE_TEXT_START "\033[0;1m"
+#define COLOUR_END "\033[0m"
+
+#define PRINT_RED printf(RED_COLOUR_START); 
+#define PRINT_YELLOW printf(YELLOW_COLOUR_START); 
+#define PRINT_GREEN printf(GREEN_COLOUR_START); 
+#define PRINT_PURPLE printf(PURPLE_COLOUR_START); 
+
+#define PRINT_TITLE printf(TITLE_TEXT_START); 
+
+#define PRINT_END printf(COLOUR_END); 

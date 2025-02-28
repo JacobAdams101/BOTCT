@@ -158,7 +158,7 @@ void initScript(RuleSet** rs, KnowledgeBase** kb, const int SCRIPT, const int NU
     addRole(&count, "CLOCKMAKER", "GOOD", "TOWNSFOLK", SCRIPT==SV, 64);
     addRole(&count, "DREAMER", "GOOD", "TOWNSFOLK", SCRIPT==SV, 64);
     addRole(&count, "SNAKE_CHARMER", "GOOD", "TOWNSFOLK", SCRIPT==SV, 64);
-    addRole(&count, "MATHEMATITICIAN", "GOOD", "TOWNSFOLK", SCRIPT==SV, 64);
+    addRole(&count, "MATHEMATICIAN", "GOOD", "TOWNSFOLK", SCRIPT==SV, 64);
     addRole(&count, "FLOWERGIRL", "GOOD", "TOWNSFOLK", SCRIPT==SV, 64);
     addRole(&count, "TOWN_CRIER", "GOOD", "TOWNSFOLK", SCRIPT==SV, 64);
     addRole(&count, "ORACLE", "GOOD", "TOWNSFOLK", SCRIPT==SV, 64);
