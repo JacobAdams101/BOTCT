@@ -639,39 +639,26 @@ static int applyRule(Rule* rule, KnowledgeBase* kb, int assignement[MAX_VARS_IN_
     }
     return foundNovelInformation;
 }
-
 /**
- * satisfiesRule() - check if a knowledge base satisfies a rules LHS in a novel way
- * if it is add novel information to the KB
- * 
- * A novel solution is descibed as
- * 
- * X AND Y AND Z AND ... => A
- * 
- * WHERE KB already knows X,Y,Z,... but does NOT know A (so it's novel)
- * 
- * NOTE: this is used for optimisations with how many implication rounds to run when infering facts
+ * findPossibleSubstitutions() - find elements of sets that
+ * can satisfy some of the LHS conditions of a rule
+ * Used to cull set elements before permuting them to look for
+ * ways to satisfy the rules
  * 
  * @rule the rule to check if the LHS is satsified
  * @kb the knowledge base
- * @verbose print out information
- * 
- * @return TRUE if a novel solution is found
+ * @satisfied writing what variables satisfy the result
+ * @lengths how many variables satisfy the result
 */
-int satisfiesRule(Rule* rule, KnowledgeBase* kb, int verbose)
+static void findPossibleSubstitutions(Rule* rule, KnowledgeBase* kb, int satisfied[MAX_VARS_IN_RULE][MAX_SET_ELEMENTS], int lengths[MAX_VARS_IN_RULE])
 {
-
-    int satisfied[MAX_VARS_IN_RULE][MAX_SET_ELEMENTS];
-    int lengths[MAX_VARS_IN_RULE];
-    int assignement[MAX_VARS_IN_RULE];
-
-    int foundNovelSolution = 0;
     for (int var = 0; var < MAX_VARS_IN_RULE; var++)
     {
         for (int element = 0; element < MAX_SET_ELEMENTS; element++)
         {
             satisfied[var][element] = -1;
         }
+        lengths[var] = 0;
     }
 
     //Loop through vars in rules
@@ -687,16 +674,13 @@ int satisfiesRule(Rule* rule, KnowledgeBase* kb, int verbose)
                 if ((kb->KNOWLEDGE_BASE[set][element][i] & rule->varConditions[var][i]) != rule->varConditions[var][i])
                 {
                     match = 0;
+                    break;
                 }
             }
-            if (match == 1)
+            if (match)
             { //in "set": fact num "element" would satisfy var number "var"
-                int i = 0;
-                while(satisfied[var][i] != -1)
-                {
-                    i++;
-                }
-                satisfied[var][i] = element;
+                satisfied[var][lengths[var]] = element;
+                lengths[var]++;
             }
         }
     }
@@ -720,12 +704,50 @@ int satisfiesRule(Rule* rule, KnowledgeBase* kb, int verbose)
                 }
                 satisfied[var][i] = -1;
             }
-            if (forcedSubValid == 1)
+            if (forcedSubValid)
             {
+                lengths[var] = 1;
                 satisfied[var][0] = forcedSub;
+            }
+            else
+            {
+                lengths[var] = 0;
             }
         }
     }
+}
+
+/**
+ * satisfiesRule() - check if a knowledge base satisfies a rules LHS in a novel way
+ * if it is add novel information to the KB
+ * 
+ * A novel solution is descibed as
+ * 
+ * X AND Y AND Z AND ... => A
+ * 
+ * WHERE KB already knows X,Y,Z,... but does NOT know A (so it's novel)
+ * 
+ * NOTE: this is used for optimisations with how many implication rounds to run when infering facts
+ * 
+ * @rule the rule to check if the LHS is satsified
+ * @kb the knowledge base
+ * @verbose print out information
+ * 
+ * @return TRUE if a novel solution is found
+*/
+int satisfiesRule(Rule* rule, KnowledgeBase* kb, int verbose)
+{
+    //Store arrays of possible var substittutions
+    int satisfied[MAX_VARS_IN_RULE][MAX_SET_ELEMENTS];
+    int lengths[MAX_VARS_IN_RULE];
+
+    //Store array of potential assignement
+    int assignement[MAX_VARS_IN_RULE];
+
+    //Stores if any novel solution has been found
+    int foundNovelSolution = 0;
+
+    findPossibleSubstitutions(rule, kb, satisfied, lengths);
 
     //Check if there are trivial ways of showing no solutions to the rule
     for (int var = 0; var < rule->varCount; var++)
@@ -735,30 +757,12 @@ int satisfiesRule(Rule* rule, KnowledgeBase* kb, int verbose)
     
     //If it satifies the rule continue by iterating 
 
-    
-    for (int var = 0; var < rule->varCount; var++)
-    {
-        int lengthCounter = 0;
-        while(satisfied[var][lengthCounter] != -1)
-        {
-            lengthCounter++;
-        }
-        lengths[var] = lengthCounter;
-    }
-
-    long numCombinations = 1;
-    for (int var = 0; var < rule->varCount; var++)
-    {
-        numCombinations *= lengths[var];
-    }
-
-    if (rule->LHSSymmetric == 1)
-    { //If it is symmetric and independant we dont
-
+    if (rule->LHSSymmetric)
+    { //If it is symmetric and independant we done
         //Test If Assignement is valid
-        if (rule->varsMutuallyExclusive == 1)
+        if (rule->varsMutuallyExclusive)
         {
-            if (lengths[0] < rule->varCount)
+            if (lengths[0] < rule->varCount) //Only check first variable lengths[0] as symmetric so lengths[0]==lengths[i] for all i
             { //Lengths < rule->varCount   ---> no valid substitutions
 
             }
@@ -791,7 +795,6 @@ int satisfiesRule(Rule* rule, KnowledgeBase* kb, int verbose)
                     foundNovelSolution |= applyRule(rule, kb, assignement, verbose); //If some novel information was added
                 }
             }
-
         }
         else
         {
@@ -810,6 +813,13 @@ int satisfiesRule(Rule* rule, KnowledgeBase* kb, int verbose)
     }
     else
     { //If not symmetric and independant we need to permute it
+        //Figure out how many combinations we have
+        long numCombinations = 1;
+        for (int var = 0; var < rule->varCount; var++)
+        {
+            numCombinations *= lengths[var];
+        }
+
         for(long count = 0; count < numCombinations; count++)
         {
             //Generate Assignement
@@ -852,7 +862,7 @@ int satisfiesRule(Rule* rule, KnowledgeBase* kb, int verbose)
  * @kb the knowledge base
  * @verbose print discoveries
  * 
- * @return TRUE if a novel solution is found
+ * @return 1 if a novel solution is found, -1 if a contradiction is found, 0 otherwise
 */
 int inferknowledgeBaseFromRules(RuleSet* rs, KnowledgeBase* kb, int verbose)
 {
@@ -860,6 +870,7 @@ int inferknowledgeBaseFromRules(RuleSet* rs, KnowledgeBase* kb, int verbose)
     for (int i = 0; i < rs->NUM_RULES; i++)
     {
         foundNovelSolution |= satisfiesRule(rs->RULES[i], kb, verbose);
+        if (foundNovelSolution && hasExplicitContradiction(kb)) return -1;
     }
     return foundNovelSolution;
 }

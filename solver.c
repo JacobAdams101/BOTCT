@@ -53,10 +53,10 @@ static int inferImplicitFacts(KnowledgeBase* kb, RuleSet* rs, int numRounds, int
         
     for (int i = 0; i < numRounds; i++)
     {
-        int foundNovelSolution = inferknowledgeBaseFromRules(rs, kb, verbose);
+        int result = inferknowledgeBaseFromRules(rs, kb, verbose);
 
-        if (hasExplicitContradiction(kb)) {return 1;} //Check for contradictions
-        if (foundNovelSolution == 0) {break;} //If nothing new was found
+        if (result == -1) {return 1;} //Check for contradictions
+        if (result == 0) {break;} //If nothing new was found
     }
     //No contradictions were found
     return 0;
@@ -353,7 +353,7 @@ void solve(KnowledgeBase* kb, RuleSet* rs, const int NUM_PLAYERS, const int NUM_
 
         if (contradiction == 1)
         {
-            printHeading("CONTRADICTION FOUND"); //UI HEADING
+            printRedHeading("CONTRADICTION FOUND!"); //UI HEADING
             printf("Rolling back Knowledge base\n");
             //Roll back knowledge base
             copyTo(kb, revertKB);

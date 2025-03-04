@@ -44,6 +44,13 @@ void printTitle(char *title, char *subheading);
 void printHeading(char *title);
 
 /**
+ * printRedHeading() - prints a heading to the terminal
+ * 
+ * @title the title string
+*/
+void printRedHeading(char *title);
+
+/**
  * setup() - ask the questions to the user to sertup a game
  * and write the results into function parameters
  * 

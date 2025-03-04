@@ -575,11 +575,27 @@ int isKnownName(KnowledgeBase* kb, char* set, int element, char* function)
 */
 int hasExplicitContradiction(KnowledgeBase* kb)
 {
-    //[NUM_SETS][MAX_SET_ELEMENTS][FUNCTION_RESULT_SIZE];
+    //Don't ask... you really REALLY don't wanna know
+    //just think it's magic
+    
+    //Declare bitstring masks to store find TRUE FALSE statements in resulting bitstrings
+    const long ODD_MASK = 6148914691236517205;
+    const long EVEN_MASK = -6148914691236517206;
+
     for (int set = 0; set < NUM_SETS; set++)
     {
         for (int element = 0; element < MAX_SET_ELEMENTS; element++)
         {
+            for (int index = 0; index < FUNCTION_RESULT_SIZE; index++)
+            {
+                long bitString = kb->KNOWLEDGE_BASE[set][element][index];
+                long oddBitString = bitString & ODD_MASK; //All true statements
+                long evenBitString = bitString & EVEN_MASK; //All false statements
+                //Finding contradictions using magic bitstrings
+                if ((oddBitString << 1) & evenBitString) return 1; //If true and false
+            }
+            //Deprecated code replaced by vodo bit magic ;)
+            /*
             for (int function = 0; function < FUNCTION_RESULT_SIZE*INT_LENGTH; function += 2)
             {
                 //Using the fact that for any statement A stored at an even index i NOT(A) is stored at the odd index i+1 
@@ -588,6 +604,7 @@ int hasExplicitContradiction(KnowledgeBase* kb)
                     return 1; 
                 }
             }
+            */
         }
     }
     return 0;

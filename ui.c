@@ -64,6 +64,21 @@ void printHeading(char *title)
 }
 
 /**
+ * printRedHeading() - prints a heading to the terminal
+ * 
+ * @title the title string
+*/
+void printRedHeading(char *title)
+{
+    PRINT_TITLE
+    PRINT_RED
+    printf("\n");
+    printf("   %s\n", title);
+    printf("‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\n");
+    PRINT_END
+}
+
+/**
  * setup() - ask the questions to the user to sertup a game
  * and write the results into function parameters
  * 
