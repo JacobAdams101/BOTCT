@@ -1229,6 +1229,49 @@ static void undertakerPing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs,
 }
 
 /**
+ * monkPing() - runs a ping
+ * 
+ * 
+ * @playerIDinfoFrom the playerID/index the ping is from
+ * @kb the knowledge base to update
+ * @rs the rulset to update
+ * @NUM_DAYS the max number of days the game can go on for
+*/
+static void monkPing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs, const int NUM_DAYS)
+{
+    char buff[STRING_BUFF_SIZE]; // Declare a character array to hold the string 
+
+    int selectedRole = -1;
+    int playerX;
+    int night = -1;
+
+
+    playerX = getPlayerIDInput(kb, "Protected player?"); // Read player ID 
+
+    night = getInt("On night?", 0, NUM_DAYS);
+
+    setTempRuleParams(rs, 1,0);
+    snprintf(buff, STRING_BUFF_SIZE, "NOT_SLEEP_DEATH_[NIGHT%d]", ROLE_NAMES[selectedRole], night);
+    setTempRuleResultName(rs, kb, playerX-1000, "PLAYERS", buff);
+
+    snprintf(buff, STRING_BUFF_SIZE, "is_MONK_[NIGHT%d]", night);
+    addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff, playerIDinfoFrom);
+    snprintf(buff, STRING_BUFF_SIZE, "is_NOT_POISONED_[NIGHT%d]", night);
+    addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff, playerIDinfoFrom);
+    pushTempRule(rs);
+
+    setTempRuleParams(rs, 2,0);
+    snprintf(buff, STRING_BUFF_SIZE, "is_NOT_MONK_[NIGHT%d]", ROLE_NAMES[selectedRole], night);
+    setTempRuleResultName(rs, kb, 0, "PLAYERS", buff);
+
+    snprintf(buff, STRING_BUFF_SIZE, "SLEEP_DEATH_[NIGHT%d]", night);
+    addFixedConditionToTempRuleName(rs,kb, 1, "PLAYERS", buff, playerX);
+    snprintf(buff, STRING_BUFF_SIZE, "is_NOT_POISONED_[NIGHT%d]", night);
+    addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff, playerIDinfoFrom);
+    pushTempRule(rs);
+}
+
+/**
  * ravenkeeperPing() - runs a ping
  * If you die at night, you are woken to choose a player: you learn their character.
  * 
@@ -1771,7 +1814,7 @@ static void sagePing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs, const
 
 /**
  * grandMotherPing() - runs a ping
- * 
+ * You start knowing a good player & their character. If the Demon kills them, you die too
  * 
  * @playerIDinfoFrom the playerID/index the ping is from
  * @kb the knowledge base to update
@@ -1780,13 +1823,34 @@ static void sagePing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs, const
 */
 static void grandMotherPing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs, const int NUM_DAYS)
 {
-    //char buff[STRING_BUFF_SIZE]; // Declare a character array to hold the string 
-    printf("NOT SUPPORTED!\n");
+    char buff[STRING_BUFF_SIZE]; // Declare a character array to hold the string 
+    
+    int playerX;
+    int playerRole;
+    int night = -1;
+
+    playerX = getPlayerIDInput(kb, "Known Good Player?"); // Read player ID 
+    playerRole = getRoleIDInput("Known Role?");
+
+    night = 0; //First night
+
+    setTempRuleParams(rs, 2,0);
+    snprintf(buff, STRING_BUFF_SIZE, "is_%s_[NIGHT%d]", ROLE_NAMES[playerRole], night);
+    setTempRuleResultName(rs, kb, 1, "PLAYERS", buff);
+    snprintf(buff, STRING_BUFF_SIZE, "is_NOT_RECLUSE_[NIGHT%d]", night);
+    addFixedConditionToTempRuleName(rs,kb, 1, "PLAYERS", buff, playerX);
+    snprintf(buff, STRING_BUFF_SIZE, "is_NOT_SPY_[NIGHT%d]", night);
+    addFixedConditionToTempRuleName(rs,kb, 1, "PLAYERS", buff, playerX);
+    snprintf(buff, STRING_BUFF_SIZE, "is_GRANDMOTHER_[NIGHT%d]", night);
+    addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff, playerIDinfoFrom);
+    snprintf(buff, STRING_BUFF_SIZE, "is_NOT_POISONED_[NIGHT%d]", night);
+    addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff, playerIDinfoFrom);
+    pushTempRule(rs);
 }
 
 /**
  * chamberMaidPing() - runs a ping
- * 
+ * Each night, choose 2 alive players (not yourself: you learn how many woke tonight due to their ability.
  * 
  * @playerIDinfoFrom the playerID/index the ping is from
  * @kb the knowledge base to update
@@ -1801,7 +1865,7 @@ static void chamberMaidPing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs
 
 /**
  * exorcistPing() - runs a ping
- * 
+ * Each night*, choose a player (different to last night): the Demon, if chosen, learns who you are & doesn't wake tonight.
  * 
  * @playerIDinfoFrom the playerID/index the ping is from
  * @kb the knowledge base to update
@@ -1815,8 +1879,53 @@ static void exorcistPing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs, c
 }
 
 /**
- * gamblerPing() - runs a ping
+ * innkeeperPing() - runs a ping
+ * Each night*, choose 2 players: they can't die tonight, but 1 is drunk until dusk.
  * 
+ * @playerIDinfoFrom the playerID/index the ping is from
+ * @kb the knowledge base to update
+ * @rs the rulset to update
+ * @NUM_DAYS the max number of days the game can go on for
+*/
+static void innkeeperPing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs, const int NUM_DAYS)
+{
+    char buff[STRING_BUFF_SIZE]; // Declare a character array to hold the string 
+    
+    int playerX;
+    int playerY;
+    int night = -1;
+
+    playerX = getPlayerIDInput(kb, "Chosen player 1?"); // Read player ID 
+    playerY = getPlayerIDInput(kb, "Chosen player 1?"); // Read player ID 
+
+    night = getInt("On night?", 0, NUM_DAYS);
+
+    setTempRuleParams(rs, 2,0);
+    snprintf(buff, STRING_BUFF_SIZE, "is_POISONED_[NIGHT%d]", night);
+    setTempRuleResultName(rs, kb, -playerY-1000, "PLAYERS", buff);
+    snprintf(buff, STRING_BUFF_SIZE, "is_NOT_POISONED_[NIGHT%d]", night);
+    addFixedConditionToTempRuleName(rs,kb, 1, "PLAYERS", buff, playerX);
+    snprintf(buff, STRING_BUFF_SIZE, "is_INNKEEPER_[NIGHT%d]", night);
+    addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff, playerIDinfoFrom);
+    snprintf(buff, STRING_BUFF_SIZE, "is_NOT_POISONED_[NIGHT%d]", night);
+    addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff, playerIDinfoFrom);
+    pushTempRule(rs);
+
+    setTempRuleParams(rs, 2,0);
+    snprintf(buff, STRING_BUFF_SIZE, "is_POISONED_[NIGHT%d]", night);
+    setTempRuleResultName(rs, kb, -playerX-1000, "PLAYERS", buff);
+    snprintf(buff, STRING_BUFF_SIZE, "is_NOT_POISONED_[NIGHT%d]", night);
+    addFixedConditionToTempRuleName(rs,kb, 1, "PLAYERS", buff, playerY);
+    snprintf(buff, STRING_BUFF_SIZE, "is_INNKEEPER_[NIGHT%d]", night);
+    addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff, playerIDinfoFrom);
+    snprintf(buff, STRING_BUFF_SIZE, "is_NOT_POISONED_[NIGHT%d]", night);
+    addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff, playerIDinfoFrom);
+    pushTempRule(rs);
+}
+
+/**
+ * gamblerPing() - runs a ping
+ * Each night*, choose a player & guess their character: if you guess wrong, you die.
  * 
  * @playerIDinfoFrom the playerID/index the ping is from
  * @kb the knowledge base to update
@@ -1880,7 +1989,7 @@ static void addPingRule(KnowledgeBase* kb, RuleSet* rs, const int NUM_DAYS)
     char EMPATH_PING[] = "EMPATH";
     char FORTUNE_TELLER_PING[] = "FORTUNE_TELLER";
     char UNDERTAKER_PING[] = "UNDERTAKER";
-    //char MONK_PING[] = "MONK"; //Monks don't have pings
+    char MONK_PING[] = "MONK"; //Monks don't have pings
     char RAVENKEEPER_PING[] = "RAVENKEEPER";
 
     //SV
@@ -1902,7 +2011,7 @@ static void addPingRule(KnowledgeBase* kb, RuleSet* rs, const int NUM_DAYS)
     char GRANDMOTHER_PING[] = "GRANDMOTHER";
     char CHAMBERMAID_PING[] = "CHAMBERMAID";
     char EXORCIST_PING[] = "EXORCIST";
-    //char INNKEEPER_PING[] = "INNKEEPER";
+    char INNKEEPER_PING[] = "INNKEEPER";
     char GAMBLER_PING[] = "GAMBLER";
     char GOSSIP_PING[] = "GOSSIP";
     //char COURTIER_PING[] = "COURTIER";
@@ -1919,154 +2028,45 @@ static void addPingRule(KnowledgeBase* kb, RuleSet* rs, const int NUM_DAYS)
     playerIDinfoFrom = getPlayerIDInput(kb, "Info from player?"); // Read player ID 
 
     printf("Ping Type?:\n");
-    printf("- %s\n- %s\n- %s\n- %s\n- %s\n- %s\n- %s\n- %s\n", WASHERWOMAN_PING, LIBRARIAN_PING, INVESTIGATOR_PING, CHEF_PING, EMPATH_PING, FORTUNE_TELLER_PING, UNDERTAKER_PING, RAVENKEEPER_PING);
+    printf("- %s\n- %s\n- %s\n- %s\n- %s\n- %s\n- %s\n- %s\n", WASHERWOMAN_PING, LIBRARIAN_PING, INVESTIGATOR_PING, CHEF_PING, EMPATH_PING, FORTUNE_TELLER_PING, UNDERTAKER_PING, MONK_PING, RAVENKEEPER_PING);
     printf("- %s\n- %s\n- %s\n- %s\n- %s\n- %s\n- %s\n- %s\n- %s\n- %s\n- %s\n- %s\n- %s\n", CLOCKMAKER_PING, DREAMER_PING, SNAKE_CHARMER_PING, MATHEMATICIAN_PING, FLOWERGIRL_PING, TOWN_CRIER_PING, ORACLE_PING, SAVANT_PING, SEAMSTRESS_PING, PHILOSOPHER_PING, ARTIST_PING, JUGGLER_PING, SAGE_PING);
-    printf("- %s\n- %s\n- %s\n- %s\n- %s\n- %s\n", GRANDMOTHER_PING, CHAMBERMAID_PING, EXORCIST_PING, GAMBLER_PING, GOSSIP_PING, PROFESSOR_PING);
+    printf("- %s\n- %s\n- %s\n- %s\n- %s\n- %s\n- %s\n", GRANDMOTHER_PING, CHAMBERMAID_PING, EXORCIST_PING, INNKEEPER_PING, GAMBLER_PING, GOSSIP_PING, PROFESSOR_PING);
     while (pingTypeID == -1)
     {
         scanf("%255s", inputPingType); // Read a string (up to 99 characters to leave space for the null terminator)
         //TB
-        if (strcmp(inputPingType,WASHERWOMAN_PING) == 0)
-        {
-            washerWomanPing(playerIDinfoFrom, kb, rs, NUM_DAYS);
-            pingTypeID = 0;
-        } 
-        else if (strcmp(inputPingType,LIBRARIAN_PING) == 0)
-        {
-            librarianPing(playerIDinfoFrom, kb, rs, NUM_DAYS);
-            pingTypeID = 1;
-        }
-        else if (strcmp(inputPingType,INVESTIGATOR_PING) == 0)
-        {
-            investigatorPing(playerIDinfoFrom, kb, rs, NUM_DAYS);
-            pingTypeID = 2;
-        }
-        else if (strcmp(inputPingType,CHEF_PING) == 0)
-        {
-            chefPing(playerIDinfoFrom, kb, rs, NUM_DAYS);
-            pingTypeID = 3;
-        }
-        else if (strcmp(inputPingType,EMPATH_PING) == 0)
-        {
-            empathPing(playerIDinfoFrom, kb, rs, NUM_DAYS);
-            pingTypeID = 4;
-        }
-        else if (strcmp(inputPingType,FORTUNE_TELLER_PING) == 0)
-        {
-            fortuneTellerPing(playerIDinfoFrom, kb, rs, NUM_DAYS);
-            pingTypeID = 5;
-        }
-        else if (strcmp(inputPingType,UNDERTAKER_PING) == 0)
-        {
-            undertakerPing(playerIDinfoFrom, kb, rs, NUM_DAYS);
-            pingTypeID = 6;
-        }
-        else if (strcmp(inputPingType,RAVENKEEPER_PING) == 0)
-        {
-            ravenkeeperPing(playerIDinfoFrom, kb, rs, NUM_DAYS);
-            pingTypeID = 7;
-        }
+        if (strcmp(inputPingType,WASHERWOMAN_PING) == 0) washerWomanPing(playerIDinfoFrom, kb, rs, NUM_DAYS);
+        else if (strcmp(inputPingType,LIBRARIAN_PING) == 0) librarianPing(playerIDinfoFrom, kb, rs, NUM_DAYS);
+        else if (strcmp(inputPingType,INVESTIGATOR_PING) == 0) investigatorPing(playerIDinfoFrom, kb, rs, NUM_DAYS);
+        else if (strcmp(inputPingType,CHEF_PING) == 0) chefPing(playerIDinfoFrom, kb, rs, NUM_DAYS);
+        else if (strcmp(inputPingType,EMPATH_PING) == 0) empathPing(playerIDinfoFrom, kb, rs, NUM_DAYS);
+        else if (strcmp(inputPingType,FORTUNE_TELLER_PING) == 0) fortuneTellerPing(playerIDinfoFrom, kb, rs, NUM_DAYS);
+        else if (strcmp(inputPingType,UNDERTAKER_PING) == 0) undertakerPing(playerIDinfoFrom, kb, rs, NUM_DAYS);
+        else if (strcmp(inputPingType,MONK_PING) == 0) monkPing(playerIDinfoFrom, kb, rs, NUM_DAYS);
+        else if (strcmp(inputPingType,RAVENKEEPER_PING) == 0) ravenkeeperPing(playerIDinfoFrom, kb, rs, NUM_DAYS);
         //SV
-        else if (strcmp(inputPingType,CLOCKMAKER_PING) == 0)
-        {
-            clockmakerPing(playerIDinfoFrom, kb, rs, NUM_DAYS);
-            pingTypeID = 8;
-        }
-        else if (strcmp(inputPingType,DREAMER_PING) == 0)
-        {
-            dreamerPing(playerIDinfoFrom, kb, rs, NUM_DAYS);
-            pingTypeID = 9;
-        }
-        else if (strcmp(inputPingType,SNAKE_CHARMER_PING) == 0)
-        {
-            snakeCharmerPing(playerIDinfoFrom, kb, rs, NUM_DAYS);
-            pingTypeID = 10;
-        }
-        else if (strcmp(inputPingType,MATHEMATICIAN_PING) == 0)
-        {
-            mathematicianPing(playerIDinfoFrom, kb, rs, NUM_DAYS);
-            pingTypeID = 11;
-        }
-        else if (strcmp(inputPingType,FLOWERGIRL_PING) == 0)
-        {
-            flowerGirlPing(playerIDinfoFrom, kb, rs, NUM_DAYS);
-            pingTypeID = 12;
-        }
-        else if (strcmp(inputPingType,TOWN_CRIER_PING) == 0)
-        {
-            townCrierPing(playerIDinfoFrom, kb, rs, NUM_DAYS);
-            pingTypeID = 13;
-        }
-        else if (strcmp(inputPingType,ORACLE_PING) == 0)
-        {
-            oraclePing(playerIDinfoFrom, kb, rs, NUM_DAYS);
-            pingTypeID = 14;
-        }
-        else if (strcmp(inputPingType,SAVANT_PING) == 0)
-        {
-            savantPing(playerIDinfoFrom, kb, rs, NUM_DAYS);
-            pingTypeID = 15;
-        }
-        else if (strcmp(inputPingType,SEAMSTRESS_PING) == 0)
-        {
-            seamstressPing(playerIDinfoFrom, kb, rs, NUM_DAYS);
-            pingTypeID = 16;
-        }
-        else if (strcmp(inputPingType,PHILOSOPHER_PING) == 0)
-        {
-            philosopherPing(playerIDinfoFrom, kb, rs, NUM_DAYS);
-            pingTypeID = 17;
-        }
-        else if (strcmp(inputPingType,ARTIST_PING) == 0)
-        {
-            artistPing(playerIDinfoFrom, kb, rs, NUM_DAYS);
-            pingTypeID = 18;
-        }
-        else if (strcmp(inputPingType,JUGGLER_PING) == 0)
-        {
-            jugglerPing(playerIDinfoFrom, kb, rs, NUM_DAYS);
-            pingTypeID = 19;
-        }
-        else if (strcmp(inputPingType,SAGE_PING) == 0)
-        {
-            sagePing(playerIDinfoFrom, kb, rs, NUM_DAYS);
-            pingTypeID = 20;
-        }
+        else if (strcmp(inputPingType,CLOCKMAKER_PING) == 0) clockmakerPing(playerIDinfoFrom, kb, rs, NUM_DAYS);
+        else if (strcmp(inputPingType,DREAMER_PING) == 0) dreamerPing(playerIDinfoFrom, kb, rs, NUM_DAYS);
+        else if (strcmp(inputPingType,SNAKE_CHARMER_PING) == 0) snakeCharmerPing(playerIDinfoFrom, kb, rs, NUM_DAYS);
+        else if (strcmp(inputPingType,MATHEMATICIAN_PING) == 0) mathematicianPing(playerIDinfoFrom, kb, rs, NUM_DAYS);
+        else if (strcmp(inputPingType,FLOWERGIRL_PING) == 0) flowerGirlPing(playerIDinfoFrom, kb, rs, NUM_DAYS);
+        else if (strcmp(inputPingType,TOWN_CRIER_PING) == 0) townCrierPing(playerIDinfoFrom, kb, rs, NUM_DAYS);
+        else if (strcmp(inputPingType,ORACLE_PING) == 0) oraclePing(playerIDinfoFrom, kb, rs, NUM_DAYS);
+        else if (strcmp(inputPingType,SAVANT_PING) == 0) savantPing(playerIDinfoFrom, kb, rs, NUM_DAYS);
+        else if (strcmp(inputPingType,SEAMSTRESS_PING) == 0) seamstressPing(playerIDinfoFrom, kb, rs, NUM_DAYS);
+        else if (strcmp(inputPingType,PHILOSOPHER_PING) == 0) philosopherPing(playerIDinfoFrom, kb, rs, NUM_DAYS);
+        else if (strcmp(inputPingType,ARTIST_PING) == 0) artistPing(playerIDinfoFrom, kb, rs, NUM_DAYS);
+        else if (strcmp(inputPingType,JUGGLER_PING) == 0) jugglerPing(playerIDinfoFrom, kb, rs, NUM_DAYS);
+        else if (strcmp(inputPingType,SAGE_PING) == 0) sagePing(playerIDinfoFrom, kb, rs, NUM_DAYS);
         //BMR
-        else if (strcmp(inputPingType,GRANDMOTHER_PING) == 0)
-        {
-            grandMotherPing(playerIDinfoFrom, kb, rs, NUM_DAYS);
-            pingTypeID = 21;
-        }
-        else if (strcmp(inputPingType,CHAMBERMAID_PING) == 0)
-        {
-            chamberMaidPing(playerIDinfoFrom, kb, rs, NUM_DAYS);
-            pingTypeID = 22;
-        }
-        else if (strcmp(inputPingType,EXORCIST_PING) == 0)
-        {
-            exorcistPing(playerIDinfoFrom, kb, rs, NUM_DAYS);
-            pingTypeID = 23;
-        }
-        else if (strcmp(inputPingType,GAMBLER_PING) == 0)
-        {
-            gamblerPing(playerIDinfoFrom, kb, rs, NUM_DAYS);
-            pingTypeID = 24;
-        }
-        else if (strcmp(inputPingType,GOSSIP_PING) == 0)
-        {
-            gossipPing(playerIDinfoFrom, kb, rs, NUM_DAYS);
-            pingTypeID = 25;
-        }
-        else if (strcmp(inputPingType,PROFESSOR_PING) == 0)
-        {
-            professorPing(playerIDinfoFrom, kb, rs, NUM_DAYS);
-            pingTypeID = 26;
-        }
-        if (pingTypeID == -1)
-        {
-            printf("ERROR: Invalid string!\n");
-        }
+        else if (strcmp(inputPingType,GRANDMOTHER_PING) == 0) grandMotherPing(playerIDinfoFrom, kb, rs, NUM_DAYS);
+        else if (strcmp(inputPingType,CHAMBERMAID_PING) == 0) chamberMaidPing(playerIDinfoFrom, kb, rs, NUM_DAYS);
+        else if (strcmp(inputPingType,EXORCIST_PING) == 0) exorcistPing(playerIDinfoFrom, kb, rs, NUM_DAYS);
+        else if (strcmp(inputPingType,INNKEEPER_PING) == 0) innkeeperPing(playerIDinfoFrom, kb, rs, NUM_DAYS);
+        else if (strcmp(inputPingType,GAMBLER_PING) == 0) gamblerPing(playerIDinfoFrom, kb, rs, NUM_DAYS);
+        else if (strcmp(inputPingType,GOSSIP_PING) == 0) gossipPing(playerIDinfoFrom, kb, rs, NUM_DAYS);
+        else if (strcmp(inputPingType,PROFESSOR_PING) == 0) professorPing(playerIDinfoFrom, kb, rs, NUM_DAYS);
+        else printf("ERROR: Invalid string!\n");
     }
 }
 
