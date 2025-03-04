@@ -924,8 +924,8 @@ void printRoleTable(KnowledgeBase* kb, int night)
             else if (strcmp(ROLE_CLASSES[role], "OUTSIDER") == 0) PRINT_PURPLE
             else if (strcmp(ROLE_CLASSES[role], "TOWNSFOLK") == 0) PRINT_GREEN
             printTrucatedStr(ROLE_NAMES[role], 3);
-            printf("|");
             PRINT_END
+            printf("|");
         }
     }
     printf("\n");

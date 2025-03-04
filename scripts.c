@@ -38,10 +38,10 @@ int ROLE_IN_SCRIPT[NUM_BOTCT_ROLES];
 
 int NUM_ROLES_IN_SCRIPT;
 
-int TOTAL_MINIONS = 12;
-int TOTAL_OUTSIDERS = 12;
-int FIRST_MINION_INDEX = 1;
-int FIRST_OUTSIDER_INDEX = 18;
+int TOTAL_MINIONS = 0;
+int TOTAL_OUTSIDERS = 0;
+int MINION_INDICIES[NUM_BOTCT_ROLES];
+int OUTSIDER_INDICIES[NUM_BOTCT_ROLES];
 
 /**
  * initRoleStrings() - allocate memory to the strings
@@ -76,7 +76,18 @@ static void addRole(int *index, char* name, char* team, char* class, int roleInS
     snprintf(ROLE_TEAMS[*index], SIZE, "%s", team);
     snprintf(ROLE_CLASSES[*index], SIZE, "%s", class);
     ROLE_IN_SCRIPT[*index] = roleInScript;
-    
+
+    if (roleInScript == 1 && strcmp(class, "MINION") == 0) 
+    {
+        MINION_INDICIES[TOTAL_MINIONS] = *index;
+        TOTAL_MINIONS++;
+    }
+    if (roleInScript == 1 && strcmp(class, "OUTSIDER") == 0) 
+    {
+        OUTSIDER_INDICIES[TOTAL_OUTSIDERS] = *index;
+        TOTAL_OUTSIDERS++;
+    }
+
     *index = *index + 1;
 }
 
@@ -121,7 +132,7 @@ void initScript(RuleSet** rs, KnowledgeBase** kb, const int SCRIPT, const int NU
     addRole(&count, "PO.", "EVIL", "DEMON", SCRIPT==BMR, 64);
 
     //Minions
-    FIRST_MINION_INDEX = count;
+    //FIRST_MINION_INDEX = count;
     //TB
     addRole(&count, "BARON", "EVIL", "MINION", SCRIPT==TB, 64);
     addRole(&count, "SCARLET_WOMAN", "EVIL", "MINION", SCRIPT==TB, 64);
@@ -183,7 +194,7 @@ void initScript(RuleSet** rs, KnowledgeBase** kb, const int SCRIPT, const int NU
     addRole(&count, "FOOL", "GOOD", "TOWNSFOLK", SCRIPT==BMR, 64);
 
     //Outsiders
-    FIRST_OUTSIDER_INDEX = count;
+    //FIRST_OUTSIDER_INDEX = count;
     //TB
     addRole(&count, "BUTLER", "GOOD", "OUTSIDER", SCRIPT==TB, 64);
     addRole(&count, "DRUNK", "GOOD", "OUTSIDER", SCRIPT==TB, 64);
@@ -215,14 +226,17 @@ void initScript(RuleSet** rs, KnowledgeBase** kb, const int SCRIPT, const int NU
     {
         for (int i = 0; i < NUM_BOTCT_ROLES; i++)
         {
-            if (ROLE_IN_SCRIPT[i] == 0)
+            if (ROLE_IN_SCRIPT[i])
             {
-                snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s_in_PLAY_[NIGHT%d]", ROLE_NAMES[i], night);
-                addKnowledgeName(*kb, "METADATA", 0, buff);
+                NUM_ROLES_IN_SCRIPT++;
             }
             else
             {
-                NUM_ROLES_IN_SCRIPT++;
+                snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s_in_PLAY_[NIGHT%d]", ROLE_NAMES[i], night);
+                addKnowledgeName(*kb, "METADATA", 0, buff);
+
+                snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s_[NIGHT%d]", ROLE_NAMES[i], night);
+                for (int player = 0; player < NUM_PLAYERS; player++) addKnowledgeName(*kb, "PLAYERS", player, buff);
             }
         }
     }
@@ -260,29 +274,32 @@ static void roleAssociation(RuleSet* rs, KnowledgeBase* kb, const int NUM_PLAYER
     */
     for (int night = 0; night < NUM_DAYS; night++)
     {
-        for (int i = 0; i < NUM_BOTCT_ROLES; i++)
+        for (int role = 0; role < NUM_BOTCT_ROLES; role++)
         {
-            //A role implies a team (assuming the role was made the normal way)
-            //<PLAYER>is_<ROLE> AND <PLAYER>is_NOT_ROLE_CHANGED => <PLAYER>is_<ROLE_TEAM>
-            setTempRuleParams(rs, 1,0);
-            snprintf(buff, STRING_BUFF_SIZE, "is_%s_[NIGHT%d]", ROLE_TEAMS[i], night);
-            setTempRuleResultName(rs, kb, 0, "PLAYERS", buff);
-            snprintf(buff, STRING_BUFF_SIZE, "is_%s_[NIGHT%d]", ROLE_NAMES[i], night);
-            addConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff);
-            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_ROLE_CHANGED_[NIGHT%d]", night);
-            addConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff);
-            pushTempRule(rs);
+            if (ROLE_IN_SCRIPT[role])
+            {
+                //A role implies a team (assuming the role was made the normal way)
+                //<PLAYER>is_<ROLE> AND <PLAYER>is_NOT_ROLE_CHANGED => <PLAYER>is_<ROLE_TEAM>
+                setTempRuleParams(rs, 1,0);
+                snprintf(buff, STRING_BUFF_SIZE, "is_%s_[NIGHT%d]", ROLE_TEAMS[role], night);
+                setTempRuleResultName(rs, kb, 0, "PLAYERS", buff);
+                snprintf(buff, STRING_BUFF_SIZE, "is_%s_[NIGHT%d]", ROLE_NAMES[role], night);
+                addConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff);
+                snprintf(buff, STRING_BUFF_SIZE, "is_NOT_ROLE_CHANGED_[NIGHT%d]", night);
+                addConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff);
+                pushTempRule(rs);
 
-            //A role implies a class
-            //Unlike alingment the class is always implied by a role
-            //<PLAYER>is_<ROLE> => <PLAYER>is_<ROLE_CLASS>
-            setTempRuleParams(rs, 1,0);
-            
-            snprintf(buff, STRING_BUFF_SIZE, "is_%s_[NIGHT%d]", ROLE_CLASSES[i], night);
-            setTempRuleResultName(rs, kb, 0, "PLAYERS", buff);
-            snprintf(buff, STRING_BUFF_SIZE, "is_%s_[NIGHT%d]", ROLE_NAMES[i], night);
-            addConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff);
-            pushTempRule(rs);
+                //A role implies a class
+                //Unlike alingment the class is always implied by a role
+                //<PLAYER>is_<ROLE> => <PLAYER>is_<ROLE_CLASS>
+                setTempRuleParams(rs, 1,0);
+                
+                snprintf(buff, STRING_BUFF_SIZE, "is_%s_[NIGHT%d]", ROLE_CLASSES[role], night);
+                setTempRuleResultName(rs, kb, 0, "PLAYERS", buff);
+                snprintf(buff, STRING_BUFF_SIZE, "is_%s_[NIGHT%d]", ROLE_NAMES[role], night);
+                addConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff);
+                pushTempRule(rs);
+            }
         }
 
         //If a player is none of the roles within a class that player can't be that class (deduction)
@@ -455,7 +472,7 @@ static void roleMutuallyExclusive(RuleSet* rs, KnowledgeBase* kb, const int NUM_
     //Temporary string buffer for writing names into
     char buff[STRING_BUFF_SIZE];
     // ===========================================
-    //  Roles Are Mutally Exclusive And Exactly 1 Rules
+    //  Roles Are Mutally Exclusive And Players have exactly 1 Role
     // ===========================================
     /*
      * IDEA: Every player has exactly one role and only one player can have that role
@@ -463,50 +480,53 @@ static void roleMutuallyExclusive(RuleSet* rs, KnowledgeBase* kb, const int NUM_
     */
     for (int night = 0; night < NUM_DAYS; night++)
     {
-        for (int i = 0; i < NUM_BOTCT_ROLES; i++)
+        for (int role = 0; role < NUM_BOTCT_ROLES; role++)
         {
-            //<PLAYER_A>is_<ROLE> AND <PLAYER_A>is_ALIVE AND <PLAYER_B>is_ALIVE => <PLAYER_B>is_NOT<ROLE>
-            // IDEA: Only one alive player can have a role
-            setTempRuleParams(rs, 2,1);
-            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s_[NIGHT%d]", ROLE_NAMES[i], night);
-            setTempRuleResultName(rs, kb, 1, "PLAYERS", buff);
-            snprintf(buff, STRING_BUFF_SIZE, "is_%s_[NIGHT%d]", ROLE_NAMES[i], night);
-            addConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff);
-            snprintf(buff, STRING_BUFF_SIZE, "is_ALIVE_[NIGHT%d]", night);
-            addConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff);
-            snprintf(buff, STRING_BUFF_SIZE, "is_ALIVE_[NIGHT%d]", night);
-            addConditionToTempRuleName(rs,kb, 1, "PLAYERS", buff);
-            pushTempRule(rs);
-
-            //<PLAYER>is_NOT_{<ROLE_A>, <ROLE_B>...} => <PLAYER>is_<ROLE_Z>
-            // IDEA: A player MUST have one role so by deduction if only one role is remaining they are that role
-            setTempRuleParams(rs, 1,0);
-            snprintf(buff, STRING_BUFF_SIZE, "is_%s_[NIGHT%d]", ROLE_NAMES[i], night);
-            setTempRuleResultName(rs, kb, 0, "PLAYERS", buff); //A player is role ROLE_NAME[i] if
-            for (int j = 0; j < NUM_BOTCT_ROLES; j++)
+            if (ROLE_IN_SCRIPT[role])
             {
-                if (j!=i)
-                { //A player is NOT role ROLE_NAME[j] for all i!=j
-                    snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s_[NIGHT%d]", ROLE_NAMES[j], night);
-                    addConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff);
-                }
-            }
-            pushTempRule(rs);
+                //<PLAYER_A>is_<ROLE> AND <PLAYER_A>is_ALIVE AND <PLAYER_B>is_ALIVE => <PLAYER_B>is_NOT<ROLE>
+                // IDEA: Only one alive player can have a role
+                setTempRuleParams(rs, 2,1);
+                snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s_[NIGHT%d]", ROLE_NAMES[role], night);
+                setTempRuleResultName(rs, kb, 1, "PLAYERS", buff);
+                snprintf(buff, STRING_BUFF_SIZE, "is_%s_[NIGHT%d]", ROLE_NAMES[role], night);
+                addConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff);
+                snprintf(buff, STRING_BUFF_SIZE, "is_ALIVE_[NIGHT%d]", night);
+                addConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff);
+                snprintf(buff, STRING_BUFF_SIZE, "is_ALIVE_[NIGHT%d]", night);
+                addConditionToTempRuleName(rs,kb, 1, "PLAYERS", buff);
+                pushTempRule(rs);
 
-            //<PLAYER>is_<ROLE_A> => <PLAYER>is_NOT<ROLE_B>
-            // IDEA: Each player only has one role
-            setTempRuleParams(rs, 1,0);
-            snprintf(buff, STRING_BUFF_SIZE, "is_%s_[NIGHT%d]", ROLE_NAMES[i], night);
-            addConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff);
-            for (int j = 0; j < NUM_BOTCT_ROLES; j++)
-            {
-                if (i!=j)
-                { //I and j are mutually exclusive
-                    snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s_[NIGHT%d]", ROLE_NAMES[j], night);
-                    setTempRuleResultName(rs, kb, 0, "PLAYERS", buff);
+                //<PLAYER>is_NOT_{<ROLE_A>, <ROLE_B>...} => <PLAYER>is_<ROLE_Z>
+                // IDEA: A player MUST have one role so by deduction if only one role is remaining they are that role
+                setTempRuleParams(rs, 1,0);
+                snprintf(buff, STRING_BUFF_SIZE, "is_%s_[NIGHT%d]", ROLE_NAMES[role], night);
+                setTempRuleResultName(rs, kb, 0, "PLAYERS", buff); //A player is role ROLE_NAME[i] if
+                for (int j = 0; j < NUM_BOTCT_ROLES; j++)
+                {
+                    if (role!=j)
+                    { //A player is NOT role ROLE_NAME[j] for all i!=j
+                        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s_[NIGHT%d]", ROLE_NAMES[j], night);
+                        addConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff);
+                    }
                 }
+                pushTempRule(rs);
+
+                //<PLAYER>is_<ROLE_A> => <PLAYER>is_NOT<ROLE_B>
+                // IDEA: Each player only has one role
+                setTempRuleParams(rs, 1,0);
+                snprintf(buff, STRING_BUFF_SIZE, "is_%s_[NIGHT%d]", ROLE_NAMES[role], night);
+                addConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff);
+                for (int j = 0; j < NUM_BOTCT_ROLES; j++)
+                {
+                    if (role!=j)
+                    { //I and j are mutually exclusive
+                        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s_[NIGHT%d]", ROLE_NAMES[j], night);
+                        setTempRuleResultName(rs, kb, 0, "PLAYERS", buff);
+                    }
+                }
+                pushTempRule(rs);
             }
-            pushTempRule(rs);
         }
     }
 }
@@ -535,78 +555,97 @@ static void roleMetaData(RuleSet* rs, KnowledgeBase* kb, const int NUM_PLAYERS, 
     */
     for (int night = 0; night < NUM_DAYS; night++)
     {
-        for (int i = 0; i < NUM_BOTCT_ROLES; i++)
+        for (int role = 0; role < NUM_BOTCT_ROLES; role++)
         {
-            //<PLAYER_0>is_NOT_<ROLE> AND <PLAYER_1>is_NOT_<ROLE> AND .. => <METADATA>is_NOT_ROLE_in_PLAY
-            // IDEA: If no one is a role, that role is not in play
-            setTempRuleParams(rs, NUM_PLAYERS,1);
-            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s_in_PLAY_[NIGHT%d]", ROLE_NAMES[i], night);
-            setTempRuleResultName(rs, kb, -1, "METADATA", buff);
-            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s_[NIGHT%d]", ROLE_NAMES[i], night);
-            for (int j = 0; j < NUM_PLAYERS; j++)
+            if (ROLE_IN_SCRIPT[role])
             {
-                addConditionToTempRuleName(rs,kb, j, "PLAYERS", buff);
+                //<PLAYER_0>is_NOT_<ROLE> AND <PLAYER_1>is_NOT_<ROLE> AND .. => <METADATA>is_NOT_ROLE_in_PLAY
+                // IDEA: If no one is a role, that role is not in play
+                setTempRuleParams(rs, NUM_PLAYERS,1);
+                snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s_in_PLAY_[NIGHT%d]", ROLE_NAMES[role], night);
+                setTempRuleResultName(rs, kb, -1, "METADATA", buff);
+                snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s_[NIGHT%d]", ROLE_NAMES[role], night);
+                for (int j = 0; j < NUM_PLAYERS; j++)
+                {
+                    addConditionToTempRuleName(rs,kb, j, "PLAYERS", buff);
+                }
+                pushTempRule(rs);
+
+                
+                //<PLAYER>is_<ROLE> => <METADATA>is_<ROLE>_in_PLAY
+                // IDEA: If a player is a role that role is in play (obviously)
+                setTempRuleParams(rs, 1,0);
+                snprintf(buff, STRING_BUFF_SIZE, "is_%s_in_PLAY_[NIGHT%d]", ROLE_NAMES[role], night);
+                setTempRuleResultName(rs, kb, -1, "METADATA", buff);
+                snprintf(buff, STRING_BUFF_SIZE, "is_%s_[NIGHT%d]", ROLE_NAMES[role], night);
+                addConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff);
+                pushTempRule(rs);
+
+                //<PLAYER>is_<ROLE> AND <PLAYER>is_ALIVE => <METADATA>is_<ROLE>_ALIVE
+                // IDEA: If a player is a role and is alive that role is in play and alive (obviously)
+                setTempRuleParams(rs, 1,0);
+                snprintf(buff, STRING_BUFF_SIZE, "is_%s_ALIVE_[NIGHT%d]", ROLE_NAMES[role], night);
+                setTempRuleResultName(rs, kb, -1, "METADATA", buff);
+                snprintf(buff, STRING_BUFF_SIZE, "is_%s_[NIGHT%d]", ROLE_NAMES[role], night);
+                addConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff);
+                snprintf(buff, STRING_BUFF_SIZE, "is_ALIVE_[NIGHT%d]", night);
+                addConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff);
+                pushTempRule(rs);
+
+                //<PLAYER>is_<ROLE> => <METADATA>is_<ROLE>_in_PLAY
+                // IDEA: If a player is a role and is alive that role is in play and alive (obviously)
+                setTempRuleParams(rs, 1,0);
+                snprintf(buff, STRING_BUFF_SIZE, "is_%s_in_PLAY_[NIGHT%d]", ROLE_NAMES[role], night);
+                setTempRuleResultName(rs, kb, -1, "METADATA", buff);
+                snprintf(buff, STRING_BUFF_SIZE, "is_%s_[NIGHT%d]", ROLE_NAMES[role], night);
+                addConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff);
+                pushTempRule(rs);
+
+                //<METADATA>is_NOT_<ROLE>_in_PLAY => <PLAYER>is_NOT_<ROLE>
+                // IDEA: [take the contrapositive] If a role is not in play... no one is that role
+                setTempRuleParams(rs, 1,0);
+                snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s_[NIGHT%d]", ROLE_NAMES[role], night);
+                setTempRuleResultName(rs, kb, -1, "PLAYERS", buff);
+                snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s_in_PLAY_[NIGHT%d]", ROLE_NAMES[role], night);
+                addConditionToTempRuleName(rs,kb, 0, "METADATA", buff);
+                pushTempRule(rs);
+
+                //<METADATA>is_NOT_<ROLE>_in_PLAY => <METADATA>is_NOT_<ROLE>_ALIVE
+                // If A role is NOT in play no one can be that alive role
+                setTempRuleParams(rs, 1,0);
+                snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s_ALIVE_[NIGHT%d]", ROLE_NAMES[role], night);
+                setTempRuleResultName(rs, kb, 0, "METADATA", buff);
+                snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s_in_PLAY_[NIGHT%d]", ROLE_NAMES[role], night);
+                addConditionToTempRuleName(rs,kb, 0, "METADATA", buff);
+                pushTempRule(rs);
+
+                //<METADATA>is_<ROLE>_ALIVE => <METADATA>is_<ROLE>_in_PLAY
+                // Contrapositive of rule above
+                setTempRuleParams(rs, 1,0);
+                snprintf(buff, STRING_BUFF_SIZE, "is_%s_in_PLAY_[NIGHT%d]", ROLE_NAMES[role], night);
+                setTempRuleResultName(rs, kb, 0, "METADATA", buff);
+                snprintf(buff, STRING_BUFF_SIZE, "is_%s_ALIVE_[NIGHT%d]", ROLE_NAMES[role], night);
+                addConditionToTempRuleName(rs,kb, 0, "METADATA", buff);
+                pushTempRule(rs);
             }
-            pushTempRule(rs);
-
-            
-            //<PLAYER>is_<ROLE> => <METADATA>is_<ROLE>_in_PLAY
-            // IDEA: If a player is a role that role is in play (obviously)
-            setTempRuleParams(rs, 1,0);
-            snprintf(buff, STRING_BUFF_SIZE, "is_%s_in_PLAY_[NIGHT%d]", ROLE_NAMES[i], night);
-            setTempRuleResultName(rs, kb, -1, "METADATA", buff);
-            snprintf(buff, STRING_BUFF_SIZE, "is_%s_[NIGHT%d]", ROLE_NAMES[i], night);
-            addConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff);
-            pushTempRule(rs);
-
-            //<PLAYER>is_<ROLE> AND <PLAYER>is_ALIVE => <METADATA>is_<ROLE>_ALIVE
-            // IDEA: If a player is a role and is alive that role is in play and alive (obviously)
-            setTempRuleParams(rs, 1,0);
-            snprintf(buff, STRING_BUFF_SIZE, "is_%s_ALIVE_[NIGHT%d]", ROLE_NAMES[i], night);
-            setTempRuleResultName(rs, kb, -1, "METADATA", buff);
-            snprintf(buff, STRING_BUFF_SIZE, "is_%s_[NIGHT%d]", ROLE_NAMES[i], night);
-            addConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff);
-            snprintf(buff, STRING_BUFF_SIZE, "is_ALIVE_[NIGHT%d]", night);
-            addConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff);
-            pushTempRule(rs);
-
-            //<PLAYER>is_<ROLE> => <METADATA>is_<ROLE>_in_PLAY
-            // IDEA: If a player is a role and is alive that role is in play and alive (obviously)
-            setTempRuleParams(rs, 1,0);
-            snprintf(buff, STRING_BUFF_SIZE, "is_%s_in_PLAY_[NIGHT%d]", ROLE_NAMES[i], night);
-            setTempRuleResultName(rs, kb, -1, "METADATA", buff);
-            snprintf(buff, STRING_BUFF_SIZE, "is_%s_[NIGHT%d]", ROLE_NAMES[i], night);
-            addConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff);
-            pushTempRule(rs);
-
-            //<METADATA>is_NOT_<ROLE>_in_PLAY => <PLAYER>is_NOT_<ROLE>
-            // IDEA: [take the contrapositive] If a role is not in play... no one is that role
-            setTempRuleParams(rs, 1,0);
-            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s_[NIGHT%d]", ROLE_NAMES[i], night);
-            setTempRuleResultName(rs, kb, -1, "PLAYERS", buff);
-            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s_in_PLAY_[NIGHT%d]", ROLE_NAMES[i], night);
-            addConditionToTempRuleName(rs,kb, 0, "METADATA", buff);
-            pushTempRule(rs);
-
-            //<METADATA>is_NOT_<ROLE>_in_PLAY => <METADATA>is_NOT_<ROLE>_ALIVE
-            // If A role is NOT in play no one can be that alive role
-            setTempRuleParams(rs, 1,0);
-            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s_ALIVE_[NIGHT%d]", ROLE_NAMES[i], night);
-            setTempRuleResultName(rs, kb, 0, "METADATA", buff);
-            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s_in_PLAY_[NIGHT%d]", ROLE_NAMES[i], night);
-            addConditionToTempRuleName(rs,kb, 0, "METADATA", buff);
-            pushTempRule(rs);
-
-            //<METADATA>is_<ROLE>_ALIVE => <METADATA>is_<ROLE>_in_PLAY
-            // Contrapositive of rule above
-            setTempRuleParams(rs, 1,0);
-            snprintf(buff, STRING_BUFF_SIZE, "is_%s_in_PLAY_[NIGHT%d]", ROLE_NAMES[i], night);
-            setTempRuleResultName(rs, kb, 0, "METADATA", buff);
-            snprintf(buff, STRING_BUFF_SIZE, "is_%s_ALIVE_[NIGHT%d]", ROLE_NAMES[i], night);
-            addConditionToTempRuleName(rs,kb, 0, "METADATA", buff);
-            pushTempRule(rs);
         }
     }
+}
+
+static int ipow(int base, int exp)
+{
+    int result = 1;
+    for (;;)
+    {
+        if (exp & 1)
+            result *= base;
+        exp >>= 1;
+        if (!exp)
+            break;
+        base *= base;
+    }
+
+    return result;
 }
 
 /*
@@ -640,9 +679,11 @@ static void roleMetaDataCounting(RuleSet* rs, KnowledgeBase* kb, const int NUM_P
     int night = 0; //Set night to 0
     //If found all minions in play set all unused minions to is_NOT_<MINION>_in_PLAY
     int numUnusedMinions = TOTAL_MINIONS-NUM_MINIONS;
+
+    int NUM_MINION_PERMS = ipow(2, TOTAL_MINIONS);
     if (0 < NUM_MINIONS && NUM_MINIONS < TOTAL_MINIONS)
     {
-        for (int i = 0; i < 4096; i++)
+        for (int i = 0; i < NUM_MINION_PERMS; i++)
         {
             //Permute all subsets
             int count = 0;
@@ -663,12 +704,12 @@ static void roleMetaDataCounting(RuleSet* rs, KnowledgeBase* kb, const int NUM_P
                 {
                     if (((i >> j) & 1) == 1)
                     {
-                        snprintf(buff, STRING_BUFF_SIZE, "is_%s_in_PLAY_[NIGHT%d]", ROLE_NAMES[j+FIRST_MINION_INDEX], night);
+                        snprintf(buff, STRING_BUFF_SIZE, "is_%s_in_PLAY_[NIGHT%d]", ROLE_NAMES[MINION_INDICIES[j]], night);
                         addConditionToTempRuleName(rs,kb, 0, "METADATA", buff);
                     }
                     else
                     {
-                        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s_in_PLAY_[NIGHT%d]", ROLE_NAMES[j+FIRST_MINION_INDEX], night);
+                        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s_in_PLAY_[NIGHT%d]", ROLE_NAMES[MINION_INDICIES[j]], night);
                         setTempRuleResultName(rs, kb, 0, "METADATA", buff);
                     }
                 }
@@ -684,12 +725,12 @@ static void roleMetaDataCounting(RuleSet* rs, KnowledgeBase* kb, const int NUM_P
                 {
                     if (((i >> j) & 1) == 1)
                     {
-                        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s_in_PLAY_[NIGHT%d]", ROLE_NAMES[j+FIRST_MINION_INDEX], night);
+                        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s_in_PLAY_[NIGHT%d]", ROLE_NAMES[MINION_INDICIES[j]], night);
                         addConditionToTempRuleName(rs,kb, 0, "METADATA", buff);
                     }
                     else
                     {
-                        snprintf(buff, STRING_BUFF_SIZE, "is_%s_in_PLAY_[NIGHT%d]", ROLE_NAMES[j+FIRST_MINION_INDEX], night);
+                        snprintf(buff, STRING_BUFF_SIZE, "is_%s_in_PLAY_[NIGHT%d]", ROLE_NAMES[MINION_INDICIES[j]], night);
                         setTempRuleResultName(rs, kb, 0, "METADATA", buff);
                     }
                 }
@@ -698,7 +739,9 @@ static void roleMetaDataCounting(RuleSet* rs, KnowledgeBase* kb, const int NUM_P
         }
     }
     
-    for (int k = 0; k < 8; k++)
+    int NUM_OUTSIDER_PERMS = ipow(2, TOTAL_OUTSIDERS);
+    int NUM_MOD_PERMS = ipow(2, 3);
+    for (int k = 0; k < NUM_MOD_PERMS; k++)
     {
         int isBaronInPlay = k&1;
         int isFangGuInPlay = (k>>1)&1;
@@ -720,7 +763,7 @@ static void roleMetaDataCounting(RuleSet* rs, KnowledgeBase* kb, const int NUM_P
         }
         int numUnusedOutsiders = TOTAL_OUTSIDERS-numOutsiders;
 
-        for (int i = 0; i < 4096; i++)
+        for (int i = 0; i < NUM_OUTSIDER_PERMS; i++)
         {
             //Permute all subsets
             int count = 0;
@@ -790,12 +833,12 @@ static void roleMetaDataCounting(RuleSet* rs, KnowledgeBase* kb, const int NUM_P
                 {
                     if (((i >> j) & 1) == 1)
                     {
-                        snprintf(buff, STRING_BUFF_SIZE, "is_%s_in_PLAY_[NIGHT%d]", ROLE_NAMES[j+FIRST_OUTSIDER_INDEX], night);
+                        snprintf(buff, STRING_BUFF_SIZE, "is_%s_in_PLAY_[NIGHT%d]", ROLE_NAMES[OUTSIDER_INDICIES[j]], night);
                         addConditionToTempRuleName(rs,kb, 0, "METADATA", buff);
                     }
                     else
                     {
-                        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s_in_PLAY_[NIGHT%d]", ROLE_NAMES[j+FIRST_OUTSIDER_INDEX], night);
+                        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s_in_PLAY_[NIGHT%d]", ROLE_NAMES[OUTSIDER_INDICIES[j]], night);
                         setTempRuleResultName(rs, kb, 0, "METADATA", buff);
                     }
                 }
@@ -860,12 +903,12 @@ static void roleMetaDataCounting(RuleSet* rs, KnowledgeBase* kb, const int NUM_P
                 {
                     if (((i >> j) & 1) == 1)
                     {
-                        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s_in_PLAY_[NIGHT%d]", ROLE_NAMES[j+FIRST_OUTSIDER_INDEX], night);
+                        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s_in_PLAY_[NIGHT%d]", ROLE_NAMES[OUTSIDER_INDICIES[j]], night);
                         addConditionToTempRuleName(rs,kb, 0, "METADATA", buff);
                     }
                     else
                     {
-                        snprintf(buff, STRING_BUFF_SIZE, "is_%s_in_PLAY_[NIGHT%d]", ROLE_NAMES[j+FIRST_OUTSIDER_INDEX], night);
+                        snprintf(buff, STRING_BUFF_SIZE, "is_%s_in_PLAY_[NIGHT%d]", ROLE_NAMES[OUTSIDER_INDICIES[j]], night);
                         setTempRuleResultName(rs, kb, 0, "METADATA", buff);
                     }
                 }
@@ -1172,111 +1215,114 @@ static void roleContinuityArguments(RuleSet* rs, KnowledgeBase* kb, const int NU
         int nextNight = startNight+1;
         if (nextNight < NUM_DAYS)
         {
-            for (int i = 0; i < NUM_BOTCT_ROLES; i++)
+            for (int role = 0; role < NUM_BOTCT_ROLES; role++)
             {
-                if (strcmp(ROLE_NAMES[i], "IMP") == 0)
-                { //Imps can star pass
-                    /*
-                    //<PLAYER>is_NOT_<ROLE> => <PLAYER>is_NOT_<ROLE>[Night x]
-                    setTempRuleParams(rs, 2,0);
-                    snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s_[NIGHT%d]", ROLE_NAMES[i], nextNight);
-                    setTempRuleResultName(rs, kb, 0, "PLAYERS", buff);
-                    snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s_[NIGHT%d]", ROLE_NAMES[i], startNight);
-                    addConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff);
-                    snprintf(buff, STRING_BUFF_SIZE, "is_NOT_MINION_[NIGHT%d]", startNight);
-                    addConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff);
-                    snprintf(buff, STRING_BUFF_SIZE, "is_NOT_SNAKE_CHARMER_in_PLAY_[NIGHT%d]", startNight);
-                    addConditionToTempRuleName(rs,kb, 1, "METADATA", buff);
-                    snprintf(buff, STRING_BUFF_SIZE, "is_NOT_BARBER_in_PLAY_[NIGHT%d]", startNight);
-                    addConditionToTempRuleName(rs,kb, 1, "METADATA", buff);
-                    snprintf(buff, STRING_BUFF_SIZE, "is_NOT_PIT_HAG_in_PLAY_[NIGHT%d]", startNight);
-                    addConditionToTempRuleName(rs,kb, 1, "METADATA", buff);
-                    pushTempRule(rs);
-                    */
-                }
-                else if (strcmp(ROLE_NAMES[i], "SCARLET_WOMAN") == 0)
-                { //Scarlet womans can become the imp
-                    /*
-                    //<PLAYER>is_NOT_<ROLE> => <PLAYER>is_NOT_<ROLE>[Night x]
-                    setTempRuleParams(rs, 2,0);
-                    snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s_[NIGHT%d]", ROLE_NAMES[i], nextNight);
-                    setTempRuleResultName(rs, kb, 0, "PLAYERS", buff);
-                    snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s_[NIGHT%d]", ROLE_NAMES[i], startNight);
-                    addConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff);
-                    snprintf(buff, STRING_BUFF_SIZE, "is_NOT_SNAKE_CHARMER_in_PLAY_[NIGHT%d]", startNight);
-                    addConditionToTempRuleName(rs,kb, 1, "METADATA", buff);
-                    snprintf(buff, STRING_BUFF_SIZE, "is_NOT_BARBER_in_PLAY_[NIGHT%d]", startNight);
-                    addConditionToTempRuleName(rs,kb, 1, "METADATA", buff);
-                    snprintf(buff, STRING_BUFF_SIZE, "is_NOT_PIT_HAG_in_PLAY_[NIGHT%d]", startNight);
-                    addConditionToTempRuleName(rs,kb, 1, "METADATA", buff);
-                    pushTempRule(rs);
-                    */
-                }
-                else if (strcmp(ROLE_NAMES[i], "SNAKE_CHARMER") == 0)
-                { //Snake charmers swap roles with demons
-
-                }
-                else if (strcmp(ROLE_CLASSES[i], "DEMON") == 0)
+                if (ROLE_IN_SCRIPT[role])
                 {
-                    //<PLAYER>is_<ROLE> => <PLAYER>is_<ROLE>[Night x]
-                    setTempRuleParams(rs, 2,0);
-                    snprintf(buff, STRING_BUFF_SIZE, "is_%s_[NIGHT%d]", ROLE_NAMES[i], nextNight);
-                    setTempRuleResultName(rs, kb, 0, "PLAYERS", buff);
-                    snprintf(buff, STRING_BUFF_SIZE, "is_%s_[NIGHT%d]", ROLE_NAMES[i], startNight);
-                    addConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff);
-                    snprintf(buff, STRING_BUFF_SIZE, "is_NOT_SNAKE_CHARMER_in_PLAY_[NIGHT%d]", startNight);
-                    addConditionToTempRuleName(rs,kb, 1, "METADATA", buff);
-                    snprintf(buff, STRING_BUFF_SIZE, "is_NOT_BARBER_in_PLAY_[NIGHT%d]", startNight);
-                    addConditionToTempRuleName(rs,kb, 1, "METADATA", buff);
-                    snprintf(buff, STRING_BUFF_SIZE, "is_NOT_PIT_HAG_in_PLAY_[NIGHT%d]", startNight);
-                    addConditionToTempRuleName(rs,kb, 1, "METADATA", buff);
-                    pushTempRule(rs);
-                    /*
-                    //<PLAYER>is_NOT_<ROLE> => <PLAYER>is_NOT_<ROLE>[Night x]
-                    setTempRuleParams(rs, 2,0);
-                    snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s_[NIGHT%d]", ROLE_NAMES[i], nextNight);
-                    setTempRuleResultName(rs, kb, 0, "PLAYERS", buff);
-                    snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s_[NIGHT%d]", ROLE_NAMES[i], startNight);
-                    addConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff);
-                    snprintf(buff, STRING_BUFF_SIZE, "is_NOT_SCARLET_WOMAN_[NIGHT%d]", startNight);
-                    addConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff);
-                    snprintf(buff, STRING_BUFF_SIZE, "is_NOT_SNAKE_CHARMER_in_PLAY_[NIGHT%d]", startNight);
-                    addConditionToTempRuleName(rs,kb, 1, "METADATA", buff);
-                    snprintf(buff, STRING_BUFF_SIZE, "is_NOT_BARBER_in_PLAY_[NIGHT%d]", startNight);
-                    addConditionToTempRuleName(rs,kb, 1, "METADATA", buff);
-                    snprintf(buff, STRING_BUFF_SIZE, "is_NOT_PIT_HAG_in_PLAY_[NIGHT%d]", startNight);
-                    addConditionToTempRuleName(rs,kb, 1, "METADATA", buff);
-                    pushTempRule(rs);
-                    */
-                }
-                else
-                { //Everyone else is affected by barbers and pit hags
-                    //<PLAYER>is_<ROLE> => <PLAYER>is_<ROLE>[Night x]
-                    setTempRuleParams(rs, 2,0);
-                    snprintf(buff, STRING_BUFF_SIZE, "is_%s_[NIGHT%d]", ROLE_NAMES[i], nextNight);
-                    setTempRuleResultName(rs, kb, 0, "PLAYERS", buff);
-                    snprintf(buff, STRING_BUFF_SIZE, "is_%s_[NIGHT%d]", ROLE_NAMES[i], startNight);
-                    addConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff);
-                    snprintf(buff, STRING_BUFF_SIZE, "is_NOT_BARBER_in_PLAY_[NIGHT%d]", startNight);
-                    addConditionToTempRuleName(rs,kb, 1, "METADATA", buff);
-                    snprintf(buff, STRING_BUFF_SIZE, "is_NOT_PIT_HAG_in_PLAY_[NIGHT%d]", startNight);
-                    addConditionToTempRuleName(rs,kb, 1, "METADATA", buff);
-                    pushTempRule(rs);
-                    
-                    //<PLAYER>is_NOT_<ROLE> => <PLAYER>is_NOT_<ROLE>[Night x]
-                    setTempRuleParams(rs, 2,0);
-                    snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s_[NIGHT%d]", ROLE_NAMES[i], nextNight);
-                    setTempRuleResultName(rs, kb, 0, "PLAYERS", buff);
-                    snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s_[NIGHT%d]", ROLE_NAMES[i], startNight);
-                    addConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff);
-                    snprintf(buff, STRING_BUFF_SIZE, "is_NOT_SNAKE_CHARMER_in_PLAY_[NIGHT%d]", startNight);
-                    addConditionToTempRuleName(rs,kb, 1, "METADATA", buff);
-                    snprintf(buff, STRING_BUFF_SIZE, "is_NOT_BARBER_in_PLAY_[NIGHT%d]", startNight);
-                    addConditionToTempRuleName(rs,kb, 1, "METADATA", buff);
-                    snprintf(buff, STRING_BUFF_SIZE, "is_NOT_PIT_HAG_in_PLAY_[NIGHT%d]", startNight);
-                    addConditionToTempRuleName(rs,kb, 1, "METADATA", buff);
-                    pushTempRule(rs);
-                    
+                    if (strcmp(ROLE_NAMES[role], "IMP") == 0)
+                    { //Imps can star pass
+                        /*
+                        //<PLAYER>is_NOT_<ROLE> => <PLAYER>is_NOT_<ROLE>[Night x]
+                        setTempRuleParams(rs, 2,0);
+                        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s_[NIGHT%d]", ROLE_NAMES[i], nextNight);
+                        setTempRuleResultName(rs, kb, 0, "PLAYERS", buff);
+                        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s_[NIGHT%d]", ROLE_NAMES[i], startNight);
+                        addConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff);
+                        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_MINION_[NIGHT%d]", startNight);
+                        addConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff);
+                        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_SNAKE_CHARMER_in_PLAY_[NIGHT%d]", startNight);
+                        addConditionToTempRuleName(rs,kb, 1, "METADATA", buff);
+                        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_BARBER_in_PLAY_[NIGHT%d]", startNight);
+                        addConditionToTempRuleName(rs,kb, 1, "METADATA", buff);
+                        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_PIT_HAG_in_PLAY_[NIGHT%d]", startNight);
+                        addConditionToTempRuleName(rs,kb, 1, "METADATA", buff);
+                        pushTempRule(rs);
+                        */
+                    }
+                    else if (strcmp(ROLE_NAMES[role], "SCARLET_WOMAN") == 0)
+                    { //Scarlet womans can become the imp
+                        /*
+                        //<PLAYER>is_NOT_<ROLE> => <PLAYER>is_NOT_<ROLE>[Night x]
+                        setTempRuleParams(rs, 2,0);
+                        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s_[NIGHT%d]", ROLE_NAMES[i], nextNight);
+                        setTempRuleResultName(rs, kb, 0, "PLAYERS", buff);
+                        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s_[NIGHT%d]", ROLE_NAMES[i], startNight);
+                        addConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff);
+                        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_SNAKE_CHARMER_in_PLAY_[NIGHT%d]", startNight);
+                        addConditionToTempRuleName(rs,kb, 1, "METADATA", buff);
+                        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_BARBER_in_PLAY_[NIGHT%d]", startNight);
+                        addConditionToTempRuleName(rs,kb, 1, "METADATA", buff);
+                        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_PIT_HAG_in_PLAY_[NIGHT%d]", startNight);
+                        addConditionToTempRuleName(rs,kb, 1, "METADATA", buff);
+                        pushTempRule(rs);
+                        */
+                    }
+                    else if (strcmp(ROLE_NAMES[role], "SNAKE_CHARMER") == 0)
+                    { //Snake charmers swap roles with demons
+
+                    }
+                    else if (strcmp(ROLE_CLASSES[role], "DEMON") == 0)
+                    {
+                        //<PLAYER>is_<ROLE> => <PLAYER>is_<ROLE>[Night x]
+                        setTempRuleParams(rs, 2,0);
+                        snprintf(buff, STRING_BUFF_SIZE, "is_%s_[NIGHT%d]", ROLE_NAMES[role], nextNight);
+                        setTempRuleResultName(rs, kb, 0, "PLAYERS", buff);
+                        snprintf(buff, STRING_BUFF_SIZE, "is_%s_[NIGHT%d]", ROLE_NAMES[role], startNight);
+                        addConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff);
+                        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_SNAKE_CHARMER_in_PLAY_[NIGHT%d]", startNight);
+                        addConditionToTempRuleName(rs,kb, 1, "METADATA", buff);
+                        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_BARBER_in_PLAY_[NIGHT%d]", startNight);
+                        addConditionToTempRuleName(rs,kb, 1, "METADATA", buff);
+                        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_PIT_HAG_in_PLAY_[NIGHT%d]", startNight);
+                        addConditionToTempRuleName(rs,kb, 1, "METADATA", buff);
+                        pushTempRule(rs);
+                        /*
+                        //<PLAYER>is_NOT_<ROLE> => <PLAYER>is_NOT_<ROLE>[Night x]
+                        setTempRuleParams(rs, 2,0);
+                        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s_[NIGHT%d]", ROLE_NAMES[i], nextNight);
+                        setTempRuleResultName(rs, kb, 0, "PLAYERS", buff);
+                        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s_[NIGHT%d]", ROLE_NAMES[i], startNight);
+                        addConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff);
+                        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_SCARLET_WOMAN_[NIGHT%d]", startNight);
+                        addConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff);
+                        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_SNAKE_CHARMER_in_PLAY_[NIGHT%d]", startNight);
+                        addConditionToTempRuleName(rs,kb, 1, "METADATA", buff);
+                        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_BARBER_in_PLAY_[NIGHT%d]", startNight);
+                        addConditionToTempRuleName(rs,kb, 1, "METADATA", buff);
+                        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_PIT_HAG_in_PLAY_[NIGHT%d]", startNight);
+                        addConditionToTempRuleName(rs,kb, 1, "METADATA", buff);
+                        pushTempRule(rs);
+                        */
+                    }
+                    else
+                    { //Everyone else is affected by barbers and pit hags
+                        //<PLAYER>is_<ROLE> => <PLAYER>is_<ROLE>[Night x]
+                        setTempRuleParams(rs, 2,0);
+                        snprintf(buff, STRING_BUFF_SIZE, "is_%s_[NIGHT%d]", ROLE_NAMES[role], nextNight);
+                        setTempRuleResultName(rs, kb, 0, "PLAYERS", buff);
+                        snprintf(buff, STRING_BUFF_SIZE, "is_%s_[NIGHT%d]", ROLE_NAMES[role], startNight);
+                        addConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff);
+                        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_BARBER_in_PLAY_[NIGHT%d]", startNight);
+                        addConditionToTempRuleName(rs,kb, 1, "METADATA", buff);
+                        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_PIT_HAG_in_PLAY_[NIGHT%d]", startNight);
+                        addConditionToTempRuleName(rs,kb, 1, "METADATA", buff);
+                        pushTempRule(rs);
+                        
+                        //<PLAYER>is_NOT_<ROLE> => <PLAYER>is_NOT_<ROLE>[Night x]
+                        setTempRuleParams(rs, 2,0);
+                        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s_[NIGHT%d]", ROLE_NAMES[role], nextNight);
+                        setTempRuleResultName(rs, kb, 0, "PLAYERS", buff);
+                        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s_[NIGHT%d]", ROLE_NAMES[role], startNight);
+                        addConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff);
+                        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_SNAKE_CHARMER_in_PLAY_[NIGHT%d]", startNight);
+                        addConditionToTempRuleName(rs,kb, 1, "METADATA", buff);
+                        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_BARBER_in_PLAY_[NIGHT%d]", startNight);
+                        addConditionToTempRuleName(rs,kb, 1, "METADATA", buff);
+                        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_PIT_HAG_in_PLAY_[NIGHT%d]", startNight);
+                        addConditionToTempRuleName(rs,kb, 1, "METADATA", buff);
+                        pushTempRule(rs);
+                        
+                    }
                 }
             }
             //<PLAYER>is_GOOD => <PLAYER>is_GOOD[Night x]

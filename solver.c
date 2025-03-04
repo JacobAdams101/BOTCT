@@ -120,8 +120,6 @@ static int assignRoleForWorld(KnowledgeBase* possibleWorldKB, KnowledgeBase*** p
             selectedRoleID++;
         }
 
-        
-        
         //Assume true
         snprintf(buff, 64, "is_%s_[NIGHT%d]", ROLE_NAMES[selectedRoleID], night);
         addKnowledgeName(possibleWorldKB, "PLAYERS", player, buff);
@@ -180,8 +178,6 @@ static int assignRoleForWorld(KnowledgeBase* possibleWorldKB, KnowledgeBase*** p
 */
 static void buildWorld(KnowledgeBase* possibleWorldKB, KnowledgeBase*** possibleWorldRevertKB, ProbKnowledgeBase* determinedInNWorlds, RuleSet* rs)
 {
-    char buff[64];
-
     int avaliable[5][MAX_SET_ELEMENTS];
     /*
      * IDEA: "Loop" through all important information to try 
@@ -265,7 +261,7 @@ void solve(KnowledgeBase* kb, RuleSet* rs, const int NUM_PLAYERS, const int NUM_
 
 
     const int NUM_THREADS = 16;
-    const int NUM_ITERATIONS = 16;
+    const int NUM_ITERATIONS = 64;
 
     ProbKnowledgeBase* threadTallies[NUM_THREADS];
     KnowledgeBase* possibleWorldKB[NUM_THREADS];

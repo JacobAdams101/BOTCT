@@ -518,7 +518,7 @@ void printRuleAssignment(Rule* rule, KnowledgeBase* kb, int assignement[MAX_VARS
  * @var the variable for the recursive nature
  * @count the seed which generates the permutation
 */
-static void getAssignment(int satisfied[MAX_VARS_IN_RULE][MAX_SET_ELEMENTS], int lengths[MAX_VARS_IN_RULE], int assignment[MAX_VARS_IN_RULE], long count)
+static inline void getAssignment(int satisfied[MAX_VARS_IN_RULE][MAX_SET_ELEMENTS], int lengths[MAX_VARS_IN_RULE], int assignment[MAX_VARS_IN_RULE], long count)
 {
     for (int var = 0; var < MAX_VARS_IN_RULE; var++)
     {
@@ -539,6 +539,27 @@ static void getAssignment(int satisfied[MAX_VARS_IN_RULE][MAX_SET_ELEMENTS], int
 }
 
 /**
+ * applyResult() - 
+ * 
+ * @kb
+ * @result
+ * @set
+ * @element
+ * 
+ * @return
+*/
+static inline int applyResult(KnowledgeBase* kb, long result[FUNCTION_RESULT_SIZE], int set, int element)
+{
+    int novelInformation = 0;
+    for (int i = 0; i < FUNCTION_RESULT_SIZE; i++)
+    {
+        novelInformation |= (kb->KNOWLEDGE_BASE[set][element][i] & result[i]) != result[i];
+        kb->KNOWLEDGE_BASE[set][element][i] |= result[i];
+    }
+    return novelInformation;
+}
+
+/**
  * applyRule() - 
  * 
  * @rule
@@ -554,22 +575,7 @@ static int applyRule(Rule* rule, KnowledgeBase* kb, int assignement[MAX_VARS_IN_
     if (rule->resultVarName >= 0)
     { //Result found in condition
         
-        int novelInformation = 0;
-        for(int function = 0; function < FUNCTION_RESULT_SIZE*INT_LENGTH; function++)
-        {
-            int index = function / INT_LENGTH;
-            int bit = function - (index * INT_LENGTH);
-            
-            if (((rule->result[index] >> bit) & 1) == 1)
-            {
-                if (isKnown(kb, rule->resultFromSet, assignement[rule->resultVarName], function) == 0)
-                {
-                    novelInformation = 1;
-                }
-                addKnowledge(kb, rule->resultFromSet, assignement[rule->resultVarName], function);
-            }
-        }
-        if (novelInformation == 1)
+        if (applyResult(kb, rule->result, rule->resultFromSet, assignement[rule->resultVarName]))
         {
             foundNovelInformation = 1;
             if (verbose) printRuleAssignment(rule, kb, assignement, assignement[rule->resultVarName]);
@@ -580,33 +586,16 @@ static int applyRule(Rule* rule, KnowledgeBase* kb, int assignement[MAX_VARS_IN_
     { //Result can be anything NOT in condition
         for (int setElement = 0; setElement < kb->SET_SIZES[rule->resultFromSet]; setElement++)
         {
-            int novelInformation = 0;
-            for(int function = 0; function < FUNCTION_RESULT_SIZE*INT_LENGTH; function++)
+            int inAssignment = 0;
+            for (int i = 0; i < rule->varCount; i++)
             {
-                int index = function / INT_LENGTH;
-                int bit = function - (index * INT_LENGTH);
-                
-                if (((rule->result[index] >> bit) & 1) == 1)
+                if (assignement[i] == setElement && rule->varConditionFromSet[i] == rule->resultFromSet)
                 {
-                    int inAssignment = 0;
-                    for (int i = 0; i < rule->varCount; i++)
-                    {
-                        if (assignement[i] == setElement && rule->varConditionFromSet[i] == rule->resultFromSet)
-                        {
-                            inAssignment = 1;
-                        }
-                    }
-                    if (inAssignment == 0)
-                    { //If not in assignment
-                        if (isKnown(kb, rule->resultFromSet, setElement, function) == 0)
-                        {
-                            novelInformation = 1;
-                        }
-                        addKnowledge(kb, rule->resultFromSet, setElement, function);
-                    }
+                    inAssignment = 1;
+                    break;
                 }
             }
-            if (novelInformation)
+            if (inAssignment == 0 && applyResult(kb, rule->result, rule->resultFromSet, setElement))
             {
                 foundNovelInformation = 1;
                 if (verbose) printRuleAssignment(rule, kb, assignement, setElement);
@@ -622,22 +611,7 @@ static int applyRule(Rule* rule, KnowledgeBase* kb, int assignement[MAX_VARS_IN_
     { //Result can be ONLY -1XXX where XXX is the element ID
         int varToSub = (-rule->resultVarName)-1000;
 
-        int novelInformation = 0;
-        for(int function = 0; function < FUNCTION_RESULT_SIZE*INT_LENGTH; function++)
-        {
-            int index = function / INT_LENGTH;
-            int bit = function - (index * INT_LENGTH);
-            
-            if (((rule->result[index] >> bit) & 1) == 1)
-            {
-                if (isKnown(kb, rule->resultFromSet, varToSub, function) == 0)
-                {
-                    novelInformation = 1;
-                }
-                addKnowledge(kb, rule->resultFromSet, varToSub, function);
-            }
-        }
-        if (novelInformation)
+        if (applyResult(kb, rule->result, rule->resultFromSet, varToSub))
         {
             foundNovelInformation = 1;
             if (verbose) printRuleAssignment(rule, kb, assignement, varToSub);
@@ -675,7 +649,7 @@ static inline int elementSatisfiesVarConditions(Rule* rule, KnowledgeBase* kb, i
  * @satisfied writing what variables satisfy the result
  * @lengths how many variables satisfy the result
 */
-static void findPossibleSubstitutions(Rule* rule, KnowledgeBase* kb, int satisfied[MAX_VARS_IN_RULE][MAX_SET_ELEMENTS], int lengths[MAX_VARS_IN_RULE])
+static inline void findPossibleSubstitutions(Rule* rule, KnowledgeBase* kb, int satisfied[MAX_VARS_IN_RULE][MAX_SET_ELEMENTS], int lengths[MAX_VARS_IN_RULE])
 {
     for (int var = 0; var < MAX_VARS_IN_RULE; var++)
     {
