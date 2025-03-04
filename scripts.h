@@ -40,7 +40,7 @@
  * @BASE_OUTSIDERS the number of base starting outsiders in the script
  * @NUM_DAYS the maximium number of days the game can run for
 */
-void initScript(RuleSet** rs, KnowledgeBase** kb, const int SCRIPT, const int NUM_PLAYERS, const int NUM_MINIONS, const int NUM_DEMONS, const int BASE_OUTSIDERS, const int NUM_DAYS);
+void initScript(RuleSet** rs, KnowledgeBase** kb, const int SCRIPT, const int NUM_PLAYERS, const int NUM_MINIONS, const int NUM_DEMONS, const int BASE_OUTSIDERS);
 
 /**
  * buildRules() - add all the rules to the game
@@ -53,7 +53,7 @@ void initScript(RuleSet** rs, KnowledgeBase** kb, const int SCRIPT, const int NU
  * @BASE_OUTSIDERS the number of base starting outsiders in the script
  * @NUM_DAYS the maximium number of days the game can run for
 */
-void buildRules(RuleSet* rs, KnowledgeBase* kb, const int NUM_PLAYERS, const int NUM_MINIONS, const int NUM_DEMONS, const int BASE_OUTSIDERS, const int NUM_DAYS);
+void buildRules(RuleSet* rs, KnowledgeBase* kb, const int NUM_PLAYERS, const int NUM_MINIONS, const int NUM_DEMONS, const int BASE_OUTSIDERS);
 
 /*
  * Global variables, ew

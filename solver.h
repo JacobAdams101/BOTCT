@@ -41,4 +41,4 @@
  * @BASE_OUTSIDERS the number of abse starting outsiders in the game
  * @NUM_DAYS the maxium number of days the game can go on for
 */
-void solve(KnowledgeBase* kb, RuleSet* rs, const int NUM_PLAYERS, const int NUM_MINIONS, const int NUM_DEMONS, const int BASE_OUTSIDERS, const int NUM_DAYS);
+void solve(KnowledgeBase* kb, RuleSet* rs, const int NUM_PLAYERS, const int NUM_MINIONS, const int NUM_DEMONS, const int BASE_OUTSIDERS);

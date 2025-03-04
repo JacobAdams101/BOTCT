@@ -47,7 +47,7 @@ typedef struct {
  * 
  * @return the KB
 */
-KnowledgeBase* initKB(const int NUM_PLAYERS, const int NUM_DAYS);
+KnowledgeBase* initKB(const int NUM_PLAYERS);
 
 /**
  * initProbKB() - allocate and initilise a probabalistic knowledge base structure

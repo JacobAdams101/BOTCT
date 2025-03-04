@@ -253,7 +253,7 @@ int getInt(char* message, int min, int max)
  * @kb the knowledge base to update
  * @NUM_DAYS the max number of days the game can go on for
 */
-static void shown_role(KnowledgeBase* kb, const int NUM_DAYS)
+static void shown_role(KnowledgeBase* kb)
 {
     int playerID;
     char buff[STRING_BUFF_SIZE]; // Declare a character array to hold the string 
@@ -316,7 +316,7 @@ static void shown_role(KnowledgeBase* kb, const int NUM_DAYS)
  * @kb the knowledge base to update
  * @NUM_DAYS the max number of days the game can go on for
 */
-static  void roleNotInGame(KnowledgeBase* kb, const int NUM_DAYS)
+static  void roleNotInGame(KnowledgeBase* kb)
 {
     char buff[STRING_BUFF_SIZE]; // Declare a character array to hold the string 
     int roleID = -1;
@@ -352,7 +352,7 @@ static  void roleNotInGame(KnowledgeBase* kb, const int NUM_DAYS)
  * @kb the knowledge base to update
  * @NUM_DAYS the max number of days the game can go on for
 */
-static void noptions(KnowledgeBase* kb, const int NUM_DAYS)
+static void noptions(KnowledgeBase* kb)
 {
     
     printf("ENERTING: n POSSIBILITIES\n");
@@ -425,7 +425,7 @@ static void noptions(KnowledgeBase* kb, const int NUM_DAYS)
  * @kb the knowledge base to update
  * @NUM_DAYS the max number of days the game can go on for
 */
-static void poisoned(KnowledgeBase* kb, const int NUM_DAYS)
+static void poisoned(KnowledgeBase* kb)
 {
     char buff[STRING_BUFF_SIZE]; // Declare a character array to hold the string 
 
@@ -448,7 +448,7 @@ static void poisoned(KnowledgeBase* kb, const int NUM_DAYS)
  * @kb the knowledge base to update
  * @NUM_DAYS the max number of days the game can go on for
 */
-static void notPoisoned(KnowledgeBase* kb, const int NUM_DAYS)
+static void notPoisoned(KnowledgeBase* kb)
 {
     char buff[STRING_BUFF_SIZE]; // Declare a character array to hold the string 
 
@@ -488,7 +488,7 @@ static void redHerring(KnowledgeBase* kb)
  * @kb the knowledge base to update
  * @NUM_DAYS the max number of days the game can go on for
 */
-static void diedInNight(KnowledgeBase* kb, const int NUM_DAYS)
+static void diedInNight(KnowledgeBase* kb)
 {
     char buff[STRING_BUFF_SIZE]; // Declare a character array to hold the string 
 
@@ -534,7 +534,7 @@ static void diedInNight(KnowledgeBase* kb, const int NUM_DAYS)
  * @kb the knowledge base to update
  * @NUM_DAYS the max number of days the game can go on for
 */
-static void hung(KnowledgeBase* kb, const int NUM_DAYS)
+static void hung(KnowledgeBase* kb)
 {
     char buff[STRING_BUFF_SIZE]; // Declare a character array to hold the string 
 
@@ -580,7 +580,7 @@ static void hung(KnowledgeBase* kb, const int NUM_DAYS)
  * @kb the knowledge base to update
  * @NUM_DAYS the max number of days the game can go on for
 */
-static void nominationDeath(KnowledgeBase* kb, const int NUM_DAYS)
+static void nominationDeath(KnowledgeBase* kb)
 {
     char buff[STRING_BUFF_SIZE]; // Declare a character array to hold the string 
 
@@ -626,7 +626,7 @@ static void nominationDeath(KnowledgeBase* kb, const int NUM_DAYS)
  * @kb the knowledge base to update
  * @NUM_DAYS the max number of days the game can go on for
 */
-static void resurrected(KnowledgeBase* kb, const int NUM_DAYS)
+static void resurrected(KnowledgeBase* kb)
 {
     char buff[STRING_BUFF_SIZE]; // Declare a character array to hold the string 
 
@@ -703,7 +703,7 @@ static void resetMetaData(KnowledgeBase* kb)
  * @rs the rulset to update
  * @NUM_DAYS the max number of days the game can go on for
 */
-static void washerWomanPing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs, const int NUM_DAYS)
+static void washerWomanPing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs)
 {
     char buff[STRING_BUFF_SIZE]; // Declare a character array to hold the string 
 
@@ -760,7 +760,7 @@ static void washerWomanPing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs
  * @rs the rulset to update
  * @NUM_DAYS the max number of days the game can go on for
 */
-static void librarianPing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs, const int NUM_DAYS)
+static void librarianPing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs)
 {
     char buff[STRING_BUFF_SIZE]; // Declare a character array to hold the string 
 
@@ -817,7 +817,7 @@ static void librarianPing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs, 
  * @rs the rulset to update
  * @NUM_DAYS the max number of days the game can go on for
 */
-static void investigatorPing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs, const int NUM_DAYS)
+static void investigatorPing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs)
 {
     char buff[STRING_BUFF_SIZE]; // Declare a character array to hold the string 
 
@@ -874,7 +874,7 @@ static void investigatorPing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* r
  * @rs the rulset to update
  * @NUM_DAYS the max number of days the game can go on for
 */
-static void chefPing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs, const int NUM_DAYS)
+static void chefPing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs)
 {
     int countPairs = -1;
     printf("What was the number of pairs?:\n");
@@ -928,7 +928,7 @@ static void chefPing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs, const
  * @rs the rulset to update
  * @NUM_DAYS the max number of days the game can go on for
 */
-static void empathPing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs, const int NUM_DAYS)
+static void empathPing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs)
 {
     char buff[STRING_BUFF_SIZE]; // Declare a character array to hold the string 
     int countEvil = -1;
@@ -1087,7 +1087,7 @@ static void empathPing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs, con
  * @rs the rulset to update
  * @NUM_DAYS the max number of days the game can go on for
 */
-static void fortuneTellerPing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs, const int NUM_DAYS)
+static void fortuneTellerPing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs)
 {
     char buff[STRING_BUFF_SIZE]; // Declare a character array to hold the string 
 
@@ -1213,7 +1213,7 @@ static void fortuneTellerPing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* 
  * @rs the rulset to update
  * @NUM_DAYS the max number of days the game can go on for
 */
-static void undertakerPing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs, const int NUM_DAYS)
+static void undertakerPing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs)
 {
     char buff[STRING_BUFF_SIZE]; // Declare a character array to hold the string 
 
@@ -1252,7 +1252,7 @@ static void undertakerPing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs,
  * @rs the rulset to update
  * @NUM_DAYS the max number of days the game can go on for
 */
-static void monkPing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs, const int NUM_DAYS)
+static void monkPing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs)
 {
     char buff[STRING_BUFF_SIZE]; // Declare a character array to hold the string 
 
@@ -1295,7 +1295,7 @@ static void monkPing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs, const
  * @rs the rulset to update
  * @NUM_DAYS the max number of days the game can go on for
 */
-static void ravenkeeperPing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs, const int NUM_DAYS)
+static void ravenkeeperPing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs)
 {
     char buff[STRING_BUFF_SIZE]; // Declare a character array to hold the string 
 
@@ -1333,7 +1333,7 @@ static void ravenkeeperPing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs
  * @rs the rulset to update
  * @NUM_DAYS the max number of days the game can go on for
 */
-static void clockmakerPing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs, const int NUM_DAYS)
+static void clockmakerPing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs)
 {
     int numSteps = -1;
 
@@ -1382,7 +1382,7 @@ static void clockmakerPing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs,
  * @rs the rulset to update
  * @NUM_DAYS the max number of days the game can go on for
 */
-static void dreamerPing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs, const int NUM_DAYS)
+static void dreamerPing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs)
 {
     char buff[STRING_BUFF_SIZE]; // Declare a character array to hold the string 
 
@@ -1427,7 +1427,7 @@ static void dreamerPing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs, co
  * @rs the rulset to update
  * @NUM_DAYS the max number of days the game can go on for
 */
-static void snakeCharmerPing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs, const int NUM_DAYS)
+static void snakeCharmerPing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs)
 {
     //char buff[STRING_BUFF_SIZE]; // Declare a character array to hold the string 
     printf("NOT SUPPORTED!\n");
@@ -1442,7 +1442,7 @@ static void snakeCharmerPing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* r
  * @rs the rulset to update
  * @NUM_DAYS the max number of days the game can go on for
 */
-static void mathematicianPing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs, const int NUM_DAYS)
+static void mathematicianPing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs)
 {
     char buff[STRING_BUFF_SIZE]; // Declare a character array to hold the string 
 
@@ -1481,7 +1481,7 @@ static void mathematicianPing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* 
  * @rs the rulset to update
  * @NUM_DAYS the max number of days the game can go on for
 */
-static void flowerGirlPing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs, const int NUM_DAYS)
+static void flowerGirlPing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs)
 {
     char buff[STRING_BUFF_SIZE]; // Declare a character array to hold the string 
     char input[STRING_BUFF_SIZE]; // Declare a character array to hold the string 
@@ -1549,7 +1549,7 @@ static void flowerGirlPing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs,
  * @rs the rulset to update
  * @NUM_DAYS the max number of days the game can go on for
 */
-static void townCrierPing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs, const int NUM_DAYS)
+static void townCrierPing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs)
 {
     char buff[STRING_BUFF_SIZE]; // Declare a character array to hold the string 
     char input[STRING_BUFF_SIZE]; // Declare a character array to hold the string 
@@ -1617,7 +1617,7 @@ static void townCrierPing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs, 
  * @rs the rulset to update
  * @NUM_DAYS the max number of days the game can go on for
 */
-static void oraclePing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs, const int NUM_DAYS)
+static void oraclePing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs)
 {
     char buff[STRING_BUFF_SIZE]; // Declare a character array to hold the string 
 
@@ -1674,7 +1674,7 @@ static void oraclePing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs, con
  * @rs the rulset to update
  * @NUM_DAYS the max number of days the game can go on for
 */
-static void savantPing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs, const int NUM_DAYS)
+static void savantPing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs)
 {
     //char buff[STRING_BUFF_SIZE]; // Declare a character array to hold the string 
     printf("NOT SUPPORTED!\n");
@@ -1689,7 +1689,7 @@ static void savantPing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs, con
  * @rs the rulset to update
  * @NUM_DAYS the max number of days the game can go on for
 */
-static void seamstressPing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs, const int NUM_DAYS)
+static void seamstressPing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs)
 {
     char buff[STRING_BUFF_SIZE]; // Declare a character array to hold the string 
     
@@ -1743,7 +1743,7 @@ static void seamstressPing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs,
  * @rs the rulset to update
  * @NUM_DAYS the max number of days the game can go on for
 */
-static void philosopherPing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs, const int NUM_DAYS)
+static void philosopherPing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs)
 {
     //char buff[STRING_BUFF_SIZE]; // Declare a character array to hold the string 
     printf("NOT SUPPORTED!\n");
@@ -1758,7 +1758,7 @@ static void philosopherPing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs
  * @rs the rulset to update
  * @NUM_DAYS the max number of days the game can go on for
 */
-static void artistPing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs, const int NUM_DAYS)
+static void artistPing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs)
 {
     //char buff[STRING_BUFF_SIZE]; // Declare a character array to hold the string 
     printf("NOT SUPPORTED!\n");
@@ -1773,7 +1773,7 @@ static void artistPing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs, con
  * @rs the rulset to update
  * @NUM_DAYS the max number of days the game can go on for
 */
-static void jugglerPing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs, const int NUM_DAYS)
+static void jugglerPing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs)
 {
     //char buff[STRING_BUFF_SIZE]; // Declare a character array to hold the string 
     printf("NOT SUPPORTED!\n");
@@ -1788,7 +1788,7 @@ static void jugglerPing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs, co
  * @rs the rulset to update
  * @NUM_DAYS the max number of days the game can go on for
 */
-static void sagePing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs, const int NUM_DAYS)
+static void sagePing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs)
 {
     char buff[STRING_BUFF_SIZE]; // Declare a character array to hold the string 
     
@@ -1836,7 +1836,7 @@ static void sagePing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs, const
  * @rs the rulset to update
  * @NUM_DAYS the max number of days the game can go on for
 */
-static void grandMotherPing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs, const int NUM_DAYS)
+static void grandMotherPing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs)
 {
     char buff[STRING_BUFF_SIZE]; // Declare a character array to hold the string 
     
@@ -1872,7 +1872,7 @@ static void grandMotherPing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs
  * @rs the rulset to update
  * @NUM_DAYS the max number of days the game can go on for
 */
-static void chamberMaidPing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs, const int NUM_DAYS)
+static void chamberMaidPing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs)
 {
     //char buff[STRING_BUFF_SIZE]; // Declare a character array to hold the string 
     printf("NOT SUPPORTED!\n");
@@ -1887,7 +1887,7 @@ static void chamberMaidPing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs
  * @rs the rulset to update
  * @NUM_DAYS the max number of days the game can go on for
 */
-static void exorcistPing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs, const int NUM_DAYS)
+static void exorcistPing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs)
 {
     //char buff[STRING_BUFF_SIZE]; // Declare a character array to hold the string 
     printf("NOT SUPPORTED!\n");
@@ -1902,7 +1902,7 @@ static void exorcistPing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs, c
  * @rs the rulset to update
  * @NUM_DAYS the max number of days the game can go on for
 */
-static void innkeeperPing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs, const int NUM_DAYS)
+static void innkeeperPing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs)
 {
     char buff[STRING_BUFF_SIZE]; // Declare a character array to hold the string 
     
@@ -1947,7 +1947,7 @@ static void innkeeperPing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs, 
  * @rs the rulset to update
  * @NUM_DAYS the max number of days the game can go on for
 */
-static void gamblerPing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs, const int NUM_DAYS)
+static void gamblerPing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs)
 {
     //char buff[STRING_BUFF_SIZE]; // Declare a character array to hold the string 
     printf("NOT SUPPORTED!\n");
@@ -1962,7 +1962,7 @@ static void gamblerPing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs, co
  * @rs the rulset to update
  * @NUM_DAYS the max number of days the game can go on for
 */
-static void gossipPing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs, const int NUM_DAYS)
+static void gossipPing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs)
 {
     //char buff[STRING_BUFF_SIZE]; // Declare a character array to hold the string 
     printf("NOT SUPPORTED!\n");
@@ -1977,7 +1977,7 @@ static void gossipPing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs, con
  * @rs the rulset to update
  * @NUM_DAYS the max number of days the game can go on for
 */
-static void professorPing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs, const int NUM_DAYS)
+static void professorPing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs)
 {
     //char buff[STRING_BUFF_SIZE]; // Declare a character array to hold the string 
     printf("NOT SUPPORTED!\n");
@@ -1992,7 +1992,7 @@ static void professorPing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs, 
  * @rs the ruleset to update
  * @NUM_DAYS the max number of days the game can go on for
 */
-static void addPingRule(KnowledgeBase* kb, RuleSet* rs, const int NUM_DAYS)
+static void addPingRule(KnowledgeBase* kb, RuleSet* rs)
 {
     char inputPingType[STRING_BUFF_SIZE]; // Declare a character array to hold the string 
 
@@ -2051,37 +2051,37 @@ static void addPingRule(KnowledgeBase* kb, RuleSet* rs, const int NUM_DAYS)
         scanf("%255s", inputPingType); // Read a string (up to 99 characters to leave space for the null terminator)
         loop = 0;
         //TB
-        if (strcmp(inputPingType,WASHERWOMAN_PING) == 0) washerWomanPing(playerIDinfoFrom, kb, rs, NUM_DAYS);
-        else if (strcmp(inputPingType,LIBRARIAN_PING) == 0) librarianPing(playerIDinfoFrom, kb, rs, NUM_DAYS);
-        else if (strcmp(inputPingType,INVESTIGATOR_PING) == 0) investigatorPing(playerIDinfoFrom, kb, rs, NUM_DAYS);
-        else if (strcmp(inputPingType,CHEF_PING) == 0) chefPing(playerIDinfoFrom, kb, rs, NUM_DAYS);
-        else if (strcmp(inputPingType,EMPATH_PING) == 0) empathPing(playerIDinfoFrom, kb, rs, NUM_DAYS);
-        else if (strcmp(inputPingType,FORTUNE_TELLER_PING) == 0) fortuneTellerPing(playerIDinfoFrom, kb, rs, NUM_DAYS);
-        else if (strcmp(inputPingType,UNDERTAKER_PING) == 0) undertakerPing(playerIDinfoFrom, kb, rs, NUM_DAYS);
-        else if (strcmp(inputPingType,MONK_PING) == 0) monkPing(playerIDinfoFrom, kb, rs, NUM_DAYS);
-        else if (strcmp(inputPingType,RAVENKEEPER_PING) == 0) ravenkeeperPing(playerIDinfoFrom, kb, rs, NUM_DAYS);
+        if (strcmp(inputPingType,WASHERWOMAN_PING) == 0) washerWomanPing(playerIDinfoFrom, kb, rs);
+        else if (strcmp(inputPingType,LIBRARIAN_PING) == 0) librarianPing(playerIDinfoFrom, kb, rs);
+        else if (strcmp(inputPingType,INVESTIGATOR_PING) == 0) investigatorPing(playerIDinfoFrom, kb, rs);
+        else if (strcmp(inputPingType,CHEF_PING) == 0) chefPing(playerIDinfoFrom, kb, rs);
+        else if (strcmp(inputPingType,EMPATH_PING) == 0) empathPing(playerIDinfoFrom, kb, rs);
+        else if (strcmp(inputPingType,FORTUNE_TELLER_PING) == 0) fortuneTellerPing(playerIDinfoFrom, kb, rs);
+        else if (strcmp(inputPingType,UNDERTAKER_PING) == 0) undertakerPing(playerIDinfoFrom, kb, rs);
+        else if (strcmp(inputPingType,MONK_PING) == 0) monkPing(playerIDinfoFrom, kb, rs);
+        else if (strcmp(inputPingType,RAVENKEEPER_PING) == 0) ravenkeeperPing(playerIDinfoFrom, kb, rs);
         //SV
-        else if (strcmp(inputPingType,CLOCKMAKER_PING) == 0) clockmakerPing(playerIDinfoFrom, kb, rs, NUM_DAYS);
-        else if (strcmp(inputPingType,DREAMER_PING) == 0) dreamerPing(playerIDinfoFrom, kb, rs, NUM_DAYS);
-        else if (strcmp(inputPingType,SNAKE_CHARMER_PING) == 0) snakeCharmerPing(playerIDinfoFrom, kb, rs, NUM_DAYS);
-        else if (strcmp(inputPingType,MATHEMATICIAN_PING) == 0) mathematicianPing(playerIDinfoFrom, kb, rs, NUM_DAYS);
-        else if (strcmp(inputPingType,FLOWERGIRL_PING) == 0) flowerGirlPing(playerIDinfoFrom, kb, rs, NUM_DAYS);
-        else if (strcmp(inputPingType,TOWN_CRIER_PING) == 0) townCrierPing(playerIDinfoFrom, kb, rs, NUM_DAYS);
-        else if (strcmp(inputPingType,ORACLE_PING) == 0) oraclePing(playerIDinfoFrom, kb, rs, NUM_DAYS);
-        else if (strcmp(inputPingType,SAVANT_PING) == 0) savantPing(playerIDinfoFrom, kb, rs, NUM_DAYS);
-        else if (strcmp(inputPingType,SEAMSTRESS_PING) == 0) seamstressPing(playerIDinfoFrom, kb, rs, NUM_DAYS);
-        else if (strcmp(inputPingType,PHILOSOPHER_PING) == 0) philosopherPing(playerIDinfoFrom, kb, rs, NUM_DAYS);
-        else if (strcmp(inputPingType,ARTIST_PING) == 0) artistPing(playerIDinfoFrom, kb, rs, NUM_DAYS);
-        else if (strcmp(inputPingType,JUGGLER_PING) == 0) jugglerPing(playerIDinfoFrom, kb, rs, NUM_DAYS);
-        else if (strcmp(inputPingType,SAGE_PING) == 0) sagePing(playerIDinfoFrom, kb, rs, NUM_DAYS);
+        else if (strcmp(inputPingType,CLOCKMAKER_PING) == 0) clockmakerPing(playerIDinfoFrom, kb, rs);
+        else if (strcmp(inputPingType,DREAMER_PING) == 0) dreamerPing(playerIDinfoFrom, kb, rs);
+        else if (strcmp(inputPingType,SNAKE_CHARMER_PING) == 0) snakeCharmerPing(playerIDinfoFrom, kb, rs);
+        else if (strcmp(inputPingType,MATHEMATICIAN_PING) == 0) mathematicianPing(playerIDinfoFrom, kb, rs);
+        else if (strcmp(inputPingType,FLOWERGIRL_PING) == 0) flowerGirlPing(playerIDinfoFrom, kb, rs);
+        else if (strcmp(inputPingType,TOWN_CRIER_PING) == 0) townCrierPing(playerIDinfoFrom, kb, rs);
+        else if (strcmp(inputPingType,ORACLE_PING) == 0) oraclePing(playerIDinfoFrom, kb, rs);
+        else if (strcmp(inputPingType,SAVANT_PING) == 0) savantPing(playerIDinfoFrom, kb, rs);
+        else if (strcmp(inputPingType,SEAMSTRESS_PING) == 0) seamstressPing(playerIDinfoFrom, kb, rs);
+        else if (strcmp(inputPingType,PHILOSOPHER_PING) == 0) philosopherPing(playerIDinfoFrom, kb, rs);
+        else if (strcmp(inputPingType,ARTIST_PING) == 0) artistPing(playerIDinfoFrom, kb, rs);
+        else if (strcmp(inputPingType,JUGGLER_PING) == 0) jugglerPing(playerIDinfoFrom, kb, rs);
+        else if (strcmp(inputPingType,SAGE_PING) == 0) sagePing(playerIDinfoFrom, kb, rs);
         //BMR
-        else if (strcmp(inputPingType,GRANDMOTHER_PING) == 0) grandMotherPing(playerIDinfoFrom, kb, rs, NUM_DAYS);
-        else if (strcmp(inputPingType,CHAMBERMAID_PING) == 0) chamberMaidPing(playerIDinfoFrom, kb, rs, NUM_DAYS);
-        else if (strcmp(inputPingType,EXORCIST_PING) == 0) exorcistPing(playerIDinfoFrom, kb, rs, NUM_DAYS);
-        else if (strcmp(inputPingType,INNKEEPER_PING) == 0) innkeeperPing(playerIDinfoFrom, kb, rs, NUM_DAYS);
-        else if (strcmp(inputPingType,GAMBLER_PING) == 0) gamblerPing(playerIDinfoFrom, kb, rs, NUM_DAYS);
-        else if (strcmp(inputPingType,GOSSIP_PING) == 0) gossipPing(playerIDinfoFrom, kb, rs, NUM_DAYS);
-        else if (strcmp(inputPingType,PROFESSOR_PING) == 0) professorPing(playerIDinfoFrom, kb, rs, NUM_DAYS);
+        else if (strcmp(inputPingType,GRANDMOTHER_PING) == 0) grandMotherPing(playerIDinfoFrom, kb, rs);
+        else if (strcmp(inputPingType,CHAMBERMAID_PING) == 0) chamberMaidPing(playerIDinfoFrom, kb, rs);
+        else if (strcmp(inputPingType,EXORCIST_PING) == 0) exorcistPing(playerIDinfoFrom, kb, rs);
+        else if (strcmp(inputPingType,INNKEEPER_PING) == 0) innkeeperPing(playerIDinfoFrom, kb, rs);
+        else if (strcmp(inputPingType,GAMBLER_PING) == 0) gamblerPing(playerIDinfoFrom, kb, rs);
+        else if (strcmp(inputPingType,GOSSIP_PING) == 0) gossipPing(playerIDinfoFrom, kb, rs);
+        else if (strcmp(inputPingType,PROFESSOR_PING) == 0) professorPing(playerIDinfoFrom, kb, rs);
         else 
         {
             printf("ERROR: Invalid string!\n");
@@ -2090,7 +2090,7 @@ static void addPingRule(KnowledgeBase* kb, RuleSet* rs, const int NUM_DAYS)
     }
 }
 
-static void printTodoList(KnowledgeBase* kb, RuleSet* rs, const int NUM_DAYS)
+static void printTodoList(KnowledgeBase* kb, RuleSet* rs)
 {
     char buff[STRING_BUFF_SIZE];
     char buffNeg[STRING_BUFF_SIZE];
@@ -2146,7 +2146,7 @@ static void printTodoList(KnowledgeBase* kb, RuleSet* rs, const int NUM_DAYS)
  * @rs the ruleset to update
  * @NUM_DAYS the max number of days the game can go on for
 */
-int add_info(KnowledgeBase* kb, RuleSet* rs, const int NUM_DAYS)
+int add_info(KnowledgeBase* kb, RuleSet* rs)
 {
     char buff[STRING_BUFF_SIZE]; // Declare a character array to hold the string 
     printHeading("ADD INFORMATION");
@@ -2193,7 +2193,7 @@ int add_info(KnowledgeBase* kb, RuleSet* rs, const int NUM_DAYS)
         printf("- Type '%s' to finish entering data and calculate the probabaility:\n", FINISH_PROB);
         printf("\n");
         printHeading("TODO LIST");
-        printTodoList(kb, rs, NUM_DAYS);
+        printTodoList(kb, rs);
 
         
  
@@ -2201,27 +2201,27 @@ int add_info(KnowledgeBase* kb, RuleSet* rs, const int NUM_DAYS)
 
         if (strcmp(buff,SHOWN_ROLE) == 0)
         {
-            shown_role(kb, NUM_DAYS);
+            shown_role(kb);
         }
         else if (strcmp(buff,ROLE_NOT_IN_GAME) == 0)
         {
-            roleNotInGame(kb, NUM_DAYS);
+            roleNotInGame(kb);
         }
         else if (strcmp(buff,PING) == 0)
         {
-            addPingRule(kb, rs, NUM_DAYS);
+            addPingRule(kb, rs);
         }
         else if (strcmp(buff,N_POSSIBILITIES) == 0)
         {
-            noptions(kb, NUM_DAYS);
+            noptions(kb);
         }
         else if (strcmp(buff,POISONED) == 0)
         {
-            poisoned(kb, NUM_DAYS);
+            poisoned(kb);
         }
         else if (strcmp(buff,NOT_POISONED) == 0)
         {
-            notPoisoned(kb, NUM_DAYS);
+            notPoisoned(kb);
         }
         else if (strcmp(buff,RED_HERRING) == 0)
         {
@@ -2229,15 +2229,15 @@ int add_info(KnowledgeBase* kb, RuleSet* rs, const int NUM_DAYS)
         }
         else if (strcmp(buff,DIED) == 0)
         {
-            diedInNight(kb, NUM_DAYS);
+            diedInNight(kb);
         }
         else if (strcmp(buff,HUNG) == 0)
         {
-            hung(kb, NUM_DAYS);
+            hung(kb);
         }
         else if (strcmp(buff,NOMINATION_DEATH) == 0)
         {
-            nominationDeath(kb, NUM_DAYS);
+            nominationDeath(kb);
         }
         else if (strcmp(buff,FAILED_HANGING) == 0)
         {
@@ -2245,7 +2245,7 @@ int add_info(KnowledgeBase* kb, RuleSet* rs, const int NUM_DAYS)
         }
         else if (strcmp(buff,RESURRECTED) == 0)
         {
-            resurrected(kb, NUM_DAYS);
+            resurrected(kb);
         }
         else if (strcmp(buff,RESET) == 0)
         {

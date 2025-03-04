@@ -85,7 +85,6 @@ int main()
     int NUM_DEMONS;
     int BASE_OUTSIDERS;
     int SCRIPT;
-    int NUM_DAYS = 5; //Max number of days
 
     setup(&NUM_PLAYERS, &NUM_MINIONS, &NUM_DEMONS, &BASE_OUTSIDERS, &SCRIPT);
 
@@ -100,14 +99,14 @@ int main()
     KnowledgeBase* kb = NULL;
     RuleSet* rs = NULL;
 
-    initScript(&rs, &kb, SCRIPT, NUM_PLAYERS, NUM_MINIONS, NUM_DEMONS, BASE_OUTSIDERS, NUM_DAYS);
+    initScript(&rs, &kb, SCRIPT, NUM_PLAYERS, NUM_MINIONS, NUM_DEMONS, BASE_OUTSIDERS);
 
     getNames(kb->ELEMENT_NAMES, NUM_PLAYERS);
     
     //Don't print rules
     //printRules(rs, kb);
 
-    solve(kb, rs, NUM_PLAYERS, NUM_MINIONS, NUM_DEMONS, BASE_OUTSIDERS, NUM_DAYS);
+    solve(kb, rs, NUM_PLAYERS, NUM_MINIONS, NUM_DEMONS, BASE_OUTSIDERS);
 
     return 0;
 }

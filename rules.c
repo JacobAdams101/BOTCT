@@ -518,18 +518,24 @@ void printRuleAssignment(Rule* rule, KnowledgeBase* kb, int assignement[MAX_VARS
  * @var the variable for the recursive nature
  * @count the seed which generates the permutation
 */
-static void getAssignment(int satisfied[MAX_VARS_IN_RULE][MAX_SET_ELEMENTS], int lengths[MAX_VARS_IN_RULE], int assignment[MAX_VARS_IN_RULE], int var, long count)
+static void getAssignment(int satisfied[MAX_VARS_IN_RULE][MAX_SET_ELEMENTS], int lengths[MAX_VARS_IN_RULE], int assignment[MAX_VARS_IN_RULE], long count)
 {
-    int nextCount = count / lengths[var];
-    int takeFromList = count - (nextCount * lengths[var]);
-
-    assignment[var] = satisfied[var][takeFromList];
-
-    if (var + 1 < MAX_VARS_IN_RULE)
+    for (int var = 0; var < MAX_VARS_IN_RULE; var++)
     {
-        getAssignment(satisfied, lengths, assignment, var+1, nextCount);
+        int nextCount = count / lengths[var];
+        int takeFromList = count - (nextCount * lengths[var]);
+
+        assignment[var] = satisfied[var][takeFromList];
+
+        count = nextCount;
     }
-    
+    //Removed recursion version
+    /*
+        if (var + 1 < MAX_VARS_IN_RULE)
+        {
+            getAssignment(satisfied, lengths, assignment, var+1, nextCount);
+        }
+    */
 }
 
 /**
@@ -639,6 +645,25 @@ static int applyRule(Rule* rule, KnowledgeBase* kb, int assignement[MAX_VARS_IN_
     }
     return foundNovelInformation;
 }
+
+/**
+ * elementSatisfiesVarConditions() - 
+ * 
+ * @rule the rule to check if the LHS is satsified
+ * @kb the knowledge base
+ * @set 
+ * @element
+ * @var
+*/
+static inline int elementSatisfiesVarConditions(Rule* rule, KnowledgeBase* kb, int set, int element, int var)
+{
+    for(int i = 0; i < FUNCTION_RESULT_SIZE; i++)
+    {
+        if ((kb->KNOWLEDGE_BASE[set][element][i] & rule->varConditions[var][i]) != rule->varConditions[var][i]) return 0;
+    }
+    return 1;
+}
+
 /**
  * findPossibleSubstitutions() - find elements of sets that
  * can satisfy some of the LHS conditions of a rule
@@ -665,53 +690,26 @@ static void findPossibleSubstitutions(Rule* rule, KnowledgeBase* kb, int satisfi
     for (int var = 0; var<rule->varCount; var++)
     {
         int set = rule->varConditionFromSet[var];
-        //Loop through elements of sets
-        for(int element = 0; element<MAX_SET_ELEMENTS; element++)
-        {
-            int match = 1;
-            for(int i = 0; i < FUNCTION_RESULT_SIZE; i++)
+        int forcedSub = rule->varsForcedSubstitutions[var];
+        if (forcedSub != -1)
+        {  //Look for forced substitutions
+            //Check if the variable that has the forced substitution satisfies condition
+            if (elementSatisfiesVarConditions(rule, kb, set, forcedSub, var))
             {
-                if ((kb->KNOWLEDGE_BASE[set][element][i] & rule->varConditions[var][i]) != rule->varConditions[var][i])
-                {
-                    match = 0;
-                    break;
-                }
-            }
-            if (match)
-            { //in "set": fact num "element" would satisfy var number "var"
-                satisfied[var][lengths[var]] = element;
+                satisfied[var][lengths[var]] = forcedSub;
                 lengths[var]++;
             }
         }
-    }
-
-    //Look for forced substitutions
-    for (int var = 0; var < rule->varCount; var++)
-    {
-        int forcedSub = rule->varsForcedSubstitutions[var];
-        if (forcedSub != -1)
-        {
-            //Loop through all variables that satisfy this variable
-            //Check if the variable that has the forced substitution appears
-            //Remove every variable
-            //IF the forced sub appears re add it at index 0
-            int forcedSubValid = 0;
-            for (int i = 0; i < MAX_SET_ELEMENTS; i++)
+        else
+        { //If not forced sub check all elements
+            //Loop through elements of sets
+            for(int element = 0; element<MAX_SET_ELEMENTS; element++)
             {
-                if (satisfied[var][i] == forcedSub)
-                {
-                    forcedSubValid = 1;
+                if (elementSatisfiesVarConditions(rule, kb, set, element, var))
+                { //in "set": fact num "element" would satisfy var number "var"
+                    satisfied[var][lengths[var]] = element;
+                    lengths[var]++;
                 }
-                satisfied[var][i] = -1;
-            }
-            if (forcedSubValid)
-            {
-                lengths[var] = 1;
-                satisfied[var][0] = forcedSub;
-            }
-            else
-            {
-                lengths[var] = 0;
             }
         }
     }
@@ -823,12 +821,12 @@ int satisfiesRule(Rule* rule, KnowledgeBase* kb, int verbose)
         for(long count = 0; count < numCombinations; count++)
         {
             //Generate Assignement
-            getAssignment(satisfied, lengths, assignement, 0, count);
+            getAssignment(satisfied, lengths, assignement, count);
 
             int validAssignment = 1;
 
             //Test If Assignement is valid
-            if (rule->varsMutuallyExclusive == 1)
+            if (rule->varsMutuallyExclusive)
             {
                 //Check that there are no duplicate assignements
                 for(int var1 = 0; var1 < rule->varCount-1; var1++)
@@ -843,7 +841,7 @@ int satisfiesRule(Rule* rule, KnowledgeBase* kb, int verbose)
                 }
             }
 
-            if (validAssignment == 1)
+            if (validAssignment)
             { //If the assignement is valid
                 //Update Knowledge Base
                 foundNovelSolution |= applyRule(rule, kb, assignement, verbose); //If some novel information was added

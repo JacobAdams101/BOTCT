@@ -116,4 +116,4 @@ int getInt(char* message, int min, int max);
  * @rs the ruleset to update
  * @NUM_DAYS the max number of days the game can go on for
 */
-int add_info(KnowledgeBase* kb, RuleSet* rs, int numDays);
+int add_info(KnowledgeBase* kb, RuleSet* rs);

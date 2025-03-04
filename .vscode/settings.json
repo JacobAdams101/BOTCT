@@ -15,6 +15,12 @@
         "string": "c",
         "__locale": "c",
         "string_view": "c",
-        "__string": "c"
+        "__string": "c",
+        "exception": "c",
+        "new": "c",
+        "optional": "c",
+        "stdexcept": "c",
+        "variant": "c",
+        "__debug": "c"
     }
 }

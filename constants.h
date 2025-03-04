@@ -33,6 +33,8 @@
 #define MAX_VARS_IN_RULE 16
 #define MAX_NUM_RULES 65536
 
+#define NUM_DAYS 5
+
 //UI Constants
 #define RED_COLOUR_START "\033[31m"
 #define YELLOW_COLOUR_START "\033[33m"

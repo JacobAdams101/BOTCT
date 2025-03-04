@@ -166,7 +166,7 @@ static void writePoisonFunc(char *funcName[NUM_SETS][FUNCTION_RESULT_SIZE*INT_LE
  * 
  * @return the KB
 */
-KnowledgeBase* initKB(const int NUM_PLAYERS, const int NUM_DAYS)
+KnowledgeBase* initKB(const int NUM_PLAYERS)
 {
     //Allocate memory
     KnowledgeBase* kb = (KnowledgeBase*) malloc(sizeof(KnowledgeBase));

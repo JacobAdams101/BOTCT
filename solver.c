@@ -50,13 +50,13 @@
 */
 static int inferImplicitFacts(KnowledgeBase* kb, RuleSet* rs, int numRounds, int verbose)
 {
-        
+    //Loop for a maximum number of rounds
     for (int i = 0; i < numRounds; i++)
     {
         int result = inferknowledgeBaseFromRules(rs, kb, verbose);
 
-        if (result == -1) {return 1;} //Check for contradictions
-        if (result == 0) {break;} //If nothing new was found
+        if (result == -1) return 1; //Check for contradictions
+        if (result == 0) break; //If nothing new was found
     }
     //No contradictions were found
     return 0;
@@ -97,7 +97,7 @@ static void buildWorld(KnowledgeBase* possibleWorldKB, KnowledgeBase* possibleWo
      * ELSE: continue until all player are assigned roles
      * once/if every player is assigned roles add this to the tally
     */
-    for (int night = 0; night < 5; night++)
+    for (int night = 0; night < NUM_DAYS; night++)
     { 
         for (int player = 0; player < possibleWorldKB->SET_SIZES[0]; player++)
         {
@@ -143,17 +143,15 @@ static void buildWorld(KnowledgeBase* possibleWorldKB, KnowledgeBase* possibleWo
                     //printf("ASSIGNING %s\n", buff);
                     //Infer knowledge (to see if a contradiction arises)
                     
-                    if (inferImplicitFacts(possibleWorldKB, rs, NUM_SOLVE_STEPS, 0) == 1)
+                    if (inferImplicitFacts(possibleWorldKB, rs, NUM_SOLVE_STEPS, 0))
                     { //If contradiction found by only adding "function" to assumptions we know NOT function is true 
                         roleAvalaliable[selectedRoleID] = 0; //Mark this role as unavaliable
                         avaliableRoles--; //One less avaliable role now
                         copyTo(possibleWorldKB, possibleWorldRevertKB); //Revert to before inference
-                        //printf("WORLD HAD CONRADICTION!\n");
                     }
                     else
                     { //If I found a role to assign
                         foundRoleToAssign = 1;
-                        //printf("FOUND MATCH!\n");
                     }
 
                 }
@@ -226,13 +224,13 @@ static void* getProbApprox(void* void_arg)
  * @BASE_OUTSIDERS the number of abse starting outsiders in the game
  * @NUM_DAYS the maxium number of days the game can go on for
 */
-void solve(KnowledgeBase* kb, RuleSet* rs, const int NUM_PLAYERS, const int NUM_MINIONS, const int NUM_DEMONS, const int BASE_OUTSIDERS, const int NUM_DAYS)
+void solve(KnowledgeBase* kb, RuleSet* rs, const int NUM_PLAYERS, const int NUM_MINIONS, const int NUM_DEMONS, const int BASE_OUTSIDERS)
 {
     char buff[STRING_BUFF_SIZE];
     //Store tallies of possible worlds
     ProbKnowledgeBase* worldTally = initProbKB();
 
-    KnowledgeBase* revertKB = initKB(NUM_PLAYERS, NUM_DAYS); //For backup incase of contradictions
+    KnowledgeBase* revertKB = initKB(NUM_PLAYERS); //For backup incase of contradictions
 
 
     const int NUM_THREADS = 32;
@@ -248,8 +246,8 @@ void solve(KnowledgeBase* kb, RuleSet* rs, const int NUM_PLAYERS, const int NUM_
     
     for (int i = 0; i < NUM_THREADS; i++)
     {
-        possibleWorldKB[i] = initKB(NUM_PLAYERS, NUM_DAYS);
-        possibleWorldTempKB[i] = initKB(NUM_PLAYERS, NUM_DAYS);
+        possibleWorldKB[i] = initKB(NUM_PLAYERS);
+        possibleWorldTempKB[i] = initKB(NUM_PLAYERS);
         threadTallies[i] = initProbKB();
     }
 
@@ -261,7 +259,7 @@ void solve(KnowledgeBase* kb, RuleSet* rs, const int NUM_PLAYERS, const int NUM_
     {
         //Create copy as backup incase of contradictions
         copyTo(revertKB, kb);
-        int runProb = add_info(kb, rs, NUM_DAYS);
+        int runProb = add_info(kb, rs);
 
         printHeading("INFER FACTS"); //UI HEADING
         contradiction = inferImplicitFacts(kb, rs, NUM_SOLVE_STEPS, 1);
