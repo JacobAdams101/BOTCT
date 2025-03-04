@@ -69,11 +69,105 @@ struct getProbApproxArgs
 {
     KnowledgeBase* kb;
     KnowledgeBase* possibleWorldKB;
-    KnowledgeBase* possibleWorldTempKB;
+    KnowledgeBase*** possibleWorldRevertKB;
     ProbKnowledgeBase* determinedInNWorlds;
     RuleSet* rs;
     int numIterations;
 };
+
+#define MAX_FALIURES 256
+
+static int assignRoleForWorld(KnowledgeBase* possibleWorldKB, KnowledgeBase*** possibleWorldRevertKB, ProbKnowledgeBase* determinedInNWorlds, RuleSet* rs, int avaliable[5][MAX_SET_ELEMENTS], int night, int player, int *failures);
+
+static int assignRoleForWorld(KnowledgeBase* possibleWorldKB, KnowledgeBase*** possibleWorldRevertKB, ProbKnowledgeBase* determinedInNWorlds, RuleSet* rs, int avaliable[5][MAX_SET_ELEMENTS], int night, int player, int *failures)
+{
+    KnowledgeBase* myLayerRevertKB = possibleWorldRevertKB[night][player];
+
+    char buff[64];
+
+    int avaliableRoles = 0;
+    int roleAvalaliable[NUM_BOTCT_ROLES];
+    for (int roleID = 0; roleID < NUM_BOTCT_ROLES; roleID++)
+    {
+        snprintf(buff, 64, "is_NOT_%s_[NIGHT%d]", ROLE_NAMES[roleID], night);
+        int isNotRole = isKnownName(possibleWorldKB, "PLAYERS", player, buff);
+
+        if (isNotRole == 0)
+        {
+            roleAvalaliable[roleID] = 1;
+            avaliableRoles++;
+        } 
+        else
+        {
+            roleAvalaliable[roleID] = 0;
+        }
+    }
+
+    copyTo(myLayerRevertKB, possibleWorldKB); //copy to backup to revert later
+
+    while (avaliableRoles > 0)
+    {
+        int rand = getRandInt(0, avaliableRoles);
+        
+        int selectedRoleID = 0;
+        //Find avaliable role 
+        while(roleAvalaliable[selectedRoleID] == 0 || rand > 0)
+        {
+            if (roleAvalaliable[selectedRoleID] == 1)
+            {
+                rand--;
+            } 
+            selectedRoleID++;
+        }
+
+        
+        
+        //Assume true
+        snprintf(buff, 64, "is_%s_[NIGHT%d]", ROLE_NAMES[selectedRoleID], night);
+        addKnowledgeName(possibleWorldKB, "PLAYERS", player, buff);
+        //printf("ASSIGNING %s\n", buff);
+        //Infer knowledge (to see if a contradiction arises)
+        
+        if (inferImplicitFacts(possibleWorldKB, rs, NUM_SOLVE_STEPS, 0))
+        { //If contradiction found by only adding "function" to assumptions we know NOT function is true 
+            *failures = *failures+1;
+            if (*failures > MAX_FALIURES) return -1;
+        }
+        else
+        { //If I found a role to assign, try deeper layers
+            //Find out how many roles are avaliable 
+            //used for computing weights basic on non uniform probabilities later
+            avaliable[night][player] = 0;
+            for (int i = 0; i < NUM_BOTCT_ROLES; i++)
+            {
+                if (roleAvalaliable[i]) avaliable[night][player]++;
+            }
+
+            //Find next player and next night
+            int nextPlayer = player+1;
+            int nextNight = night;
+            if (nextPlayer >= possibleWorldKB->SET_SIZES[0])
+            {
+                nextPlayer = 0;
+                nextNight++;
+            }
+            if (nextNight >= NUM_DAYS) return 1; //If no more elements to assign, as this layer was a success return SUCCESS 
+            //If there are deeper levels to infer look for them
+
+            //See if deeper level inference leads to a good world
+            int result = assignRoleForWorld(possibleWorldKB, possibleWorldRevertKB, determinedInNWorlds, rs, avaliable, nextNight, nextPlayer, failures);
+            if (result == 1) return 1;
+            if (*failures > MAX_FALIURES) return -1; 
+        }
+
+        //If failed to find a world try a different role
+        roleAvalaliable[selectedRoleID] = 0; //Mark this role as unavaliable
+        avaliableRoles--; //One less avaliable role now
+        copyTo(possibleWorldKB, myLayerRevertKB); //Revert to before inference
+    }
+    //Failed to find anything
+    return -1;
+}
 
 /**
  * buildWorld() - true to build some random world,
@@ -84,91 +178,28 @@ struct getProbApproxArgs
  * @determinedInNWorlds the tally to add the score to if the world works
  * @rs the ruleset
 */
-static void buildWorld(KnowledgeBase* possibleWorldKB, KnowledgeBase* possibleWorldRevertKB, ProbKnowledgeBase* determinedInNWorlds, RuleSet* rs)
+static void buildWorld(KnowledgeBase* possibleWorldKB, KnowledgeBase*** possibleWorldRevertKB, ProbKnowledgeBase* determinedInNWorlds, RuleSet* rs)
 {
     char buff[64];
 
     int avaliable[5][MAX_SET_ELEMENTS];
     /*
-     * IDEA: Loop through all important information to try 
+     * IDEA: "Loop" through all important information to try 
      * and build some worlds where every play is assigned a role
      * After each step infer as much information as possible checking to see if there are contradictions
-     * IF: there are contradiction STOP
+     * IF: there are contradiction BACKTRACK
      * ELSE: continue until all player are assigned roles
      * once/if every player is assigned roles add this to the tally
     */
-    for (int night = 0; night < NUM_DAYS; night++)
-    { 
-        for (int player = 0; player < possibleWorldKB->SET_SIZES[0]; player++)
-        {
-            int avaliableRoles = 0;
-            int roleAvalaliable[NUM_BOTCT_ROLES];
-            for (int roleID = 0; roleID < NUM_BOTCT_ROLES; roleID++)
-            {
-                snprintf(buff, 64, "is_NOT_%s_[NIGHT%d]", ROLE_NAMES[roleID], night);
-                int isNotRole = isKnownName(possibleWorldKB, "PLAYERS", player, buff);
-                //printf("%s IS AVALIABLE %d!\n", buff, isNotRole);
-                if (isNotRole == 0)
-                {
-                    roleAvalaliable[roleID] = 1;
-                    avaliableRoles++;
-                } 
-                else
-                {
-                    roleAvalaliable[roleID] = 0;
-                }
-            }
-            int foundRoleToAssign = 0;
-            while (foundRoleToAssign == 0)
-            {
-                if (avaliableRoles > 0)
-                {
-                    int rand = getRandInt(0, avaliableRoles);
-                    //printf("RANDOM %d!\n", rand);
-                    int selectedRoleID = 0;
-                    //Find avaliable role 
-                    while(roleAvalaliable[selectedRoleID] == 0 || rand > 0)
-                    {
-                        if (roleAvalaliable[selectedRoleID] == 1)
-                        {
-                            rand--;
-                        } 
-                        selectedRoleID++;
-                    }
-
-                    copyTo(possibleWorldRevertKB, possibleWorldKB); //copy to backup to revert later
-                    //Assume true
-                    snprintf(buff, 64, "is_%s_[NIGHT%d]", ROLE_NAMES[selectedRoleID], night);
-                    addKnowledgeName(possibleWorldKB, "PLAYERS", player, buff);
-                    //printf("ASSIGNING %s\n", buff);
-                    //Infer knowledge (to see if a contradiction arises)
-                    
-                    if (inferImplicitFacts(possibleWorldKB, rs, NUM_SOLVE_STEPS, 0))
-                    { //If contradiction found by only adding "function" to assumptions we know NOT function is true 
-                        roleAvalaliable[selectedRoleID] = 0; //Mark this role as unavaliable
-                        avaliableRoles--; //One less avaliable role now
-                        copyTo(possibleWorldKB, possibleWorldRevertKB); //Revert to before inference
-                    }
-                    else
-                    { //If I found a role to assign
-                        foundRoleToAssign = 1;
-                    }
-
-                }
-                else
-                {
-                    printf("WORLD HAD TOO MANY CONRADICTIONS!\n");
-                    return;
-                }
-            }
-
-            avaliable[night][player] = 0;
-            for (int i = 0; i < NUM_BOTCT_ROLES; i++)
-            {
-                if (roleAvalaliable[i]) avaliable[night][player]++;
-            }
-        }
+    int faliures = 0;
+    int result = assignRoleForWorld(possibleWorldKB, possibleWorldRevertKB, determinedInNWorlds, rs, avaliable, 0, 0, &faliures);
+    if (result == -1) 
+    {
+        printf("WORLD HAD TOO MANY CONRADICTIONS\n");
+        return; //If no valid world was found
     }
+
+
     //Compute weight to account for changes in probability due to backtracking
     double weight = 1000000000.0;
     for (int night = 0; night < 1; night++) //ONLY LOOK AT FIRST NIGHT and only consider roles in script
@@ -199,7 +230,7 @@ static void* getProbApprox(void* void_arg)
     //Upack arguments
     KnowledgeBase* kb = args->kb;
     KnowledgeBase* possibleWorldKB = args->possibleWorldKB;
-    KnowledgeBase* possibleWorldTempKB = args->possibleWorldTempKB;
+    KnowledgeBase*** possibleWorldRevertKB = args->possibleWorldRevertKB;
     ProbKnowledgeBase* determinedInNWorlds = args->determinedInNWorlds;
     RuleSet* rs = args->rs;
     int numIterations = args->numIterations;
@@ -208,7 +239,7 @@ static void* getProbApprox(void* void_arg)
     for (int i = 0; i < numIterations; i++)
     {
         copyTo(possibleWorldKB, kb);
-        buildWorld(possibleWorldKB, possibleWorldTempKB, determinedInNWorlds, rs);
+        buildWorld(possibleWorldKB, possibleWorldRevertKB, determinedInNWorlds, rs);
     }
     return NULL;
 }
@@ -233,12 +264,12 @@ void solve(KnowledgeBase* kb, RuleSet* rs, const int NUM_PLAYERS, const int NUM_
     KnowledgeBase* revertKB = initKB(NUM_PLAYERS); //For backup incase of contradictions
 
 
-    const int NUM_THREADS = 32;
+    const int NUM_THREADS = 16;
     const int NUM_ITERATIONS = 16;
 
     ProbKnowledgeBase* threadTallies[NUM_THREADS];
     KnowledgeBase* possibleWorldKB[NUM_THREADS];
-    KnowledgeBase* possibleWorldTempKB[NUM_THREADS];
+    KnowledgeBase*** possibleWorldTempKB[NUM_THREADS];
     struct getProbApproxArgs* threadArgs[NUM_THREADS];
 
     //Thread object
@@ -247,9 +278,35 @@ void solve(KnowledgeBase* kb, RuleSet* rs, const int NUM_PLAYERS, const int NUM_
     for (int i = 0; i < NUM_THREADS; i++)
     {
         possibleWorldKB[i] = initKB(NUM_PLAYERS);
-        possibleWorldTempKB[i] = initKB(NUM_PLAYERS);
         threadTallies[i] = initProbKB();
+        possibleWorldTempKB[i] = (KnowledgeBase***)malloc(NUM_DAYS * sizeof(KnowledgeBase***));
+        if (possibleWorldTempKB[i] == NULL)
+        {
+            printf("MALLOC FAILED!\n");
+            return;
+        }
+        for (int j = 0; j < NUM_DAYS; j++)
+        {
+            possibleWorldTempKB[i][j] = (KnowledgeBase**)malloc(MAX_SET_ELEMENTS * sizeof(KnowledgeBase**));
+            if (possibleWorldTempKB[i][j] == NULL)
+            {
+                printf("MALLOC FAILED!\n");
+                return;
+            }
+            for (int k = 0; k < MAX_SET_ELEMENTS; k++)
+            {
+                //possibleWorldTempKB[i][j][k] = (KnowledgeBase*)malloc(NUM_DAYS * sizeof(KnowledgeBase*));
+                
+                possibleWorldTempKB[i][j][k] = initKB(NUM_PLAYERS);
+                if (possibleWorldTempKB[i][j][k] == NULL)
+                {
+                    printf("MALLOC FAILED!\n");
+                    return;
+                }
+            }
+        }
     }
+
 
     printf("BEGIN GAME LOOP...\n");
 
@@ -289,7 +346,7 @@ void solve(KnowledgeBase* kb, RuleSet* rs, const int NUM_PLAYERS, const int NUM_
                 
                 threadArgs[i]->kb = kb; //We MUST promise to never touch this in the thread
                 threadArgs[i]->possibleWorldKB = possibleWorldKB[i]; //Working block of memory
-                threadArgs[i]->possibleWorldTempKB = possibleWorldTempKB[i]; //Working block of memory
+                threadArgs[i]->possibleWorldRevertKB = possibleWorldTempKB[i]; //Working block of memory
                 threadArgs[i]->determinedInNWorlds = threadTallies[i]; //The output tallies
                 threadArgs[i]->rs = rs;
                 threadArgs[i]->numIterations = NUM_ITERATIONS;
