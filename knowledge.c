@@ -850,11 +850,15 @@ void printPlayerTable(KnowledgeBase* kb, int night)
         printf("|");
         if (isPoisoned == 1)
         {
+            PRINT_RED
             printf(" POISONED ");
+            PRINT_END
         }
         else if (isNotPoisoned == 1)
         {
+            PRINT_GREEN
             printf("  HEALTHY ");
+            PRINT_END
         }
         else
         {
@@ -863,11 +867,15 @@ void printPlayerTable(KnowledgeBase* kb, int night)
         printf("|");
         if (isAlive == 1)
         {
+            PRINT_GREEN
             printf(" ALIVE ");
+            PRINT_END
         }
         else if (isDead == 1)
         {
+            PRINT_RED
             printf(" DEAD  ");
+            PRINT_END
         }
         else
         {

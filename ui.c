@@ -1251,7 +1251,7 @@ static void monkPing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs, const
     night = getInt("On night?", 0, NUM_DAYS);
 
     setTempRuleParams(rs, 1,0);
-    snprintf(buff, STRING_BUFF_SIZE, "NOT_SLEEP_DEATH_[NIGHT%d]", ROLE_NAMES[selectedRole], night);
+    snprintf(buff, STRING_BUFF_SIZE, "NOT_SLEEP_DEATH_[NIGHT%d]", night);
     setTempRuleResultName(rs, kb, playerX-1000, "PLAYERS", buff);
 
     snprintf(buff, STRING_BUFF_SIZE, "is_MONK_[NIGHT%d]", night);
@@ -1261,7 +1261,7 @@ static void monkPing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs, const
     pushTempRule(rs);
 
     setTempRuleParams(rs, 2,0);
-    snprintf(buff, STRING_BUFF_SIZE, "is_NOT_MONK_[NIGHT%d]", ROLE_NAMES[selectedRole], night);
+    snprintf(buff, STRING_BUFF_SIZE, "is_NOT_MONK_[NIGHT%d]", night);
     setTempRuleResultName(rs, kb, 0, "PLAYERS", buff);
 
     snprintf(buff, STRING_BUFF_SIZE, "SLEEP_DEATH_[NIGHT%d]", night);
@@ -1989,7 +1989,7 @@ static void addPingRule(KnowledgeBase* kb, RuleSet* rs, const int NUM_DAYS)
     char EMPATH_PING[] = "EMPATH";
     char FORTUNE_TELLER_PING[] = "FORTUNE_TELLER";
     char UNDERTAKER_PING[] = "UNDERTAKER";
-    char MONK_PING[] = "MONK"; //Monks don't have pings
+    char MONK_PING[] = "MONK"; 
     char RAVENKEEPER_PING[] = "RAVENKEEPER";
 
     //SV
@@ -2019,7 +2019,7 @@ static void addPingRule(KnowledgeBase* kb, RuleSet* rs, const int NUM_DAYS)
     //char MINSTREL_PING[] = "MINSTREL";
 
 
-    int pingTypeID = -1;
+    int loop = 1;
 
     int playerIDinfoFrom;
 
@@ -2028,12 +2028,13 @@ static void addPingRule(KnowledgeBase* kb, RuleSet* rs, const int NUM_DAYS)
     playerIDinfoFrom = getPlayerIDInput(kb, "Info from player?"); // Read player ID 
 
     printf("Ping Type?:\n");
-    printf("- %s\n- %s\n- %s\n- %s\n- %s\n- %s\n- %s\n- %s\n", WASHERWOMAN_PING, LIBRARIAN_PING, INVESTIGATOR_PING, CHEF_PING, EMPATH_PING, FORTUNE_TELLER_PING, UNDERTAKER_PING, MONK_PING, RAVENKEEPER_PING);
+    printf("- %s\n- %s\n- %s\n- %s\n- %s\n- %s\n- %s\n- %s\n- %s\n", WASHERWOMAN_PING, LIBRARIAN_PING, INVESTIGATOR_PING, CHEF_PING, EMPATH_PING, FORTUNE_TELLER_PING, UNDERTAKER_PING, MONK_PING, RAVENKEEPER_PING);
     printf("- %s\n- %s\n- %s\n- %s\n- %s\n- %s\n- %s\n- %s\n- %s\n- %s\n- %s\n- %s\n- %s\n", CLOCKMAKER_PING, DREAMER_PING, SNAKE_CHARMER_PING, MATHEMATICIAN_PING, FLOWERGIRL_PING, TOWN_CRIER_PING, ORACLE_PING, SAVANT_PING, SEAMSTRESS_PING, PHILOSOPHER_PING, ARTIST_PING, JUGGLER_PING, SAGE_PING);
     printf("- %s\n- %s\n- %s\n- %s\n- %s\n- %s\n- %s\n", GRANDMOTHER_PING, CHAMBERMAID_PING, EXORCIST_PING, INNKEEPER_PING, GAMBLER_PING, GOSSIP_PING, PROFESSOR_PING);
-    while (pingTypeID == -1)
+    while (loop)
     {
         scanf("%255s", inputPingType); // Read a string (up to 99 characters to leave space for the null terminator)
+        loop = 0;
         //TB
         if (strcmp(inputPingType,WASHERWOMAN_PING) == 0) washerWomanPing(playerIDinfoFrom, kb, rs, NUM_DAYS);
         else if (strcmp(inputPingType,LIBRARIAN_PING) == 0) librarianPing(playerIDinfoFrom, kb, rs, NUM_DAYS);
@@ -2066,7 +2067,11 @@ static void addPingRule(KnowledgeBase* kb, RuleSet* rs, const int NUM_DAYS)
         else if (strcmp(inputPingType,GAMBLER_PING) == 0) gamblerPing(playerIDinfoFrom, kb, rs, NUM_DAYS);
         else if (strcmp(inputPingType,GOSSIP_PING) == 0) gossipPing(playerIDinfoFrom, kb, rs, NUM_DAYS);
         else if (strcmp(inputPingType,PROFESSOR_PING) == 0) professorPing(playerIDinfoFrom, kb, rs, NUM_DAYS);
-        else printf("ERROR: Invalid string!\n");
+        else 
+        {
+            printf("ERROR: Invalid string!\n");
+            loop = 1;
+        }
     }
 }
 
@@ -2110,7 +2115,7 @@ static void printTodoList(KnowledgeBase* kb, RuleSet* rs, const int NUM_DAYS)
         {
             if (night == 0)
             {
-                printf("%d. - ENTER IF ANYONE WAS RESURRECTED\n", foundSomethingToDo);
+                printf("%d. - ENTER ANY PINGS\n", foundSomethingToDo);
                 foundSomethingToDo++;
             }
             printf("[TASKS FOR NIGHT %d]\n", night);
@@ -2172,7 +2177,7 @@ int add_info(KnowledgeBase* kb, RuleSet* rs, const int NUM_DAYS)
         printf("- Type '%s' to finish entering data:\n", FINISH);
         printf("- Type '%s' to finish entering data and calculate the probabaility:\n", FINISH_PROB);
         printf("\n");
-        printf("TODO LIST:\n");
+        printHeading("TODO LIST");
         printTodoList(kb, rs, NUM_DAYS);
 
         
