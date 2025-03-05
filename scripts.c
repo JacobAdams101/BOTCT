@@ -1572,6 +1572,20 @@ static void poisonRules(RuleSet* rs, KnowledgeBase* kb, const int NUM_PLAYERS, c
             addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff, player);
             pushTempRule(rs);
         }
+
+
+        //Specific poisoning
+        //A solider who dies [[by a demon]] must be poisoned
+        setTempRuleParams(rs, 2,0);
+        snprintf(buff, STRING_BUFF_SIZE, "is_POISONED_[NIGHT%d]", night);
+        setTempRuleResultName(rs, kb, 0, "PLAYERS", buff);
+        snprintf(buff, STRING_BUFF_SIZE, "is_SOLDIER_[NIGHT%d]", night);
+        addConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff);
+        snprintf(buff, STRING_BUFF_SIZE, "SLEEP_DEATH_[NIGHT%d]", night);
+        addConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff);
+        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_ASSASSIN_ALIVE_[NIGHT%d]", night);
+        addConditionToTempRuleName(rs,kb, 1, "METADATA", buff);
+        pushTempRule(rs);
         /*
         //Contrapositive logic
         //Disabled due to a large amount of roles in play
