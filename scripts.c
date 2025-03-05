@@ -1586,17 +1586,107 @@ static void poisonRules(RuleSet* rs, KnowledgeBase* kb, const int NUM_PLAYERS, c
         snprintf(buff, STRING_BUFF_SIZE, "is_NOT_ASSASSIN_ALIVE_[NIGHT%d]", night);
         addConditionToTempRuleName(rs,kb, 1, "METADATA", buff);
         pushTempRule(rs);
-        /*
-        //Contrapositive logic
-        //Disabled due to a large amount of roles in play
-        // <PLAYER>is_poisoned_NIGHT<i> => <METADATA>is_POISONER_in_PLAY
-        setTempRuleParams(rs, 1,0);
-        snprintf(buff, STRING_BUFF_SIZE, "is_POISONER_in_PLAY_[NIGHT%d]", night);
-        setTempRuleResultName(rs, kb, -1, "METADATA", buff);
-        snprintf(buff, STRING_BUFF_SIZE, "is_POISONED_[NIGHT%d]", night);
-        addConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff);
-        pushTempRule(rs);
-        */
+        
+        for (int poisonRole = 0; poisonRole < 13; poisonRole++)
+        {
+            //Contrapositive logic
+            //Disabled due to a large amount of roles in play
+            // <PLAYER>is_poisoned_NIGHT<i> => <METADATA>is_POISONER_in_PLAY
+            setTempRuleParams(rs, 2,0);
+
+            //TB
+            if (poisonRole == 0) snprintf(buff, STRING_BUFF_SIZE, "is_POISONER_ALIVE_[NIGHT%d]", night);
+            //BMR
+            else if (poisonRole == 1) snprintf(buff, STRING_BUFF_SIZE, "is_SAILOR_ALIVE_[NIGHT%d]", night);
+            else if (poisonRole == 2) snprintf(buff, STRING_BUFF_SIZE, "is_INNKEEPER_ALIVE_[NIGHT%d]", night);
+            else if (poisonRole == 3) snprintf(buff, STRING_BUFF_SIZE, "is_COURTIER_ALIVE_[NIGHT%d]", night);
+            else if (poisonRole == 4) snprintf(buff, STRING_BUFF_SIZE, "is_MINSTREL_ALIVE_[NIGHT%d]", night);
+            else if (poisonRole == 5) snprintf(buff, STRING_BUFF_SIZE, "is_GOON_ALIVE_[NIGHT%d]", night);
+            else if (poisonRole == 6) snprintf(buff, STRING_BUFF_SIZE, "is_PUKKA_ALIVE_[NIGHT%d]", night);
+            //S&V
+            else if (poisonRole == 7) snprintf(buff, STRING_BUFF_SIZE, "is_SNAKE_CHARMER_ALIVE_[NIGHT%d]", night);
+            else if (poisonRole == 8) snprintf(buff, STRING_BUFF_SIZE, "is_PHILOSOPHER_ALIVE_[NIGHT%d]", night);
+            else if (poisonRole == 9) snprintf(buff, STRING_BUFF_SIZE, "is_SWEETHEART_ALIVE_[NIGHT%d]", night);
+            else if (poisonRole == 10) snprintf(buff, STRING_BUFF_SIZE, "is_VORTOX_ALIVE_[NIGHT%d]", night);
+            else if (poisonRole == 11) snprintf(buff, STRING_BUFF_SIZE, "is_NO_DASHII_ALIVE_[NIGHT%d]", night);
+            else if (poisonRole == 12) snprintf(buff, STRING_BUFF_SIZE, "is_VIGORMORTIS_ALIVE_[NIGHT%d]", night);
+            setTempRuleResultName(rs, kb, -1, "METADATA", buff);
+
+            snprintf(buff, STRING_BUFF_SIZE, "is_POISONED_[NIGHT%d]", night);
+            addConditionToTempRuleName(rs,kb, 1, "PLAYERS", buff);
+            pushTempRule(rs);
+
+            //TB
+            if (poisonRole != 0) 
+            {
+                snprintf(buff, STRING_BUFF_SIZE, "is_NOT_POISONER_in_PLAY_[NIGHT%d]", night);
+                addConditionToTempRuleName(rs,kb, 0, "METADATA", buff);
+            }
+            //BMR
+            if (poisonRole != 1) 
+            {
+                snprintf(buff, STRING_BUFF_SIZE, "is_NOT_SAILOR_in_PLAY_[NIGHT%d]", night);
+                addConditionToTempRuleName(rs,kb, 0, "METADATA", buff);
+            }
+            if (poisonRole != 2) 
+            {
+                snprintf(buff, STRING_BUFF_SIZE, "is_NOT_INNKEEPER_in_PLAY_[NIGHT%d]", night);
+                addConditionToTempRuleName(rs,kb, 0, "METADATA", buff);
+            }
+            if (poisonRole != 3) 
+            {
+                snprintf(buff, STRING_BUFF_SIZE, "is_NOT_COURTIER_in_PLAY_[NIGHT%d]", night);
+                addConditionToTempRuleName(rs,kb, 0, "METADATA", buff);
+            }
+            if (poisonRole != 4) 
+            {
+                snprintf(buff, STRING_BUFF_SIZE, "is_NOT_MINSTREL_in_PLAY_[NIGHT%d]", night);
+                addConditionToTempRuleName(rs,kb, 0, "METADATA", buff);
+            }
+            if (poisonRole != 5) 
+            {
+                snprintf(buff, STRING_BUFF_SIZE, "is_NOT_GOON_in_PLAY_[NIGHT%d]", night);
+                addConditionToTempRuleName(rs,kb, 0, "METADATA", buff);
+            }
+            if (poisonRole != 6) 
+            {
+                snprintf(buff, STRING_BUFF_SIZE, "is_NOT_PUKKA_in_PLAY_[NIGHT%d]", night);
+                addConditionToTempRuleName(rs,kb, 0, "METADATA", buff);
+            }
+            //S&V
+            if (poisonRole != 7) 
+            {
+                snprintf(buff, STRING_BUFF_SIZE, "is_NOT_SNAKE_CHARMER_in_PLAY_[NIGHT%d]", night);
+                addConditionToTempRuleName(rs,kb, 0, "METADATA", buff);
+            }
+            if (poisonRole != 8) 
+            {
+                snprintf(buff, STRING_BUFF_SIZE, "is_NOT_PHILOSOPHER_in_PLAY_[NIGHT%d]", night);
+                addConditionToTempRuleName(rs,kb, 0, "METADATA", buff);
+            }
+            if (poisonRole != 9) 
+            {
+                snprintf(buff, STRING_BUFF_SIZE, "is_NOT_SWEETHEART_in_PLAY_[NIGHT%d]", night);
+                addConditionToTempRuleName(rs,kb, 0, "METADATA", buff);
+            }
+            if (poisonRole != 10) 
+            {
+                snprintf(buff, STRING_BUFF_SIZE, "is_NOT_VORTOX_in_PLAY_[NIGHT%d]", night);
+                addConditionToTempRuleName(rs,kb, 0, "METADATA", buff);
+            }
+            if (poisonRole != 11) 
+            {
+                snprintf(buff, STRING_BUFF_SIZE, "is_NOT_NO_DASHII_in_PLAY_[NIGHT%d]", night);
+                addConditionToTempRuleName(rs,kb, 0, "METADATA", buff);
+            }
+            if (poisonRole != 12) 
+            {
+                snprintf(buff, STRING_BUFF_SIZE, "is_NOT_VIGORMORTIS_in_PLAY_[NIGHT%d]", night);
+                addConditionToTempRuleName(rs,kb, 0, "METADATA", buff);
+            }
+
+            pushTempRule(rs);
+        }
         /*
         //This is not true in scripts other than tb and technically 
         //the poisoner could poison they're own team
