@@ -1220,10 +1220,25 @@ static void roleContinuityArguments(RuleSet* rs, KnowledgeBase* kb, const int NU
                 if (ROLE_IN_SCRIPT[role])
                 {
                     if (strcmp(ROLE_NAMES[role], "IMP") == 0)
-                    { //Imps can star pass
+                    { 
+                        //Imps can star pass, any minion can become the imp, 
+                        //imps will remain imps unless affected snake charmers barbers or pithags
+
+                        //<PLAYER>is_<ROLE> => <PLAYER>is_<ROLE>[Night x]
+                        setTempRuleParams(rs, 2,0);
+                        snprintf(buff, STRING_BUFF_SIZE, "is_%s_[NIGHT%d]", ROLE_NAMES[role], nextNight);
+                        setTempRuleResultName(rs, kb, 0, "PLAYERS", buff);
+                        snprintf(buff, STRING_BUFF_SIZE, "is_%s_[NIGHT%d]", ROLE_NAMES[role], startNight);
+                        addConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff);
+                        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_SNAKE_CHARMER_in_PLAY_[NIGHT%d]", startNight);
+                        addConditionToTempRuleName(rs,kb, 1, "METADATA", buff);
+                        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_BARBER_in_PLAY_[NIGHT%d]", startNight);
+                        addConditionToTempRuleName(rs,kb, 1, "METADATA", buff);
+                        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_PIT_HAG_in_PLAY_[NIGHT%d]", startNight);
+                        addConditionToTempRuleName(rs,kb, 1, "METADATA", buff);
+                        pushTempRule(rs);
                         
                         //<PLAYER>is_NOT_<ROLE> => <PLAYER>is_NOT_<ROLE>[Night x]
-                        
                         setTempRuleParams(rs, 2,0);
                         snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s_[NIGHT%d]", ROLE_NAMES[role], nextNight);
                         setTempRuleResultName(rs, kb, 0, "PLAYERS", buff);
@@ -1246,8 +1261,13 @@ static void roleContinuityArguments(RuleSet* rs, KnowledgeBase* kb, const int NU
 
                     }
                     else if (strcmp(ROLE_CLASSES[role], "MINION") == 0)
-                    { //Scarlet womans can become the imp
-                        
+                    { 
+                        //Scarlet womans can become the demon, 
+                        //Minions can become the imp
+
+                        //No one will become a minion unless pithags, snake charmers or barbers are involved
+
+
                         //<PLAYER>is_NOT_<ROLE> => <PLAYER>is_NOT_<ROLE>[Night x]
                         setTempRuleParams(rs, 2,0);
                         snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s_[NIGHT%d]", ROLE_NAMES[role], nextNight);
@@ -1264,7 +1284,12 @@ static void roleContinuityArguments(RuleSet* rs, KnowledgeBase* kb, const int NU
                         
                     }
                     else if (strcmp(ROLE_CLASSES[role], "DEMON") == 0)
-                    {
+                    { //Non imp demons
+                        //Scarlet womans can become the demon, 
+                        //Minions can become the imp (not needed to consider here as imps considered seperately)
+
+                        //Demons remain demons unless affected by snake charmers, barbers or pithags
+
                         //<PLAYER>is_<ROLE> => <PLAYER>is_<ROLE>[Night x]
                         setTempRuleParams(rs, 2,0);
                         snprintf(buff, STRING_BUFF_SIZE, "is_%s_[NIGHT%d]", ROLE_NAMES[role], nextNight);
@@ -1278,12 +1303,12 @@ static void roleContinuityArguments(RuleSet* rs, KnowledgeBase* kb, const int NU
                         snprintf(buff, STRING_BUFF_SIZE, "is_NOT_PIT_HAG_in_PLAY_[NIGHT%d]", startNight);
                         addConditionToTempRuleName(rs,kb, 1, "METADATA", buff);
                         pushTempRule(rs);
-                        /*
+                        
                         //<PLAYER>is_NOT_<ROLE> => <PLAYER>is_NOT_<ROLE>[Night x]
                         setTempRuleParams(rs, 2,0);
-                        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s_[NIGHT%d]", ROLE_NAMES[i], nextNight);
+                        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s_[NIGHT%d]", ROLE_NAMES[role], nextNight);
                         setTempRuleResultName(rs, kb, 0, "PLAYERS", buff);
-                        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s_[NIGHT%d]", ROLE_NAMES[i], startNight);
+                        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s_[NIGHT%d]", ROLE_NAMES[role], startNight);
                         addConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff);
                         snprintf(buff, STRING_BUFF_SIZE, "is_NOT_SCARLET_WOMAN_[NIGHT%d]", startNight);
                         addConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff);
@@ -1294,7 +1319,7 @@ static void roleContinuityArguments(RuleSet* rs, KnowledgeBase* kb, const int NU
                         snprintf(buff, STRING_BUFF_SIZE, "is_NOT_PIT_HAG_in_PLAY_[NIGHT%d]", startNight);
                         addConditionToTempRuleName(rs,kb, 1, "METADATA", buff);
                         pushTempRule(rs);
-                        */
+                        
                     }
                     else
                     { //Everyone else is affected by barbers and pit hags
