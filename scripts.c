@@ -1428,11 +1428,13 @@ static void roleContinuityArguments(RuleSet* rs, KnowledgeBase* kb, const int NU
 
             //<PLAYER>is_MINION_ => <PLAYER>is_MINION_[Night x]
             //NOTE this is not true if the demon star passes
-            /*
+            
             setTempRuleParams(rs, 2,0);
             snprintf(buff, STRING_BUFF_SIZE, "is_MINION_[NIGHT%d]", nextNight);
             setTempRuleResultName(rs, kb, 0, "PLAYERS", buff);
             snprintf(buff, STRING_BUFF_SIZE, "is_MINION_[NIGHT%d]", startNight);
+            addConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_SCARLET_WOMAN_[NIGHT%d]", startNight);
             addConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff);
             snprintf(buff, STRING_BUFF_SIZE, "is_NOT_SNAKE_CHARMER_in_PLAY_[NIGHT%d]", startNight);
             addConditionToTempRuleName(rs,kb, 1, "METADATA", buff);
@@ -1442,10 +1444,9 @@ static void roleContinuityArguments(RuleSet* rs, KnowledgeBase* kb, const int NU
             addConditionToTempRuleName(rs,kb, 1, "METADATA", buff);
             snprintf(buff, STRING_BUFF_SIZE, "is_NOT_IMP_in_PLAY_[NIGHT%d]", startNight);
             addConditionToTempRuleName(rs,kb, 1, "METADATA", buff);
-            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_SCARLET_WOMAN_in_PLAY_[NIGHT%d]", startNight);
-            addConditionToTempRuleName(rs,kb, 1, "METADATA", buff);
+            
             pushTempRule(rs);
-            */
+            
         }
     }
 }
