@@ -1221,12 +1221,13 @@ static void roleContinuityArguments(RuleSet* rs, KnowledgeBase* kb, const int NU
                 {
                     if (strcmp(ROLE_NAMES[role], "IMP") == 0)
                     { //Imps can star pass
-                        /*
+                        
                         //<PLAYER>is_NOT_<ROLE> => <PLAYER>is_NOT_<ROLE>[Night x]
+                        
                         setTempRuleParams(rs, 2,0);
-                        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s_[NIGHT%d]", ROLE_NAMES[i], nextNight);
+                        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s_[NIGHT%d]", ROLE_NAMES[role], nextNight);
                         setTempRuleResultName(rs, kb, 0, "PLAYERS", buff);
-                        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s_[NIGHT%d]", ROLE_NAMES[i], startNight);
+                        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s_[NIGHT%d]", ROLE_NAMES[role], startNight);
                         addConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff);
                         snprintf(buff, STRING_BUFF_SIZE, "is_NOT_MINION_[NIGHT%d]", startNight);
                         addConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff);
@@ -1237,16 +1238,21 @@ static void roleContinuityArguments(RuleSet* rs, KnowledgeBase* kb, const int NU
                         snprintf(buff, STRING_BUFF_SIZE, "is_NOT_PIT_HAG_in_PLAY_[NIGHT%d]", startNight);
                         addConditionToTempRuleName(rs,kb, 1, "METADATA", buff);
                         pushTempRule(rs);
-                        */
+                        
+                        
                     }
-                    else if (strcmp(ROLE_NAMES[role], "SCARLET_WOMAN") == 0)
+                    else if (strcmp(ROLE_NAMES[role], "SNAKE_CHARMER") == 0)
+                    { //Snake charmers swap roles with demons
+
+                    }
+                    else if (strcmp(ROLE_CLASSES[role], "MINION") == 0)
                     { //Scarlet womans can become the imp
-                        /*
+                        
                         //<PLAYER>is_NOT_<ROLE> => <PLAYER>is_NOT_<ROLE>[Night x]
                         setTempRuleParams(rs, 2,0);
-                        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s_[NIGHT%d]", ROLE_NAMES[i], nextNight);
+                        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s_[NIGHT%d]", ROLE_NAMES[role], nextNight);
                         setTempRuleResultName(rs, kb, 0, "PLAYERS", buff);
-                        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s_[NIGHT%d]", ROLE_NAMES[i], startNight);
+                        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s_[NIGHT%d]", ROLE_NAMES[role], startNight);
                         addConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff);
                         snprintf(buff, STRING_BUFF_SIZE, "is_NOT_SNAKE_CHARMER_in_PLAY_[NIGHT%d]", startNight);
                         addConditionToTempRuleName(rs,kb, 1, "METADATA", buff);
@@ -1255,11 +1261,7 @@ static void roleContinuityArguments(RuleSet* rs, KnowledgeBase* kb, const int NU
                         snprintf(buff, STRING_BUFF_SIZE, "is_NOT_PIT_HAG_in_PLAY_[NIGHT%d]", startNight);
                         addConditionToTempRuleName(rs,kb, 1, "METADATA", buff);
                         pushTempRule(rs);
-                        */
-                    }
-                    else if (strcmp(ROLE_NAMES[role], "SNAKE_CHARMER") == 0)
-                    { //Snake charmers swap roles with demons
-
+                        
                     }
                     else if (strcmp(ROLE_CLASSES[role], "DEMON") == 0)
                     {
@@ -1400,6 +1402,8 @@ static void roleContinuityArguments(RuleSet* rs, KnowledgeBase* kb, const int NU
             pushTempRule(rs);
 
             //<PLAYER>is_MINION_ => <PLAYER>is_MINION_[Night x]
+            //NOTE this is not true if the demon star passes
+            /*
             setTempRuleParams(rs, 2,0);
             snprintf(buff, STRING_BUFF_SIZE, "is_MINION_[NIGHT%d]", nextNight);
             setTempRuleResultName(rs, kb, 0, "PLAYERS", buff);
@@ -1416,6 +1420,7 @@ static void roleContinuityArguments(RuleSet* rs, KnowledgeBase* kb, const int NU
             snprintf(buff, STRING_BUFF_SIZE, "is_NOT_SCARLET_WOMAN_in_PLAY_[NIGHT%d]", startNight);
             addConditionToTempRuleName(rs,kb, 1, "METADATA", buff);
             pushTempRule(rs);
+            */
         }
     }
 }
