@@ -40,6 +40,29 @@ int getRandInt(int min, int max)
 {
     return (rand() % (max - min)) + min;
 }
+
+/**
+ * getRandIntNotIn() - returns a random integer between 0 and len(avaliable)
+ *
+ * @avaliable - is number avaliable
+ * @numAvaliable - num avaliable
+ * 
+ * @return min <= rand < max
+*/
+int getRandIntNotIn(int avaliable[], int numAvaliable)
+{
+    int rand = getRandInt(0, numAvaliable);
+        
+    int selected = 0;
+    //Find avaliable role 
+    while(avaliable[selected] == 0 || rand > 0)
+    {
+        rand = avaliable[selected] == 1 ? rand - 1 : rand;
+        selected++;
+    }
+    return selected;
+}
+
 /**
  * initRand() - Initilize the random number generate
  * 

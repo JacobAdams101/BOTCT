@@ -21,6 +21,7 @@
         "optional": "c",
         "stdexcept": "c",
         "variant": "c",
-        "__debug": "c"
+        "__debug": "c",
+        "util.h": "c"
     }
 }

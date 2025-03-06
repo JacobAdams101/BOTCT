@@ -50,8 +50,8 @@
  * The solver partitions information into nights nights run from the sleeping phase to the voting phase
  * For a clear example, see the diagram below:
  * 
- * | SEEN ROLE | NIGHT | DAYTIME | VOTING | NIGHT | DAYTIME | VOTING | NIGHT | DAYTIME | VOTING |
- * |_NIGHT 0______________________________|_NIGHT 1__________________|_NIGHT 2__________________|
+ * | SEEN ROLE | NIGHT | DAYTIME | VOTING | NIGHT | DAYTIME | VOTING | NIGHT | DAYTIME | VOTING | NIGHT |
+ * |_DAY 0_____________|_DAY 1____________________|_DAY 2____________________|_DAY 3____________________|
  * 
  */
 

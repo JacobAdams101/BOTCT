@@ -96,6 +96,10 @@ void setup(int *numPlayers, int *numMinions, int *numDemons, int *baseOutsiders,
     printf("\n");
     printf("This program is used to aid in solving standard Trouble Brewing games of BOTCT\n");
     printf("Do NOT use without the storyteller's permission\n");
+    printHeading("INTRODUCTION");
+    printf("Nights are seperated by different numbers\n");
+    printf("| SEEN ROLE | NIGHT | DAYTIME | VOTING | NIGHT | DAYTIME | VOTING | NIGHT | DAYTIME | VOTING | NIGHT |\n");
+    printf("|_DAY 0_____________|_DAY 1____________________|_DAY 2____________________|_DAY 3____________________|\n");
     printHeading("SETUP");
     //Script info
     *script = getInt("What script are you playing 0-TB, 1-S&V, 2-BMR?", 0, 3);
@@ -403,7 +407,7 @@ static void noptions(KnowledgeBase* kb)
             }
         }
         //Roles someone might be that would cause them to lie about their three for three
-        if ((strcmp(ROLE_NAMES[i], "DRUNK") == 0) || (strcmp(ROLE_NAMES[i], "MUTANT") == 0) || (strcmp(ROLE_TEAMS[i], "EVIL") == 0)) //If i is on evil team or Drunk, or Mutant
+        if ((strcmp(ROLE_NAMES[i], "POLITICIAN") == 0) || (strcmp(ROLE_NAMES[i], "DRUNK") == 0) || (strcmp(ROLE_NAMES[i], "MUTANT") == 0) || (strcmp(ROLE_TEAMS[i], "EVIL") == 0)) //If i is on evil team or Drunk, or Mutant
         { //People as these roles could always give a false 3 for 3
             inRole = 1;
         }
@@ -2130,9 +2134,11 @@ static void printTodoList(KnowledgeBase* kb, RuleSet* rs)
         {
             if (night == 0)
             {
-                printf("%d. - ENTER ANY PINGS\n", foundSomethingToDo);
+                printf("%d. - ENTER ANY ROLE CLAIMS\n", foundSomethingToDo);
                 foundSomethingToDo++;
             }
+            printf("%d. - ENTER ANY PINGS\n", foundSomethingToDo);
+            foundSomethingToDo++;
             printf("[TASKS FOR NIGHT %d]\n", night);
         }
         night++;

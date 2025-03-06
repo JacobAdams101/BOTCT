@@ -77,10 +77,13 @@ struct getProbApproxArgs
 
 #define MAX_FALIURES 256
 
-static int assignRoleForWorld(KnowledgeBase* possibleWorldKB, KnowledgeBase*** possibleWorldRevertKB, ProbKnowledgeBase* determinedInNWorlds, RuleSet* rs, int avaliable[5][MAX_SET_ELEMENTS], int night, int player, int *failures);
+static int assignRoleForWorld(KnowledgeBase* possibleWorldKB, KnowledgeBase*** possibleWorldRevertKB, ProbKnowledgeBase* determinedInNWorlds, RuleSet* rs, int avaliable[5][MAX_SET_ELEMENTS], int night, int playerIndex, int *failures, int permute[]);
 
-static int assignRoleForWorld(KnowledgeBase* possibleWorldKB, KnowledgeBase*** possibleWorldRevertKB, ProbKnowledgeBase* determinedInNWorlds, RuleSet* rs, int avaliable[5][MAX_SET_ELEMENTS], int night, int player, int *failures)
+static int assignRoleForWorld(KnowledgeBase* possibleWorldKB, KnowledgeBase*** possibleWorldRevertKB, ProbKnowledgeBase* determinedInNWorlds, RuleSet* rs, int avaliable[5][MAX_SET_ELEMENTS], int night, int playerIndex, int *failures, int permute[])
 {
+    //Choose player from random permutation to remove certain biases in allocation
+    int player = permute[playerIndex];
+
     KnowledgeBase* myLayerRevertKB = possibleWorldRevertKB[night][player];
 
     char buff[64];
@@ -107,18 +110,7 @@ static int assignRoleForWorld(KnowledgeBase* possibleWorldKB, KnowledgeBase*** p
 
     while (avaliableRoles > 0)
     {
-        int rand = getRandInt(0, avaliableRoles);
-        
-        int selectedRoleID = 0;
-        //Find avaliable role 
-        while(roleAvalaliable[selectedRoleID] == 0 || rand > 0)
-        {
-            if (roleAvalaliable[selectedRoleID] == 1)
-            {
-                rand--;
-            } 
-            selectedRoleID++;
-        }
+        int selectedRoleID = getRandIntNotIn(roleAvalaliable, avaliableRoles);
 
         //Assume true
         snprintf(buff, 64, "is_%s_[NIGHT%d]", ROLE_NAMES[selectedRoleID], night);
@@ -142,18 +134,18 @@ static int assignRoleForWorld(KnowledgeBase* possibleWorldKB, KnowledgeBase*** p
             }
 
             //Find next player and next night
-            int nextPlayer = player+1;
+            int nextPlayerIndex = playerIndex+1;
             int nextNight = night;
-            if (nextPlayer >= possibleWorldKB->SET_SIZES[0])
+            if (nextPlayerIndex >= possibleWorldKB->SET_SIZES[0])
             {
-                nextPlayer = 0;
+                nextPlayerIndex = 0;
                 nextNight++;
             }
             if (nextNight >= NUM_DAYS) return 1; //If no more elements to assign, as this layer was a success return SUCCESS 
             //If there are deeper levels to infer look for them
 
             //See if deeper level inference leads to a good world
-            int result = assignRoleForWorld(possibleWorldKB, possibleWorldRevertKB, determinedInNWorlds, rs, avaliable, nextNight, nextPlayer, failures);
+            int result = assignRoleForWorld(possibleWorldKB, possibleWorldRevertKB, determinedInNWorlds, rs, avaliable, nextNight, nextPlayerIndex, failures, permute);
             if (result == 1) return 1;
             if (*failures > MAX_FALIURES) return -1; 
         }
@@ -178,6 +170,20 @@ static int assignRoleForWorld(KnowledgeBase* possibleWorldKB, KnowledgeBase*** p
 */
 static void buildWorld(KnowledgeBase* possibleWorldKB, KnowledgeBase*** possibleWorldRevertKB, ProbKnowledgeBase* determinedInNWorlds, RuleSet* rs)
 {
+    //Build permutations to remove symptoms from always assigning orders in one way
+    int permute[possibleWorldKB->SET_SIZES[0]];
+    int temp[possibleWorldKB->SET_SIZES[0]];
+    for (int i = 0; i < possibleWorldKB->SET_SIZES[0]; i++)
+    {
+        temp[i] = 1;
+    }
+    for (int i = 0; i < possibleWorldKB->SET_SIZES[0]; i++)
+    {
+        int rand = getRandIntNotIn(temp, possibleWorldKB->SET_SIZES[0]-i);
+        permute[i] = rand;
+        temp[rand] = 0;
+    }
+
     int avaliable[5][MAX_SET_ELEMENTS];
     /*
      * IDEA: "Loop" through all important information to try 
@@ -188,7 +194,7 @@ static void buildWorld(KnowledgeBase* possibleWorldKB, KnowledgeBase*** possible
      * once/if every player is assigned roles add this to the tally
     */
     int faliures = 0;
-    int result = assignRoleForWorld(possibleWorldKB, possibleWorldRevertKB, determinedInNWorlds, rs, avaliable, 0, 0, &faliures);
+    int result = assignRoleForWorld(possibleWorldKB, possibleWorldRevertKB, determinedInNWorlds, rs, avaliable, 0, 0, &faliures, permute);
     if (result == -1) 
     {
         printf("WORLD HAD TOO MANY CONRADICTIONS\n");

@@ -24,6 +24,29 @@
 
 #pragma once
 
+/**
+ * getRandInt() - returns a random integer between two values
+ *
+ * @min - min number (inclusive)
+ * @max - max number (exclusive)
+ * 
+ * @return min <= rand < max
+*/
 int getRandInt(int min, int max);
 
+/**
+ * getRandIntNotIn() - returns a random integer between 0 and len(avaliable)
+ *
+ * @avaliable - is number avaliable
+ * @numAvaliable - num avaliable
+ * 
+ * @return min <= rand < max
+*/
+int getRandIntNotIn(int avaliable[], int numAvaliable);
+
+/**
+ * initRand() - Initilize the random number generate
+ * 
+ * 
+*/
 void initRand();
