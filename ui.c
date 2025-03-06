@@ -2109,37 +2109,37 @@ static void addPingRule(KnowledgeBase* kb, RuleSet* rs)
         scanf("%255s", inputPingType); // Read a string (up to 99 characters to leave space for the null terminator)
         loop = 0;
         //TB
-        if (strcmp(inputPingType,WASHERWOMAN_PING) == 0) washerWomanPing(playerIDinfoFrom, kb, rs);
-        else if (strcmp(inputPingType,LIBRARIAN_PING) == 0) librarianPing(playerIDinfoFrom, kb, rs);
-        else if (strcmp(inputPingType,INVESTIGATOR_PING) == 0) investigatorPing(playerIDinfoFrom, kb, rs);
-        else if (strcmp(inputPingType,CHEF_PING) == 0) chefPing(playerIDinfoFrom, kb, rs);
-        else if (strcmp(inputPingType,EMPATH_PING) == 0) empathPing(playerIDinfoFrom, kb, rs);
-        else if (strcmp(inputPingType,FORTUNE_TELLER_PING) == 0) fortuneTellerPing(playerIDinfoFrom, kb, rs);
-        else if (strcmp(inputPingType,UNDERTAKER_PING) == 0) undertakerPing(playerIDinfoFrom, kb, rs);
-        else if (strcmp(inputPingType,MONK_PING) == 0) monkPing(playerIDinfoFrom, kb, rs);
-        else if (strcmp(inputPingType,RAVENKEEPER_PING) == 0) ravenkeeperPing(playerIDinfoFrom, kb, rs);
+        if (strcasecmp(inputPingType,WASHERWOMAN_PING) == 0) washerWomanPing(playerIDinfoFrom, kb, rs);
+        else if (strcasecmp(inputPingType,LIBRARIAN_PING) == 0) librarianPing(playerIDinfoFrom, kb, rs);
+        else if (strcasecmp(inputPingType,INVESTIGATOR_PING) == 0) investigatorPing(playerIDinfoFrom, kb, rs);
+        else if (strcasecmp(inputPingType,CHEF_PING) == 0) chefPing(playerIDinfoFrom, kb, rs);
+        else if (strcasecmp(inputPingType,EMPATH_PING) == 0) empathPing(playerIDinfoFrom, kb, rs);
+        else if (strcasecmp(inputPingType,FORTUNE_TELLER_PING) == 0) fortuneTellerPing(playerIDinfoFrom, kb, rs);
+        else if (strcasecmp(inputPingType,UNDERTAKER_PING) == 0) undertakerPing(playerIDinfoFrom, kb, rs);
+        else if (strcasecmp(inputPingType,MONK_PING) == 0) monkPing(playerIDinfoFrom, kb, rs);
+        else if (strcasecmp(inputPingType,RAVENKEEPER_PING) == 0) ravenkeeperPing(playerIDinfoFrom, kb, rs);
         //SV
-        else if (strcmp(inputPingType,CLOCKMAKER_PING) == 0) clockmakerPing(playerIDinfoFrom, kb, rs);
-        else if (strcmp(inputPingType,DREAMER_PING) == 0) dreamerPing(playerIDinfoFrom, kb, rs);
-        else if (strcmp(inputPingType,SNAKE_CHARMER_PING) == 0) snakeCharmerPing(playerIDinfoFrom, kb, rs);
-        else if (strcmp(inputPingType,MATHEMATICIAN_PING) == 0) mathematicianPing(playerIDinfoFrom, kb, rs);
-        else if (strcmp(inputPingType,FLOWERGIRL_PING) == 0) flowerGirlPing(playerIDinfoFrom, kb, rs);
-        else if (strcmp(inputPingType,TOWN_CRIER_PING) == 0) townCrierPing(playerIDinfoFrom, kb, rs);
-        else if (strcmp(inputPingType,ORACLE_PING) == 0) oraclePing(playerIDinfoFrom, kb, rs);
-        else if (strcmp(inputPingType,SAVANT_PING) == 0) savantPing(playerIDinfoFrom, kb, rs);
-        else if (strcmp(inputPingType,SEAMSTRESS_PING) == 0) seamstressPing(playerIDinfoFrom, kb, rs);
-        else if (strcmp(inputPingType,PHILOSOPHER_PING) == 0) philosopherPing(playerIDinfoFrom, kb, rs);
-        else if (strcmp(inputPingType,ARTIST_PING) == 0) artistPing(playerIDinfoFrom, kb, rs);
-        else if (strcmp(inputPingType,JUGGLER_PING) == 0) jugglerPing(playerIDinfoFrom, kb, rs);
-        else if (strcmp(inputPingType,SAGE_PING) == 0) sagePing(playerIDinfoFrom, kb, rs);
+        else if (strcasecmp(inputPingType,CLOCKMAKER_PING) == 0) clockmakerPing(playerIDinfoFrom, kb, rs);
+        else if (strcasecmp(inputPingType,DREAMER_PING) == 0) dreamerPing(playerIDinfoFrom, kb, rs);
+        else if (strcasecmp(inputPingType,SNAKE_CHARMER_PING) == 0) snakeCharmerPing(playerIDinfoFrom, kb, rs);
+        else if (strcasecmp(inputPingType,MATHEMATICIAN_PING) == 0) mathematicianPing(playerIDinfoFrom, kb, rs);
+        else if (strcasecmp(inputPingType,FLOWERGIRL_PING) == 0) flowerGirlPing(playerIDinfoFrom, kb, rs);
+        else if (strcasecmp(inputPingType,TOWN_CRIER_PING) == 0) townCrierPing(playerIDinfoFrom, kb, rs);
+        else if (strcasecmp(inputPingType,ORACLE_PING) == 0) oraclePing(playerIDinfoFrom, kb, rs);
+        else if (strcasecmp(inputPingType,SAVANT_PING) == 0) savantPing(playerIDinfoFrom, kb, rs);
+        else if (strcasecmp(inputPingType,SEAMSTRESS_PING) == 0) seamstressPing(playerIDinfoFrom, kb, rs);
+        else if (strcasecmp(inputPingType,PHILOSOPHER_PING) == 0) philosopherPing(playerIDinfoFrom, kb, rs);
+        else if (strcasecmp(inputPingType,ARTIST_PING) == 0) artistPing(playerIDinfoFrom, kb, rs);
+        else if (strcasecmp(inputPingType,JUGGLER_PING) == 0) jugglerPing(playerIDinfoFrom, kb, rs);
+        else if (strcasecmp(inputPingType,SAGE_PING) == 0) sagePing(playerIDinfoFrom, kb, rs);
         //BMR
-        else if (strcmp(inputPingType,GRANDMOTHER_PING) == 0) grandMotherPing(playerIDinfoFrom, kb, rs);
-        else if (strcmp(inputPingType,CHAMBERMAID_PING) == 0) chamberMaidPing(playerIDinfoFrom, kb, rs);
-        else if (strcmp(inputPingType,EXORCIST_PING) == 0) exorcistPing(playerIDinfoFrom, kb, rs);
-        else if (strcmp(inputPingType,INNKEEPER_PING) == 0) innkeeperPing(playerIDinfoFrom, kb, rs);
-        else if (strcmp(inputPingType,GAMBLER_PING) == 0) gamblerPing(playerIDinfoFrom, kb, rs);
-        else if (strcmp(inputPingType,GOSSIP_PING) == 0) gossipPing(playerIDinfoFrom, kb, rs);
-        else if (strcmp(inputPingType,PROFESSOR_PING) == 0) professorPing(playerIDinfoFrom, kb, rs);
+        else if (strcasecmp(inputPingType,GRANDMOTHER_PING) == 0) grandMotherPing(playerIDinfoFrom, kb, rs);
+        else if (strcasecmp(inputPingType,CHAMBERMAID_PING) == 0) chamberMaidPing(playerIDinfoFrom, kb, rs);
+        else if (strcasecmp(inputPingType,EXORCIST_PING) == 0) exorcistPing(playerIDinfoFrom, kb, rs);
+        else if (strcasecmp(inputPingType,INNKEEPER_PING) == 0) innkeeperPing(playerIDinfoFrom, kb, rs);
+        else if (strcasecmp(inputPingType,GAMBLER_PING) == 0) gamblerPing(playerIDinfoFrom, kb, rs);
+        else if (strcasecmp(inputPingType,GOSSIP_PING) == 0) gossipPing(playerIDinfoFrom, kb, rs);
+        else if (strcasecmp(inputPingType,PROFESSOR_PING) == 0) professorPing(playerIDinfoFrom, kb, rs);
         else 
         {
             printf("ERROR: Invalid string!\n");
@@ -2259,7 +2259,7 @@ int add_info(KnowledgeBase* kb, RuleSet* rs)
  
         scanf("%255s", buff); // Read a string (up to 99 characters to leave space for the null terminator)
 
-        if (strcmp(buff,SHOWN_ROLE) == 0)
+        if (strcasecmp(buff,SHOWN_ROLE) == 0)
         {
             shown_role(kb);
         }
@@ -2267,56 +2267,56 @@ int add_info(KnowledgeBase* kb, RuleSet* rs)
         {
             roleNotInGame(kb);
         }
-        else if (strcmp(buff,PING) == 0)
+        else if (strcasecmp(buff,PING) == 0)
         {
             addPingRule(kb, rs);
         }
-        else if (strcmp(buff,N_POSSIBILITIES) == 0)
+        else if (strcasecmp(buff,N_POSSIBILITIES) == 0)
         {
             noptions(kb);
         }
-        else if (strcmp(buff,POISONED) == 0)
+        else if (strcasecmp(buff,POISONED) == 0)
         {
             poisoned(kb);
         }
-        else if (strcmp(buff,NOT_POISONED) == 0)
+        else if (strcasecmp(buff,NOT_POISONED) == 0)
         {
             notPoisoned(kb);
         }
-        else if (strcmp(buff,RED_HERRING) == 0)
+        else if (strcasecmp(buff,RED_HERRING) == 0)
         {
             redHerring(kb);
         }
-        else if (strcmp(buff,DIED) == 0)
+        else if (strcasecmp(buff,DIED) == 0)
         {
             diedInNight(kb);
         }
-        else if (strcmp(buff,HUNG) == 0)
+        else if (strcasecmp(buff,HUNG) == 0)
         {
             hung(kb);
         }
-        else if (strcmp(buff,NOMINATION_DEATH) == 0)
+        else if (strcasecmp(buff,NOMINATION_DEATH) == 0)
         {
             nominationDeath(kb);
         }
-        else if (strcmp(buff,FAILED_HANGING) == 0)
+        else if (strcasecmp(buff,FAILED_HANGING) == 0)
         {
             //TODO
         }
-        else if (strcmp(buff,RESURRECTED) == 0)
+        else if (strcasecmp(buff,RESURRECTED) == 0)
         {
             resurrected(kb);
         }
-        else if (strcmp(buff,RESET) == 0)
+        else if (strcasecmp(buff,RESET) == 0)
         {
             reset(kb);
         }
-        else if (strcmp(buff,FINISH) == 0)
+        else if (strcasecmp(buff,FINISH) == 0)
         {
             printf("EXITING...");
             return 0;
         }
-        else if (strcmp(buff,FINISH_PROB) == 0)
+        else if (strcasecmp(buff,FINISH_PROB) == 0)
         {
             printf("EXITING...");
             return 1;

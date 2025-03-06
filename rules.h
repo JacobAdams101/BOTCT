@@ -54,6 +54,7 @@ typedef struct
 typedef struct
 {
     Rule *RULES[MAX_NUM_RULES];
+    int RULE_ACTIVE[MAX_NUM_RULES];
     int NUM_RULES;
     Rule *temp_rule;
 } RuleSet;
@@ -162,6 +163,17 @@ void addConditionToTempRuleName(RuleSet* rs, KnowledgeBase* kb, int varName, cha
  * @forcedSubstitution if the subsitution is forced to a specific element in the knowledge base
 */
 void addFixedConditionToTempRuleName(RuleSet* rs, KnowledgeBase* kb, int varName, char* set, char* function, int forcedSubstitution);
+
+/**
+ * optimiseRuleset() - optimise the ruleset by seeing how many rules can be disabled
+ * due to lack of novel information they will provide
+ * 
+ * @rs the ruleset to optimise
+ * @kb the knowledge base the rule is for
+ * 
+ * @return 1 if this rule can find novel information 0 if otherwise
+*/
+void optimiseRuleset(RuleSet* rs, KnowledgeBase* kb);
 
 /**
  * printRule() - 

@@ -323,7 +323,12 @@ void solve(KnowledgeBase* kb, RuleSet* rs, const int NUM_PLAYERS, const int NUM_
         printHeading("INFER FACTS"); //UI HEADING
         contradiction = inferImplicitFacts(kb, rs, NUM_SOLVE_STEPS, 1);
         
-
+        if (contradiction == 0)
+        { //Optimise ruleset only if no contradictions were produced
+            printHeading("OPTIMISE RULESET");
+            optimiseRuleset(rs, kb);
+        }
+        
         
         //Commented out for being too slow: further optimisation is needed
         //NOTE: Re-added after optimisation

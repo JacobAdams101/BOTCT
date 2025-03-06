@@ -126,6 +126,23 @@ static int LHSSymmetric(Rule* rule)
 */
 void pushTempRule(RuleSet* ruleSet)
 {
+    long somethingInRuleExists = 0;
+    for (int var = 0; var < MAX_VARS_IN_RULE; var++)
+    {
+        for (int i = 0; i < FUNCTION_RESULT_SIZE; i++)
+        {
+            somethingInRuleExists |= ruleSet->temp_rule->varConditions[var][i];
+        }
+    }
+    for (int i = 0; i < FUNCTION_RESULT_SIZE; i++)
+    {
+        somethingInRuleExists |= ruleSet->temp_rule->result[i];
+    }
+    if (somethingInRuleExists == 0)
+    {
+        printf("INVALID RULE MADE!\n");
+        exit(1);
+    }
     //See if LHS is symmetric for an optimisation to checker
     ruleSet->temp_rule->LHSSymmetric = LHSSymmetric(ruleSet->temp_rule);
 
@@ -155,6 +172,8 @@ RuleSet* initRS()
     {
         ruleSet->RULES[i] = (Rule*) malloc(sizeof(Rule));
         resetRule(ruleSet->RULES[i]);
+
+        ruleSet->RULE_ACTIVE[i] = 1;
     }
     printf("--Reset builder rule...\n");
     ruleSet->temp_rule = (Rule*) malloc(sizeof(Rule));
@@ -352,6 +371,46 @@ void addFixedConditionToTempRuleName(RuleSet* rs, KnowledgeBase* kb, int varName
 }
 
 /**
+ * canRuleProvideNovelInformation() - 
+ * 
+ * @rule
+ * @kb the knowledge base the rule is for
+ * 
+ * @return 1 if this rule can find novel information 0 if otherwise
+*/
+inline static int canRuleProvideNovelInformation(Rule* rule, KnowledgeBase* kb)
+{
+    for (int element = 0; element < kb->SET_SIZES[rule->resultFromSet]; element++)
+    {
+        for (int i = 0; i < FUNCTION_RESULT_SIZE; i++)
+        {
+            if ((kb->KNOWLEDGE_BASE[rule->resultFromSet][element][i] & rule->result[i]) != rule->result[i]) return 1;
+        }
+    }
+    return 0;
+}
+
+/**
+ * optimiseRuleset() - optimise the ruleset by seeing how many rules can be disabled
+ * due to lack of novel information they will provide
+ * 
+ * @rs the ruleset to optimise
+ * @kb the knowledge base the rule is for
+ * 
+ * @return 1 if this rule can find novel information 0 if otherwise
+*/
+void optimiseRuleset(RuleSet* rs, KnowledgeBase* kb)
+{
+    int count = 0;
+    for (int rule = 0; rule < rs->NUM_RULES; rule++)
+    {
+       rs->RULE_ACTIVE[rule] = canRuleProvideNovelInformation(rs->RULES[rule], kb);
+       if (rs->RULE_ACTIVE[rule] == 0) count++;
+    }
+    printf("%d / %d rules disabled", count, rs->NUM_RULES);
+}
+
+/**
  * printRule() - 
  * 
  * @rule the rule to print
@@ -372,7 +431,7 @@ void printRule(Rule* rule, KnowledgeBase* kb)
             int index, bit;
             getIndexAndBit(&index, &bit, function);
             
-            if (((rule->varConditions[var][index] >> bit) & 1) == 1)
+            if (rule->varConditions[var][index] & (1 << bit))
             {
                 finalCount++;
             }
@@ -385,7 +444,7 @@ void printRule(Rule* rule, KnowledgeBase* kb)
             int index, bit;
             getIndexAndBit(&index, &bit, function);
             //printf("PR-2B\n"); //Remove
-            if (((rule->varConditions[var][index] >> bit) & 1) == 1)
+            if (rule->varConditions[var][index] & (1 << bit))
             {
                 //printf("PR-2C\n"); //Remove
                 //printf("PR-2CA %d\n", dgufgd); //Remove
@@ -409,7 +468,7 @@ void printRule(Rule* rule, KnowledgeBase* kb)
         int index, bit;
         getIndexAndBit(&index, &bit, function);
         
-        if (((rule->result[index] >> bit) & 1) == 1)
+        if (rule->result[index] & (1 << bit))
         {
             finalCount++;
         }
@@ -421,7 +480,7 @@ void printRule(Rule* rule, KnowledgeBase* kb)
         int index, bit;
         getIndexAndBit(&index, &bit, function);
         
-        if (((rule->result[index] >> bit) & 1) == 1)
+        if (rule->result[index] & (1 << bit))
         {
             printf("%s(%d:%s)", kb->FUNCTION_NAME[rule->resultFromSet][function], rule->resultVarName, kb->SET_NAMES[rule->resultFromSet]);
             count++;
@@ -455,7 +514,7 @@ void printRuleAssignment(Rule* rule, KnowledgeBase* kb, int assignement[MAX_VARS
             int index, bit;
             getIndexAndBit(&index, &bit, function);
             
-            if (((rule->varConditions[var][index] >> bit) & 1) == 1)
+            if (rule->varConditions[var][index] & (1 << bit))
             {
                 finalCount++;
             }
@@ -466,7 +525,7 @@ void printRuleAssignment(Rule* rule, KnowledgeBase* kb, int assignement[MAX_VARS
             int index, bit;
             getIndexAndBit(&index, &bit, function);
             
-            if (((rule->varConditions[var][index] >> bit) & 1) == 1)
+            if (rule->varConditions[var][index] & (1 << bit))
             {
                 printf("%s(%d:%s)", kb->FUNCTION_NAME[rule->varConditionFromSet[var]][function], assignement[var], kb->SET_NAMES[rule->varConditionFromSet[var]]);
                 count++;
@@ -485,7 +544,7 @@ void printRuleAssignment(Rule* rule, KnowledgeBase* kb, int assignement[MAX_VARS
         int index, bit;
         getIndexAndBit(&index, &bit, function);
         
-        if (((rule->result[index] >> bit) & 1) == 1)
+        if (rule->result[index] & (1 << bit))
         {
             finalCount++;
         }
@@ -496,7 +555,7 @@ void printRuleAssignment(Rule* rule, KnowledgeBase* kb, int assignement[MAX_VARS
         int index, bit;
         getIndexAndBit(&index, &bit, function);
         
-        if (((rule->result[index] >> bit) & 1) == 1)
+        if (rule->result[index] & (1 << bit))
         {
             printf("%s(%d:%s)", kb->FUNCTION_NAME[rule->resultFromSet][function], resultAssignement, kb->SET_NAMES[rule->resultFromSet]);
             count++;
@@ -529,13 +588,6 @@ static inline void getAssignment(int satisfied[MAX_VARS_IN_RULE][MAX_SET_ELEMENT
 
         count = nextCount;
     }
-    //Removed recursion version
-    /*
-        if (var + 1 < MAX_VARS_IN_RULE)
-        {
-            getAssignment(satisfied, lengths, assignment, var+1, nextCount);
-        }
-    */
 }
 
 /**
@@ -574,7 +626,6 @@ static int applyRule(Rule* rule, KnowledgeBase* kb, int assignement[MAX_VARS_IN_
     int foundNovelInformation = 0;
     if (rule->resultVarName >= 0)
     { //Result found in condition
-        
         if (applyResult(kb, rule->result, rule->resultFromSet, assignement[rule->resultVarName]))
         {
             foundNovelInformation = 1;
@@ -605,7 +656,6 @@ static int applyRule(Rule* rule, KnowledgeBase* kb, int assignement[MAX_VARS_IN_
     }
     else if (rule->resultVarName == -2)
     { //Result can be anything IN condition
-
     }
     else if (rule->resultVarName <= -1000)
     { //Result can be ONLY -1XXX where XXX is the element ID
@@ -651,18 +701,11 @@ static inline int elementSatisfiesVarConditions(Rule* rule, KnowledgeBase* kb, i
 */
 static inline void findPossibleSubstitutions(Rule* rule, KnowledgeBase* kb, int satisfied[MAX_VARS_IN_RULE][MAX_SET_ELEMENTS], int lengths[MAX_VARS_IN_RULE])
 {
-    for (int var = 0; var < MAX_VARS_IN_RULE; var++)
-    {
-        for (int element = 0; element < MAX_SET_ELEMENTS; element++)
-        {
-            satisfied[var][element] = -1;
-        }
-        lengths[var] = 0;
-    }
-
     //Loop through vars in rules
     for (int var = 0; var<rule->varCount; var++)
     {
+        lengths[var] = 0;
+
         int set = rule->varConditionFromSet[var];
         int forcedSub = rule->varsForcedSubstitutions[var];
         if (forcedSub != -1)
@@ -687,6 +730,8 @@ static inline void findPossibleSubstitutions(Rule* rule, KnowledgeBase* kb, int 
             }
         }
     }
+    for (int var = rule->varCount; var<MAX_VARS_IN_RULE; var++) lengths[var] = 0;
+    
 }
 
 /**
@@ -718,15 +763,12 @@ int satisfiesRule(Rule* rule, KnowledgeBase* kb, int verbose)
 
     //Stores if any novel solution has been found
     int foundNovelSolution = 0;
-
     findPossibleSubstitutions(rule, kb, satisfied, lengths);
-
     //Check if there are trivial ways of showing no solutions to the rule
     for (int var = 0; var < rule->varCount; var++)
     {
-        if (satisfied[var][0] == -1) return 0;
+        if (lengths[var] <= 0) return 0;
     }
-    
     //If it satifies the rule continue by iterating 
 
     if (rule->LHSSymmetric)
@@ -736,7 +778,6 @@ int satisfiesRule(Rule* rule, KnowledgeBase* kb, int verbose)
         {
             if (lengths[0] < rule->varCount) //Only check first variable lengths[0] as symmetric so lengths[0]==lengths[i] for all i
             { //Lengths < rule->varCount   ---> no valid substitutions
-
             }
             else if (lengths[0] == rule->varCount)
             { //Lengths == rule->varCount   ---> One valid substitution
@@ -755,10 +796,7 @@ int satisfiesRule(Rule* rule, KnowledgeBase* kb, int verbose)
                     int count = 0;
                     for (int var = 0; var < rule->varCount; var++)
                     {
-                        if (count == potentialSub)
-                        {
-                            count++;
-                        }
+                        count += (count == potentialSub);
                         assignement[var] = satisfied[0][count];
                         count++;
                     }
@@ -822,7 +860,6 @@ int satisfiesRule(Rule* rule, KnowledgeBase* kb, int verbose)
             }
         }
     }
-    
     return foundNovelSolution;
 }
 
@@ -841,8 +878,11 @@ int inferknowledgeBaseFromRules(RuleSet* rs, KnowledgeBase* kb, int verbose)
     int foundNovelSolution = 0;
     for (int i = 0; i < rs->NUM_RULES; i++)
     {
-        foundNovelSolution |= satisfiesRule(rs->RULES[i], kb, verbose);
-        if (foundNovelSolution && hasExplicitContradiction(kb)) return -1;
+        if (rs->RULE_ACTIVE[i])
+        { //Only apply a rule if it hasn't been culled
+            foundNovelSolution |= satisfiesRule(rs->RULES[i], kb, verbose);
+            if (foundNovelSolution && hasExplicitContradiction(kb)) return -1;
+        }
     }
     return foundNovelSolution;
 }

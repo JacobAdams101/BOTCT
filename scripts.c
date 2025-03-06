@@ -211,7 +211,7 @@ void initScript(RuleSet** rs, KnowledgeBase** kb, const int SCRIPT, const int NU
     addRole(&count, "GOON", "GOOD", "OUTSIDER", SCRIPT==BMR, 64);
     addRole(&count, "LUNATIC", "GOOD", "OUTSIDER", SCRIPT==BMR, 64);
     //MISC
-    addRole(&count, "POLITICIAN", "GOOD", "OUTSIDER", 0, 64);
+    //addRole(&count, "POLITICIAN", "GOOD", "OUTSIDER", 0, 64);
 
     printf("INIT DATA STRUCTURES...\n");
     //Init data structures
@@ -270,6 +270,7 @@ static void roleAssociation(RuleSet* rs, KnowledgeBase* kb, const int NUM_PLAYER
     // ===========================================
     //  Make role based Associatation rules
     // ===========================================
+    printf("Make role based Associatation rules...\n");
     /*
      * IDEA: Roles have associated data with them
      * For the most part!! a Player IS Demon => player IS Evil etc. etc.
@@ -476,6 +477,7 @@ static void roleMutuallyExclusive(RuleSet* rs, KnowledgeBase* kb, const int NUM_
     // ===========================================
     //  Roles Are Mutally Exclusive And Players have exactly 1 Role
     // ===========================================
+    printf("Make Roles Are Mutally Exclusive And Players have exactly 1 Role...\n");
     /*
      * IDEA: Every player has exactly one role and only one player can have that role
      * For the most part (excluding dead players)
@@ -551,6 +553,7 @@ static void roleMetaData(RuleSet* rs, KnowledgeBase* kb, const int NUM_PLAYERS, 
     // ===========================================
     //  Role Metadata implications
     // ===========================================
+    printf("Make: Role Metadata implications...\n");
     /*
      * IDEA: The game has metadata associated with it Roles can imply metadata and metadata can imply roles
      * 
@@ -671,6 +674,7 @@ static void roleMetaDataCounting(RuleSet* rs, KnowledgeBase* kb, const int NUM_P
     // ===========================================
     //  Role Metadata Counting Arguments
     // ===========================================
+    printf("Make: Role Metadata Counting Arguments...\n");
     /*
      * IDEA: If we know about what roles are/are not in the game 
      * and we know about how many of a certain class we're expecting
@@ -946,6 +950,7 @@ static void teamAndClassCountingArguments(RuleSet* rs, KnowledgeBase* kb, const 
     // ===========================================
     //  Team Counting Arguments
     // ===========================================
+    printf("Make: Team Counting Arguments...\n");
     /*
      * IDEA: By counting the classes and teams of people,
      * we can deduce what teams other people must be
@@ -1026,6 +1031,7 @@ static void classDeductionArguments(RuleSet* rs, KnowledgeBase* kb, const int NU
     // ===========================================
     //  Class Deduction argument rules
     // ===========================================
+    printf("Make: Class Deduction argument rules...\n");
     /*
      * IDEA: If we know what class a player isn't,
      * then we know what class the player is
@@ -1156,6 +1162,7 @@ static void redHerringRules(RuleSet* rs, KnowledgeBase* kb, const int NUM_PLAYER
     // ===========================================
     //  Red Herring rules
     // ===========================================
+    printf("Make: Red Herring rules...\n");
     /*
      * IDEA: There can be one red herring for the fortune teller
      * red herrings do not change with night
@@ -1208,6 +1215,7 @@ static void roleContinuityArguments(RuleSet* rs, KnowledgeBase* kb, const int NU
     // ===========================================
     //  Role Continuity Arguments
     // ===========================================
+    printf("Make: Role Continuity Arguments...\n");
     /*
      * IDEA: For most games peoples roles don't change throughout the game
      * 
@@ -1471,6 +1479,7 @@ static void poisonRules(RuleSet* rs, KnowledgeBase* kb, const int NUM_PLAYERS, c
     // ===========================================
     //  Poison rules
     // ===========================================
+    printf("Make: Poison rules...\n");
     /*
      * IDEA: There can be one red herring for the fortune teller
      * red herrings do not change with night
@@ -1742,6 +1751,7 @@ static void deathRules(RuleSet* rs, KnowledgeBase* kb, const int NUM_PLAYERS, co
     // ===========================================
     //  Death rules
     // ===========================================
+    printf("Make: Death rules\n");
     /*
      * IDEA: There can be one red herring for the fortune teller
      * red herrings do not change with night
