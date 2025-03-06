@@ -50,3 +50,7 @@ int getRandIntNotIn(int avaliable[], int numAvaliable);
  * 
 */
 void initRand();
+
+char* toLowerCase(char* str);
+
+char* toUpperCase(char* str);

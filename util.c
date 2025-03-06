@@ -26,8 +26,10 @@
 #include <string.h>
 #include <stdlib.h>
 #include <time.h>
+#include <ctype.h>
 
 #include "util.h"
+#include "constants.h"
 /**
  * getRandInt() - returns a random integer between two values
  *
@@ -72,3 +74,17 @@ void initRand()
 {
     srand(time(NULL));
 }
+
+
+char* toLowerCase(char* str)
+{
+    for (int i = 0; str[i] != '\0'; i++) str[i] = tolower(str[i]);
+    return str;
+}
+
+char* toUpperCase(char* str)
+{
+    for (int i = 0; str[i] != '\0'; i++) str[i] = toupper(str[i]);
+    return str;
+}
+

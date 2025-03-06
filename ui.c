@@ -31,6 +31,7 @@
 #include "constants.h"
 #include "scripts.h"
 #include "ui.h"
+#include "util.h"
 
 /**
  * printTitle() - prints a title to the terminal
@@ -77,6 +78,7 @@ void printRedHeading(char *title)
     printf("‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\n");
     PRINT_END
 }
+
 
 /**
  * setup() - ask the questions to the user to sertup a game
@@ -144,7 +146,7 @@ int getRoleIdFromString(char* roleName)
     {
         if (ROLE_IN_SCRIPT[roleID] == 1)
         {
-            if (strcmp(roleName,ROLE_NAMES[roleID]) == 0)
+            if (strcasecmp(roleName,ROLE_NAMES[roleID]) == 0)
             {
                 return roleID;
             }
@@ -208,6 +210,7 @@ int getPlayerIDInput(KnowledgeBase* kb, char* message)
     while (roleID == -1)
     {
         scanf("%255s", input); // Read a string (up to 99 characters to leave space for the null terminator)
+        
         roleID = getSetElementIDWithName(kb, 0, input, 0);
         
         if (roleID == -1)
@@ -250,6 +253,27 @@ int getInt(char* message, int min, int max)
     return -1;
 }
 
+/**
+ * getYNInput() - 
+ * 
+ * @message the message to ask the user
+ * 
+ * @return 1 for yes, 0 for no
+*/
+int getYNInput(char* message)
+{
+    char input[STRING_BUFF_SIZE]; // Declare a character array to hold the string
+    int result = -1;
+    printf("%s (Y/N):\n", message);
+    while (result == -1)
+    {
+        scanf("%255s", input); // Read a string (up to 99 characters to leave space for the null terminator)
+
+        if (strcasecmp(input,"y") == 0 || strcasecmp(input,"yes") == 0) result = 1;
+        if (strcasecmp(input,"n") == 0 || strcasecmp(input,"no") == 0) result = 0;
+    }
+    return result;
+}
 /**
  * shown_role() - used to update the knowledge base assuming a player was shown a certain role
  * this function also takes into account the innacuracies of being shown roles (drunk, lunatic etc.)
@@ -723,7 +747,7 @@ static void washerWomanPing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs
 
     //Originally this but converted to the stronger argument
     //If <PLAYER_INFO>is_WASHERWOMAN AND <PLAYER_INFO>is_NOT_poisonedNIGHT0 AND <METADATA>is_NOT_SPY_in_PLAY => <METADATA>is_<ROLE>_in_PLAY
-    //It was converted to this as <METADATA>is_NOT_SPY_in_PLAY => <PLAYER_X>is_NOT_SPY
+    //It was converted to this as <METADATA>is_NOT_SPY_in_PLAY ---> <PLAYER_X>is_NOT_SPY
     //If <PLAYER_INFO>is_WASHERWOMAN AND <PLAYER_INFO>is_NOT_poisonedNIGHT0 AND <PLAYER_X>is_NOT_SPY AND <PLAYER_Y>is_NOT_SPY => <METADATA>is_<ROLE>_in_PLAY
     setTempRuleParams(rs, 3,0);
     snprintf(buff, STRING_BUFF_SIZE, "is_%s_in_PLAY_[NIGHT0]", ROLE_NAMES[selectedRole]);
@@ -1100,7 +1124,7 @@ static void fortuneTellerPing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* 
     int playerY;
     int night = -1;
 
-    count = getInt("What was ping? (0 - NO, 1 - YES)", 0, 2);
+    count = getYNInput("What was ping?");
 
     playerX = getPlayerIDInput(kb, "For player 1?"); // Read player ID 
 
@@ -1330,7 +1354,7 @@ static void ravenkeeperPing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs
 
 /**
  * clockmakerPing() - runs a ping
- * 
+ * You start knowing how many steps from the Demon to nearest Minion.
  * 
  * @playerIDinfoFrom the playerID/index the ping is from
  * @kb the knowledge base to update
@@ -1344,38 +1368,67 @@ static void clockmakerPing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs)
     const int MAX_STEPS = kb->SET_SIZES[0]/2; //was (kb->SET_SIZES[0]/2)-1 but we add +1 at getInt anyways as non inclusive
 
     numSteps = getInt("numSteps?", 0, MAX_STEPS);
+    for (int demonPlayer = 0; demonPlayer < kb->SET_SIZES[0]; demonPlayer++)
+    {
+        int playerLHS = demonPlayer;
+        int playerRHS = demonPlayer;
+        
+        for (int step = 0; step <= numSteps; step++)
+        { // For all previous steps unless there is a spy, no one is the minion
+            playerLHS--;
+            playerRHS++;
+            if (playerLHS < 0)
+            {
+                playerLHS += kb->SET_SIZES[0];
+            }
+            if (playerRHS >= kb->SET_SIZES[0])
+            {
+                playerRHS -= kb->SET_SIZES[0];
+            }
+            if (step < numSteps)
+            {
+                setTempRuleParams(rs, 3,0);
+                setTempRuleResultName(rs, kb, 1, "PLAYERS", "is_NOT_MINION_[NIGHT0]");
+                addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", "is_CLOCKMAKER_[NIGHT0]", playerIDinfoFrom);
+                addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", "is_NOT_POISONED_[NIGHT0]", playerIDinfoFrom);
+                addFixedConditionToTempRuleName(rs,kb, 1, "PLAYERS", "is_NOT_SPY_[NIGHT0]", playerLHS);
+                addFixedConditionToTempRuleName(rs,kb, 2, "PLAYERS", "is_DEMON_[NIGHT0]", demonPlayer);
+                pushTempRule(rs);
 
-    int playerLHS = playerIDinfoFrom;
-    int playerRHS = playerIDinfoFrom;
+                setTempRuleParams(rs, 3,0);
+                setTempRuleResultName(rs, kb, 1, "PLAYERS", "is_NOT_MINION_[NIGHT0]");
+                addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", "is_CLOCKMAKER_[NIGHT0]", playerIDinfoFrom);
+                addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", "is_NOT_POISONED_[NIGHT0]", playerIDinfoFrom);
+                addFixedConditionToTempRuleName(rs,kb, 1, "PLAYERS", "is_NOT_SPY_[NIGHT0]", playerRHS);
+                addFixedConditionToTempRuleName(rs,kb, 2, "PLAYERS", "is_DEMON_[NIGHT0]", demonPlayer);
+                pushTempRule(rs);
+            }
+            else
+            {
+                setTempRuleParams(rs, 4,0);
+                setTempRuleResultName(rs, kb, 1, "PLAYERS", "is_MINION_[NIGHT0]");
+                addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", "is_CLOCKMAKER_[NIGHT0]", playerIDinfoFrom);
+                addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", "is_NOT_POISONED_[NIGHT0]", playerIDinfoFrom);
+                addFixedConditionToTempRuleName(rs,kb, 1, "PLAYERS", "is_NOT_RECLUSE_[NIGHT0]", playerLHS);
+                addFixedConditionToTempRuleName(rs,kb, 2, "PLAYERS", "is_DEMON_[NIGHT0]", demonPlayer);
+                addFixedConditionToTempRuleName(rs,kb, 3, "PLAYERS", "is_NOT_MINION_[NIGHT0]", playerRHS);
+                addFixedConditionToTempRuleName(rs,kb, 3, "PLAYERS", "is_NOT_RECLUSE_[NIGHT0]", playerRHS);
+                pushTempRule(rs);
 
-    for (int step = 0; step < numSteps; step++)
-    { // For all previous steps unless there is a spy, no one is the minion
-        playerLHS--;
-        playerRHS++;
-        if (playerLHS < 0)
-        {
-            playerLHS += kb->SET_SIZES[0];
+                setTempRuleParams(rs, 4,0);
+                setTempRuleResultName(rs, kb, 1, "PLAYERS", "is_MINION_[NIGHT0]");
+                addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", "is_CLOCKMAKER_[NIGHT0]", playerIDinfoFrom);
+                addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", "is_NOT_POISONED_[NIGHT0]", playerIDinfoFrom);
+                addFixedConditionToTempRuleName(rs,kb, 1, "PLAYERS", "is_NOT_RECLUSE_[NIGHT0]", playerRHS);
+                addFixedConditionToTempRuleName(rs,kb, 2, "PLAYERS", "is_DEMON_[NIGHT0]", demonPlayer);
+                addFixedConditionToTempRuleName(rs,kb, 3, "PLAYERS", "is_NOT_MINION_[NIGHT0]", playerLHS);
+                addFixedConditionToTempRuleName(rs,kb, 3, "PLAYERS", "is_NOT_RECLUSE_[NIGHT0]", playerLHS);
+                pushTempRule(rs);
+            }
         }
-        if (playerRHS >= kb->SET_SIZES[0])
-        {
-            playerRHS -= kb->SET_SIZES[0];
-        }
-
-        setTempRuleParams(rs, 2,0);
-        setTempRuleResultName(rs, kb, 1, "PLAYERS", "is_NOT_MINION");
-        addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", "is_CLOCKMAKER_[NIGHT0]", playerIDinfoFrom);
-        addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", "is_NOT_POISONED_[NIGHT0]", playerIDinfoFrom);
-        addFixedConditionToTempRuleName(rs,kb, 1, "PLAYERS", "is_NOT_SPY_[NIGHT0]", playerLHS);
-        pushTempRule(rs);
-
-        setTempRuleParams(rs, 2,0);
-        setTempRuleResultName(rs, kb, 1, "PLAYERS", "is_NOT_MINION");
-        addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", "is_CLOCKMAKER_[NIGHT0]", playerIDinfoFrom);
-        addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", "is_NOT_POISONED_[NIGHT0]", playerIDinfoFrom);
-        addFixedConditionToTempRuleName(rs,kb, 1, "PLAYERS", "is_NOT_SPY_[NIGHT0]", playerRHS);
-        pushTempRule(rs);
     }
 }
+
 
 /**
  * dreamerPing() - runs a ping
@@ -1818,6 +1871,7 @@ static void sagePing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs)
     addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff, playerIDinfoFrom);
     pushTempRule(rs);
 
+    setTempRuleParams(rs, 2,0);
     snprintf(buff, STRING_BUFF_SIZE, "is_DEMON_[NIGHT%d]", night);
     setTempRuleResultName(rs, kb, -playerY-1000, "PLAYERS", buff);
 
@@ -1974,7 +2028,7 @@ static void gossipPing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs)
 
 /**
  * professorPing() - runs a ping
- * 
+ * Once per game, at night*, choose a dead player: if they are a Townsfolk, they are resurrected.
  * 
  * @playerIDinfoFrom the playerID/index the ping is from
  * @kb the knowledge base to update
