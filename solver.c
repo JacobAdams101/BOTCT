@@ -77,24 +77,28 @@ struct getProbApproxArgs
 
 #define MAX_FALIURES 256
 
-static int assignRoleForWorld(KnowledgeBase* possibleWorldKB, KnowledgeBase*** possibleWorldRevertKB, ProbKnowledgeBase* determinedInNWorlds, RuleSet* rs, int avaliable[5][MAX_SET_ELEMENTS], int night, int playerIndex, int *failures, int permute[]);
+static int assignRoleForWorld(KnowledgeBase* possibleWorldKB, KnowledgeBase*** possibleWorldRevertKB, ProbKnowledgeBase* determinedInNWorlds, RuleSet* rs, int avaliable[5][MAX_SET_ELEMENTS], int night, int playerIndex, int *failures, int permute[], int isroleIndexes[NUM_DAYS][NUM_BOTCT_ROLES], int notroleIndexes[NUM_DAYS][NUM_BOTCT_ROLES]);
 
-static int assignRoleForWorld(KnowledgeBase* possibleWorldKB, KnowledgeBase*** possibleWorldRevertKB, ProbKnowledgeBase* determinedInNWorlds, RuleSet* rs, int avaliable[5][MAX_SET_ELEMENTS], int night, int playerIndex, int *failures, int permute[])
+static int assignRoleForWorld(KnowledgeBase* possibleWorldKB, KnowledgeBase*** possibleWorldRevertKB, ProbKnowledgeBase* determinedInNWorlds, RuleSet* rs, int avaliable[5][MAX_SET_ELEMENTS], int night, int playerIndex, int *failures, int permute[], int isroleIndexes[NUM_DAYS][NUM_BOTCT_ROLES], int notroleIndexes[NUM_DAYS][NUM_BOTCT_ROLES])
 {
     //Choose player from random permutation to remove certain biases in allocation
     int player = permute[playerIndex];
 
     KnowledgeBase* myLayerRevertKB = possibleWorldRevertKB[night][player];
 
-    char buff[64];
+    
 
     int avaliableRoles = 0;
     int roleAvalaliable[NUM_BOTCT_ROLES];
     for (int roleID = 0; roleID < NUM_BOTCT_ROLES; roleID++)
     {
-        snprintf(buff, 64, "is_NOT_%s_[NIGHT%d]", ROLE_NAMES[roleID], night);
-        int isNotRole = isKnownName(possibleWorldKB, "PLAYERS", player, buff);
+        //NOTE: swapped out for faster code
+        //snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s_[NIGHT%d]", ROLE_NAMES[roleID], night);
+        //int isNotRole = isKnownName(possibleWorldKB, "PLAYERS", player, buff);
+        int isNotRole = isKnown(possibleWorldKB, 0, player, notroleIndexes[night][roleID]);
 
+        //NOTE: swapped out for branchless version
+        /*
         if (isNotRole == 0)
         {
             roleAvalaliable[roleID] = 1;
@@ -104,6 +108,10 @@ static int assignRoleForWorld(KnowledgeBase* possibleWorldKB, KnowledgeBase*** p
         {
             roleAvalaliable[roleID] = 0;
         }
+        */
+        int roleAvaliable = isNotRole ? 0 : 1;
+        roleAvalaliable[roleID] = roleAvaliable;
+        avaliableRoles += roleAvaliable;
     }
 
     copyTo(myLayerRevertKB, possibleWorldKB); //copy to backup to revert later
@@ -113,8 +121,10 @@ static int assignRoleForWorld(KnowledgeBase* possibleWorldKB, KnowledgeBase*** p
         int selectedRoleID = getRandIntNotIn(roleAvalaliable, avaliableRoles);
 
         //Assume true
-        snprintf(buff, 64, "is_%s_[NIGHT%d]", ROLE_NAMES[selectedRoleID], night);
-        addKnowledgeName(possibleWorldKB, "PLAYERS", player, buff);
+        //NOTE: swapped out for faster code
+        //snprintf(buff, 64, "is_%s_[NIGHT%d]", ROLE_NAMES[selectedRoleID], night);
+        //addKnowledgeName(possibleWorldKB, "PLAYERS", player, buff);
+        addKnowledge(possibleWorldKB, 0, player, isroleIndexes[night][selectedRoleID]);
         //printf("ASSIGNING %s\n", buff);
         //Infer knowledge (to see if a contradiction arises)
         
@@ -128,10 +138,15 @@ static int assignRoleForWorld(KnowledgeBase* possibleWorldKB, KnowledgeBase*** p
             //Find out how many roles are avaliable 
             //used for computing weights basic on non uniform probabilities later
             avaliable[night][player] = 0;
+            //Swapped out for faster code;
+            /*
             for (int i = 0; i < NUM_BOTCT_ROLES; i++)
-            {
+            {    
                 if (roleAvalaliable[i]) avaliable[night][player]++;
+                
             }
+             */
+            for (int i = 0; i < NUM_BOTCT_ROLES; i++) avaliable[night][player] += roleAvalaliable[i];
 
             //Find next player and next night
             int nextPlayerIndex = playerIndex+1;
@@ -145,7 +160,7 @@ static int assignRoleForWorld(KnowledgeBase* possibleWorldKB, KnowledgeBase*** p
             //If there are deeper levels to infer look for them
 
             //See if deeper level inference leads to a good world
-            int result = assignRoleForWorld(possibleWorldKB, possibleWorldRevertKB, determinedInNWorlds, rs, avaliable, nextNight, nextPlayerIndex, failures, permute);
+            int result = assignRoleForWorld(possibleWorldKB, possibleWorldRevertKB, determinedInNWorlds, rs, avaliable, nextNight, nextPlayerIndex, failures, permute, isroleIndexes, notroleIndexes);
             if (result == 1) return 1;
             if (*failures > MAX_FALIURES) return -1; 
         }
@@ -168,7 +183,7 @@ static int assignRoleForWorld(KnowledgeBase* possibleWorldKB, KnowledgeBase*** p
  * @determinedInNWorlds the tally to add the score to if the world works
  * @rs the ruleset
 */
-static void buildWorld(KnowledgeBase* possibleWorldKB, KnowledgeBase*** possibleWorldRevertKB, ProbKnowledgeBase* determinedInNWorlds, RuleSet* rs)
+static void buildWorld(KnowledgeBase* possibleWorldKB, KnowledgeBase*** possibleWorldRevertKB, ProbKnowledgeBase* determinedInNWorlds, RuleSet* rs, int isroleIndexes[NUM_DAYS][NUM_BOTCT_ROLES], int notroleIndexes[NUM_DAYS][NUM_BOTCT_ROLES])
 {
     //Build permutations to remove symptoms from always assigning orders in one way
     int permute[possibleWorldKB->SET_SIZES[0]];
@@ -183,6 +198,7 @@ static void buildWorld(KnowledgeBase* possibleWorldKB, KnowledgeBase*** possible
         permute[i] = rand;
         temp[rand] = 0;
     }
+    
 
     int avaliable[5][MAX_SET_ELEMENTS];
     /*
@@ -194,7 +210,7 @@ static void buildWorld(KnowledgeBase* possibleWorldKB, KnowledgeBase*** possible
      * once/if every player is assigned roles add this to the tally
     */
     int faliures = 0;
-    int result = assignRoleForWorld(possibleWorldKB, possibleWorldRevertKB, determinedInNWorlds, rs, avaliable, 0, 0, &faliures, permute);
+    int result = assignRoleForWorld(possibleWorldKB, possibleWorldRevertKB, determinedInNWorlds, rs, avaliable, 0, 0, &faliures, permute, isroleIndexes, notroleIndexes);
     if (result == -1) 
     {
         printf("WORLD HAD TOO MANY CONRADICTIONS\n");
@@ -237,11 +253,25 @@ static void* getProbApprox(void* void_arg)
     RuleSet* rs = args->rs;
     int numIterations = args->numIterations;
 
+    //Cache role data locations for fast lookup
+    char buff[STRING_BUFF_SIZE];
+    int isroleIndexes[NUM_DAYS][NUM_BOTCT_ROLES];
+    int notroleIndexes[NUM_DAYS][NUM_BOTCT_ROLES];
+    for (int night = 0; night < NUM_DAYS; night++)
+    {
+        for (int role = 0; role < NUM_BOTCT_ROLES; role++)
+        {
+            snprintf(buff, STRING_BUFF_SIZE, "is_%s_[NIGHT%d]", ROLE_NAMES[role], night);
+            isroleIndexes[night][role] = getSetFunctionIDWithName(kb, 0, buff, 1);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s_[NIGHT%d]", ROLE_NAMES[role], night);
+            notroleIndexes[night][role] = getSetFunctionIDWithName(kb, 0, buff, 1);
+        }
+    }
     
     for (int i = 0; i < numIterations; i++)
     {
         copyTo(possibleWorldKB, kb);
-        buildWorld(possibleWorldKB, possibleWorldRevertKB, determinedInNWorlds, rs);
+        buildWorld(possibleWorldKB, possibleWorldRevertKB, determinedInNWorlds, rs, isroleIndexes, notroleIndexes);
     }
     return NULL;
 }
@@ -267,7 +297,7 @@ void solve(KnowledgeBase* kb, RuleSet* rs, const int NUM_PLAYERS, const int NUM_
 
 
     const int NUM_THREADS = 16;
-    const int NUM_ITERATIONS = 64;
+    const int NUM_ITERATIONS = 256;
 
     ProbKnowledgeBase* threadTallies[NUM_THREADS];
     KnowledgeBase* possibleWorldKB[NUM_THREADS];
@@ -357,8 +387,6 @@ void solve(KnowledgeBase* kb, RuleSet* rs, const int NUM_PLAYERS, const int NUM_
                 threadArgs[i]->determinedInNWorlds = threadTallies[i]; //The output tallies
                 threadArgs[i]->rs = rs;
                 threadArgs[i]->numIterations = NUM_ITERATIONS;
-
-                
                 
             }
             //Set off NUM_THREADS-1 threads

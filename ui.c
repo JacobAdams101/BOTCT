@@ -1486,8 +1486,62 @@ static void dreamerPing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs)
 */
 static void snakeCharmerPing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* rs)
 {
-    //char buff[STRING_BUFF_SIZE]; // Declare a character array to hold the string 
-    printf("NOT SUPPORTED!\n");
+    char buff[STRING_BUFF_SIZE]; // Declare a character array to hold the string 
+
+    int didSwap = -1;
+    int playerX;
+    int night = -1;
+    int nextNight = -1;
+
+    playerX = getPlayerIDInput(kb, "Chosen player?"); // Read player ID 
+
+    didSwap = getYNInput("Did swap?");
+
+    night = getInt("On night?", 0, NUM_DAYS);
+    nextNight = night+1;
+
+    if (didSwap == 0)
+    { //Not demon
+        setTempRuleParams(rs,1,0);
+        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_DEMON_[NIGHT%d]", night);
+        setTempRuleResultName(rs, kb, playerX-1000, "PLAYERS", buff);
+        snprintf(buff, STRING_BUFF_SIZE, "is_SNAKE_CHARMER_[NIGHT%d]", night);
+        addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff, playerIDinfoFrom);
+        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_POISONED_[NIGHT%d]", night);
+        addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff, playerIDinfoFrom);
+        pushTempRule(rs);
+    }
+    else
+    { //Is demon
+        //Rules for swap
+        setTempRuleParams(rs,1,0);
+        snprintf(buff, STRING_BUFF_SIZE, "is_DEMON_[NIGHT%d]", night);
+        setTempRuleResultName(rs, kb, playerX-1000, "PLAYERS", buff);
+        snprintf(buff, STRING_BUFF_SIZE, "is_SNAKE_CHARMER_[NIGHT%d]", nextNight);
+        setTempRuleResultName(rs, kb, playerX-1000, "PLAYERS", buff);
+        snprintf(buff, STRING_BUFF_SIZE, "is_POISONED_[NIGHT%d]", nextNight);
+        setTempRuleResultName(rs, kb, playerX-1000, "PLAYERS", buff);
+        snprintf(buff, STRING_BUFF_SIZE, "is_ROLE_CHANGED_[NIGHT%d]", nextNight);
+        setTempRuleResultName(rs, kb, playerX-1000, "PLAYERS", buff);
+        snprintf(buff, STRING_BUFF_SIZE, "is_SNAKE_CHARMER_[NIGHT%d]", night);
+        addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff, playerIDinfoFrom);
+        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_POISONED_[NIGHT%d]", night);
+        addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff, playerIDinfoFrom);
+        pushTempRule(rs);
+
+        setTempRuleParams(rs,1,0);
+        snprintf(buff, STRING_BUFF_SIZE, "is_DEMON_[NIGHT%d]", nextNight);
+        setTempRuleResultName(rs, kb, 0, "PLAYERS", buff);
+        snprintf(buff, STRING_BUFF_SIZE, "is_ROLE_CHANGED_[NIGHT%d]", nextNight);
+        setTempRuleResultName(rs, kb, 0, "PLAYERS", buff);
+        snprintf(buff, STRING_BUFF_SIZE, "is_SNAKE_CHARMER_[NIGHT%d]", night);
+        addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff, playerIDinfoFrom);
+        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_POISONED_[NIGHT%d]", night);
+        addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff, playerIDinfoFrom);
+        pushTempRule(rs);
+
+    }
+
 }
 
 /**

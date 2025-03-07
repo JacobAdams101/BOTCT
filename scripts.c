@@ -211,7 +211,7 @@ void initScript(RuleSet** rs, KnowledgeBase** kb, const int SCRIPT, const int NU
     addRole(&count, "GOON", "GOOD", "OUTSIDER", SCRIPT==BMR, 64);
     addRole(&count, "LUNATIC", "GOOD", "OUTSIDER", SCRIPT==BMR, 64);
     //MISC
-    //addRole(&count, "POLITICIAN", "GOOD", "OUTSIDER", 0, 64);
+    addRole(&count, "POLITICIAN", "GOOD", "OUTSIDER", 0, 64);
 
     printf("INIT DATA STRUCTURES...\n");
     //Init data structures
