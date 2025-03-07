@@ -698,8 +698,10 @@ static inline int elementSatisfiesVarConditions(Rule* rule, KnowledgeBase* kb, i
  * @kb the knowledge base
  * @satisfied writing what variables satisfy the result
  * @lengths how many variables satisfy the result
+ * 
+ * @return returns 0 if the valid substitutions trivially won't work (lengths[x] == 0 for some x), 1 otherwise
 */
-static inline void findPossibleSubstitutions(Rule* rule, KnowledgeBase* kb, int satisfied[MAX_VARS_IN_RULE][MAX_SET_ELEMENTS], int lengths[MAX_VARS_IN_RULE])
+static inline int findPossibleSubstitutions(Rule* rule, KnowledgeBase* kb, int satisfied[MAX_VARS_IN_RULE][MAX_SET_ELEMENTS], int lengths[MAX_VARS_IN_RULE])
 {
     //Loop through vars in rules
     for (int var = 0; var<rule->varCount; var++)
@@ -716,6 +718,7 @@ static inline void findPossibleSubstitutions(Rule* rule, KnowledgeBase* kb, int 
                 satisfied[var][lengths[var]] = forcedSub;
                 lengths[var]++;
             }
+            else return 0;
         }
         else
         { //If not forced sub check all elements
@@ -728,10 +731,25 @@ static inline void findPossibleSubstitutions(Rule* rule, KnowledgeBase* kb, int 
                     lengths[var]++;
                 }
             }
+            if (lengths[var] == 0) return 0;
         }
     }
     for (int var = rule->varCount; var<MAX_VARS_IN_RULE; var++) lengths[var] = 0;
+    return 1;
     
+}
+
+static inline int isRepeatVar(int assignement[MAX_VARS_IN_RULE], int varCount)
+{
+    //Check that there are no duplicate assignements
+    for(int var1 = 0; var1 < varCount-1; var1++)
+    {
+        for(int var2 = var1+1; var2 < varCount; var2++)
+        {
+            if (assignement[var1] == assignement[var2]) return 1;
+        }
+    }
+    return 0;
 }
 
 /**
@@ -763,14 +781,14 @@ int satisfiesRule(Rule* rule, KnowledgeBase* kb, int verbose)
 
     //Stores if any novel solution has been found
     int foundNovelSolution = 0;
-    findPossibleSubstitutions(rule, kb, satisfied, lengths);
-    //Check if there are trivial ways of showing no solutions to the rule
-    for (int var = 0; var < rule->varCount; var++)
-    {
-        if (lengths[var] <= 0) return 0;
-    }
-    //If it satifies the rule continue by iterating 
 
+    //Find possible substitutions for variable elements
+    //ALSO: Check if there are trivial ways of showing no solutions to the rule
+    //If there is trivially no solution exit function early
+    if (findPossibleSubstitutions(rule, kb, satisfied, lengths) == 0) return 0;
+    
+
+    //If it satifies the rule continue by iterating 
     if (rule->LHSSymmetric)
     { //If it is symmetric and independant we done
         //Test If Assignement is valid
@@ -825,35 +843,14 @@ int satisfiesRule(Rule* rule, KnowledgeBase* kb, int verbose)
     { //If not symmetric and independant we need to permute it
         //Figure out how many combinations we have
         long numCombinations = 1;
-        for (int var = 0; var < rule->varCount; var++)
-        {
-            numCombinations *= lengths[var];
-        }
+        for (int var = 0; var < rule->varCount; var++) numCombinations *= lengths[var];
 
         for(long count = 0; count < numCombinations; count++)
         {
             //Generate Assignement
             getAssignment(satisfied, lengths, assignement, count);
 
-            int validAssignment = 1;
-
-            //Test If Assignement is valid
-            if (rule->varsMutuallyExclusive)
-            {
-                //Check that there are no duplicate assignements
-                for(int var1 = 0; var1 < rule->varCount-1; var1++)
-                {
-                    for(int var2 = var1+1; var2 < rule->varCount; var2++)
-                    {
-                        if (assignement[var1] == assignement[var2])
-                        {
-                            validAssignment = 0;
-                        }
-                    }
-                }
-            }
-
-            if (validAssignment)
+            if (!rule->varsMutuallyExclusive || !isRepeatVar(assignement, rule->varCount))
             { //If the assignement is valid
                 //Update Knowledge Base
                 foundNovelSolution |= applyRule(rule, kb, assignement, verbose); //If some novel information was added

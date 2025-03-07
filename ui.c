@@ -104,7 +104,7 @@ void setup(int *numPlayers, int *numMinions, int *numDemons, int *baseOutsiders,
     printf("|_DAY 0_____________|_DAY 1____________________|_DAY 2____________________|_DAY 3____________________|\n");
     printHeading("SETUP");
     //Script info
-    *script = getInt("What script are you playing 0-TB, 1-S&V, 2-BMR?", 0, 3);
+    *script = getInt("What script are you playing 0-TB, 1-S&V, 2-BMR 3-ALFIE?", 0, 4);
 
     //Expected night 1 Player count infor
     *numPlayers = getInt("How many players are in the game?", 3, 17);

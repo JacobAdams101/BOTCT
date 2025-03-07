@@ -114,27 +114,31 @@ void initScript(RuleSet** rs, KnowledgeBase** kb, const int SCRIPT, const int NU
     int TB = 0;
     int SV = 1;
     int BMR = 2;
+    int ALFIE = 3; //alfies script :)
 
     
     //Roles
     //Demons
     //TB
-    addRole(&count, "IMP", "EVIL", "DEMON", SCRIPT==TB, 64);
+    addRole(&count, "IMP", "EVIL", "DEMON", SCRIPT==TB || SCRIPT==ALFIE, 64);
     //S&V
     addRole(&count, "FANG_GU", "EVIL", "DEMON", SCRIPT==SV, 64);
     addRole(&count, "VIGORMORTIS", "EVIL", "DEMON", SCRIPT==SV, 64);
-    addRole(&count, "NO_DASHII", "EVIL", "DEMON", SCRIPT==SV, 64);
+    addRole(&count, "NO_DASHII", "EVIL", "DEMON", SCRIPT==SV || SCRIPT==ALFIE, 64);
     addRole(&count, "VORTOX", "EVIL", "DEMON", SCRIPT==SV, 64);
     //BMR
     addRole(&count, "ZOMBUUL", "EVIL", "DEMON", SCRIPT==BMR, 64);
     addRole(&count, "PUKKA", "EVIL", "DEMON", SCRIPT==BMR, 64);
     addRole(&count, "SHABALOTH", "EVIL", "DEMON", SCRIPT==BMR, 64);
     addRole(&count, "PO.", "EVIL", "DEMON", SCRIPT==BMR, 64);
+    //Misc
+    addRole(&count, "OJO", "EVIL", "DEMON", SCRIPT==ALFIE, 64);
+    addRole(&count, "LLEECH", "EVIL", "DEMON", SCRIPT==ALFIE, 64);
 
     //Minions
     //FIRST_MINION_INDEX = count;
     //TB
-    addRole(&count, "BARON", "EVIL", "MINION", SCRIPT==TB, 64);
+    addRole(&count, "BARON", "EVIL", "MINION", SCRIPT==TB || SCRIPT==ALFIE, 64);
     addRole(&count, "SCARLET_WOMAN", "EVIL", "MINION", SCRIPT==TB, 64);
     addRole(&count, "SPY", "EVIL", "MINION", SCRIPT==TB, 64);
     addRole(&count, "POISONER", "EVIL", "MINION", SCRIPT==TB, 64);
@@ -145,9 +149,11 @@ void initScript(RuleSet** rs, KnowledgeBase** kb, const int SCRIPT, const int NU
     addRole(&count, "PIT_HAG", "EVIL", "MINION", SCRIPT==SV, 64);
     //BMR
     addRole(&count, "GODFATHER", "EVIL", "MINION", SCRIPT==BMR, 64);
-    addRole(&count, "DEVILS_ADVOCATE", "EVIL", "MINION", SCRIPT==BMR, 64);
-    addRole(&count, "ASSASSIN", "EVIL", "MINION", SCRIPT==BMR, 64);
+    addRole(&count, "DEVILS_ADVOCATE", "EVIL", "MINION", SCRIPT==BMR || SCRIPT==ALFIE, 64);
+    addRole(&count, "ASSASSIN", "EVIL", "MINION", SCRIPT==BMR || SCRIPT==ALFIE, 64);
     addRole(&count, "MASTERMIND", "EVIL", "MINION", SCRIPT==BMR, 64);
+    //Misc
+    addRole(&count, "SUMMONER", "EVIL", "MINION", SCRIPT==ALFIE, 64);
 
     //Townsfolk
     //TB
@@ -156,7 +162,7 @@ void initScript(RuleSet** rs, KnowledgeBase** kb, const int SCRIPT, const int NU
     addRole(&count, "INVESTIGATOR", "GOOD", "TOWNSFOLK", SCRIPT==TB, 64);
     addRole(&count, "CHEF", "GOOD", "TOWNSFOLK", SCRIPT==TB, 64);
     addRole(&count, "EMPATH", "GOOD", "TOWNSFOLK", SCRIPT==TB, 64);
-    addRole(&count, "FORTUNE_TELLER", "GOOD", "TOWNSFOLK", SCRIPT==TB, 64);
+    addRole(&count, "FORTUNE_TELLER", "GOOD", "TOWNSFOLK", SCRIPT==TB || SCRIPT==ALFIE, 64);
     addRole(&count, "UNDERTAKER", "GOOD", "TOWNSFOLK", SCRIPT==TB, 64);
     addRole(&count, "MONK", "GOOD", "TOWNSFOLK", SCRIPT==TB, 64);
     addRole(&count, "RAVENKEEPER", "GOOD", "TOWNSFOLK", SCRIPT==TB, 64);
@@ -169,35 +175,39 @@ void initScript(RuleSet** rs, KnowledgeBase** kb, const int SCRIPT, const int NU
     addRole(&count, "DREAMER", "GOOD", "TOWNSFOLK", SCRIPT==SV, 64);
     addRole(&count, "SNAKE_CHARMER", "GOOD", "TOWNSFOLK", SCRIPT==SV, 64);
     addRole(&count, "MATHEMATICIAN", "GOOD", "TOWNSFOLK", SCRIPT==SV, 64);
-    addRole(&count, "FLOWERGIRL", "GOOD", "TOWNSFOLK", SCRIPT==SV, 64);
+    addRole(&count, "FLOWERGIRL", "GOOD", "TOWNSFOLK", SCRIPT==SV || SCRIPT==ALFIE, 64);
     addRole(&count, "TOWN_CRIER", "GOOD", "TOWNSFOLK", SCRIPT==SV, 64);
-    addRole(&count, "ORACLE", "GOOD", "TOWNSFOLK", SCRIPT==SV, 64);
+    addRole(&count, "ORACLE", "GOOD", "TOWNSFOLK", SCRIPT==SV || SCRIPT==ALFIE, 64);
     addRole(&count, "SAVANT", "GOOD", "TOWNSFOLK", SCRIPT==SV, 64);
     addRole(&count, "SEAMSTRESS", "GOOD", "TOWNSFOLK", SCRIPT==SV, 64);
-    addRole(&count, "PHILOSOPHER", "GOOD", "TOWNSFOLK", SCRIPT==SV, 64);
+    addRole(&count, "PHILOSOPHER", "GOOD", "TOWNSFOLK", SCRIPT==SV || SCRIPT==ALFIE, 64);
     addRole(&count, "ARTIST", "GOOD", "TOWNSFOLK", SCRIPT==SV, 64);
     addRole(&count, "JUGGLER", "GOOD", "TOWNSFOLK", SCRIPT==SV, 64);
     addRole(&count, "SAGE", "GOOD", "TOWNSFOLK", SCRIPT==SV, 64);
     //BMR
     addRole(&count, "GRANDMOTHER", "GOOD", "TOWNSFOLK", SCRIPT==BMR, 64);
-    addRole(&count, "SAILOR", "GOOD", "TOWNSFOLK", SCRIPT==BMR, 64);
-    addRole(&count, "CHAMBERMAID", "GOOD", "TOWNSFOLK", SCRIPT==BMR, 64);
+    addRole(&count, "SAILOR", "GOOD", "TOWNSFOLK", SCRIPT==BMR || SCRIPT==ALFIE, 64);
+    addRole(&count, "CHAMBERMAID", "GOOD", "TOWNSFOLK", SCRIPT==BMR || SCRIPT==ALFIE, 64);
     addRole(&count, "EXORCIST", "GOOD", "TOWNSFOLK", SCRIPT==BMR, 64);
     addRole(&count, "INNKEEPER", "GOOD", "TOWNSFOLK", SCRIPT==BMR, 64);
     addRole(&count, "GAMBLER", "GOOD", "TOWNSFOLK", SCRIPT==BMR, 64);
-    addRole(&count, "GOSSIP", "GOOD", "TOWNSFOLK", SCRIPT==BMR, 64);
+    addRole(&count, "GOSSIP", "GOOD", "TOWNSFOLK", SCRIPT==BMR || SCRIPT==ALFIE, 64);
     addRole(&count, "COURTIER", "GOOD", "TOWNSFOLK", SCRIPT==BMR, 64);
     addRole(&count, "PROFESSOR", "GOOD", "TOWNSFOLK", SCRIPT==BMR, 64);
     addRole(&count, "MINSTREL", "GOOD", "TOWNSFOLK", SCRIPT==BMR, 64);
-    addRole(&count, "TEA_LADY", "GOOD", "TOWNSFOLK", SCRIPT==BMR, 64);
+    addRole(&count, "TEA_LADY", "GOOD", "TOWNSFOLK", SCRIPT==BMR || SCRIPT==ALFIE, 64);
     addRole(&count, "PACIFIST", "GOOD", "TOWNSFOLK", SCRIPT==BMR, 64);
     addRole(&count, "FOOL", "GOOD", "TOWNSFOLK", SCRIPT==BMR, 64);
+    //MISC
+    addRole(&count, "BOUNTY_HUNTER", "GOOD", "TOWNSFOLK", SCRIPT==ALFIE, 64);
+    addRole(&count, "ACROBAT", "GOOD", "TOWNSFOLK", SCRIPT==ALFIE, 64);
+    addRole(&count, "POPPY_GROWER", "GOOD", "TOWNSFOLK", SCRIPT==ALFIE, 64);
 
     //Outsiders
     //FIRST_OUTSIDER_INDEX = count;
     //TB
     addRole(&count, "BUTLER", "GOOD", "OUTSIDER", SCRIPT==TB, 64);
-    addRole(&count, "DRUNK", "GOOD", "OUTSIDER", SCRIPT==TB, 64);
+    addRole(&count, "DRUNK", "GOOD", "OUTSIDER", SCRIPT==TB || SCRIPT==ALFIE, 64);
     addRole(&count, "RECLUSE", "GOOD", "OUTSIDER", SCRIPT==TB, 64);
     addRole(&count, "SAINT", "GOOD", "OUTSIDER", SCRIPT==TB, 64);
     //S&V
@@ -207,11 +217,12 @@ void initScript(RuleSet** rs, KnowledgeBase** kb, const int SCRIPT, const int NU
     addRole(&count, "KLUTZ", "GOOD", "OUTSIDER", SCRIPT==SV, 64);
     //BMR
     addRole(&count, "TINKER", "GOOD", "OUTSIDER", SCRIPT==BMR, 64);
-    addRole(&count, "MOONCHILD", "GOOD", "OUTSIDER", SCRIPT==BMR, 64);
-    addRole(&count, "GOON", "GOOD", "OUTSIDER", SCRIPT==BMR, 64);
+    addRole(&count, "MOONCHILD", "GOOD", "OUTSIDER", SCRIPT==BMR || SCRIPT==ALFIE, 64);
+    addRole(&count, "GOON", "GOOD", "OUTSIDER", SCRIPT==BMR || SCRIPT==ALFIE, 64);
     addRole(&count, "LUNATIC", "GOOD", "OUTSIDER", SCRIPT==BMR, 64);
     //MISC
-    addRole(&count, "POLITICIAN", "GOOD", "OUTSIDER", 0, 64);
+    addRole(&count, "POLITICIAN", "GOOD", "OUTSIDER", SCRIPT==ALFIE, 64);
+    
 
     printf("INIT DATA STRUCTURES...\n");
     //Init data structures
@@ -283,13 +294,15 @@ static void roleAssociation(RuleSet* rs, KnowledgeBase* kb, const int NUM_PLAYER
             {
                 //A role implies a team (assuming the role was made the normal way)
                 //<PLAYER>is_<ROLE> AND <PLAYER>is_NOT_ROLE_CHANGED => <PLAYER>is_<ROLE_TEAM>
-                setTempRuleParams(rs, 1,0);
+                setTempRuleParams(rs, 2,0);
                 snprintf(buff, STRING_BUFF_SIZE, "is_%s_[NIGHT%d]", ROLE_TEAMS[role], night);
                 setTempRuleResultName(rs, kb, 0, "PLAYERS", buff);
                 snprintf(buff, STRING_BUFF_SIZE, "is_%s_[NIGHT%d]", ROLE_NAMES[role], night);
                 addConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff);
                 snprintf(buff, STRING_BUFF_SIZE, "is_NOT_ROLE_CHANGED_[NIGHT%d]", night);
                 addConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff);
+                snprintf(buff, STRING_BUFF_SIZE, "is_NOT_BOUNTY_HUNTER_in_PLAY_[NIGHT%d]", night);
+                addConditionToTempRuleName(rs,kb, 1, "METADATA", buff);
                 pushTempRule(rs);
 
                 //A role implies a class
@@ -426,8 +439,9 @@ static void roleAssociation(RuleSet* rs, KnowledgeBase* kb, const int NUM_PLAYER
         addConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff);
         pushTempRule(rs);
 
-        //If the role hasn't been change you are definitely the correct alingment for your role
-        setTempRuleParams(rs, 1,0);
+        //If the role hasn't been change you are definitely the correct alignment for your role
+        //Assuming a bounty hunter isn't in play
+        setTempRuleParams(rs, 2,0);
         for (int i = 0; i < NUM_BOTCT_ROLES; i++)
         {
             if (strcmp(ROLE_TEAMS[i], "GOOD") == 0)
@@ -440,6 +454,8 @@ static void roleAssociation(RuleSet* rs, KnowledgeBase* kb, const int NUM_PLAYER
         addConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff);
         snprintf(buff, STRING_BUFF_SIZE, "is_NOT_ROLE_CHANGED_[NIGHT%d]", night);
         addConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff);
+        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_BOUNTY_HUNTER_in_PLAY_[NIGHT%d]", night);
+        addConditionToTempRuleName(rs,kb, 1, "METADATA", buff);
         pushTempRule(rs);
 
         setTempRuleParams(rs, 1,0);
@@ -1262,6 +1278,8 @@ static void roleContinuityArguments(RuleSet* rs, KnowledgeBase* kb, const int NU
                         addConditionToTempRuleName(rs,kb, 1, "METADATA", buff);
                         snprintf(buff, STRING_BUFF_SIZE, "is_NOT_PIT_HAG_in_PLAY_[NIGHT%d]", startNight);
                         addConditionToTempRuleName(rs,kb, 1, "METADATA", buff);
+                        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_SUMMONER_in_PLAY_[NIGHT%d]", startNight);
+                        addConditionToTempRuleName(rs,kb, 1, "METADATA", buff);
                         pushTempRule(rs);
                         
                         
@@ -1327,6 +1345,8 @@ static void roleContinuityArguments(RuleSet* rs, KnowledgeBase* kb, const int NU
                         snprintf(buff, STRING_BUFF_SIZE, "is_NOT_BARBER_in_PLAY_[NIGHT%d]", startNight);
                         addConditionToTempRuleName(rs,kb, 1, "METADATA", buff);
                         snprintf(buff, STRING_BUFF_SIZE, "is_NOT_PIT_HAG_in_PLAY_[NIGHT%d]", startNight);
+                        addConditionToTempRuleName(rs,kb, 1, "METADATA", buff);
+                        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_SUMMONER_in_PLAY_[NIGHT%d]", startNight);
                         addConditionToTempRuleName(rs,kb, 1, "METADATA", buff);
                         pushTempRule(rs);
                         
@@ -1734,6 +1754,36 @@ static void poisonRules(RuleSet* rs, KnowledgeBase* kb, const int NUM_PLAYERS, c
 }
 
 /**
+ * summonerRules() - add rules to the game
+ * 
+ * @rs the ruleset object to write to
+ * @kb the knoweledge base to write to
+ * @NUM_PLAYERS the number of players playing
+ * @NUM_MINIONS the number of base minions in the script
+ * @NUM_DEMONS the number of base, starting demons in the script
+ * @BASE_OUTSIDERS the number of base starting outsiders in the script
+ * @NUM_DAYS the maximium number of days the game can run for
+*/
+static void summonerRules(RuleSet* rs, KnowledgeBase* kb, const int NUM_PLAYERS, const int NUM_MINIONS, const int NUM_DEMONS, const int BASE_OUTSIDERS)
+{
+    //Temporary string buffer for writing names into
+    char buff[STRING_BUFF_SIZE];
+    // ===========================================
+    //  Summoner rules
+    // ===========================================
+    printf("Make: Summoner rules...\n");
+    /*
+     * IDEA: 
+     * 
+    */
+   setTempRuleParams(rs, 1,0);
+   setTempRuleResultName(rs, kb, -1, "PLAYERS", "is_NOT_DEMON_[NIGHT0]");
+   addConditionToTempRuleName(rs,kb, 0, "METADATA", "is_SUMMONER_in_PLAY_[NIGHT0]");
+   pushTempRule(rs);
+
+}
+
+/**
  * deathRules() - add rules to the game
  * 
  * @rs the ruleset object to write to
@@ -1751,10 +1801,10 @@ static void deathRules(RuleSet* rs, KnowledgeBase* kb, const int NUM_PLAYERS, co
     // ===========================================
     //  Death rules
     // ===========================================
-    printf("Make: Death rules\n");
+    printf("Make: Death rules...\n");
     /*
-     * IDEA: There can be one red herring for the fortune teller
-     * red herrings do not change with night
+     * IDEA: 
+     * 
     */
 
     //If a player died: the player is dead
@@ -1937,6 +1987,9 @@ void buildRules(RuleSet* rs, KnowledgeBase* kb, const int NUM_PLAYERS, const int
 
     //ROLE CONTINUITY ARGUMENTS
     roleContinuityArguments(rs, kb, NUM_PLAYERS, NUM_MINIONS, NUM_DEMONS, BASE_OUTSIDERS);
+
+    //SUMMONER RULES
+    summonerRules(rs, kb, NUM_PLAYERS, NUM_MINIONS, NUM_DEMONS, BASE_OUTSIDERS);
 
     //DEATH RULES
     deathRules(rs, kb, NUM_PLAYERS, NUM_MINIONS, NUM_DEMONS, BASE_OUTSIDERS);
