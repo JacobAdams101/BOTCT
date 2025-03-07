@@ -431,7 +431,7 @@ void printRule(Rule* rule, KnowledgeBase* kb)
             int index, bit;
             getIndexAndBit(&index, &bit, function);
             
-            if (rule->varConditions[var][index] & (1 << bit))
+            if (rule->varConditions[var][index] & (1L << bit))
             {
                 finalCount++;
             }
@@ -444,7 +444,7 @@ void printRule(Rule* rule, KnowledgeBase* kb)
             int index, bit;
             getIndexAndBit(&index, &bit, function);
             //printf("PR-2B\n"); //Remove
-            if (rule->varConditions[var][index] & (1 << bit))
+            if (rule->varConditions[var][index] & (1L << bit))
             {
                 //printf("PR-2C\n"); //Remove
                 //printf("PR-2CA %d\n", dgufgd); //Remove
@@ -468,7 +468,7 @@ void printRule(Rule* rule, KnowledgeBase* kb)
         int index, bit;
         getIndexAndBit(&index, &bit, function);
         
-        if (rule->result[index] & (1 << bit))
+        if (rule->result[index] & (1L << bit))
         {
             finalCount++;
         }
@@ -480,7 +480,7 @@ void printRule(Rule* rule, KnowledgeBase* kb)
         int index, bit;
         getIndexAndBit(&index, &bit, function);
         
-        if (rule->result[index] & (1 << bit))
+        if (rule->result[index] & (1L << bit))
         {
             printf("%s(%d:%s)", kb->FUNCTION_NAME[rule->resultFromSet][function], rule->resultVarName, kb->SET_NAMES[rule->resultFromSet]);
             count++;
@@ -514,7 +514,7 @@ void printRuleAssignment(Rule* rule, KnowledgeBase* kb, int assignement[MAX_VARS
             int index, bit;
             getIndexAndBit(&index, &bit, function);
             
-            if (rule->varConditions[var][index] & (1 << bit))
+            if (rule->varConditions[var][index] & (1L << bit))
             {
                 finalCount++;
             }
@@ -525,11 +525,11 @@ void printRuleAssignment(Rule* rule, KnowledgeBase* kb, int assignement[MAX_VARS
             int index, bit;
             getIndexAndBit(&index, &bit, function);
             
-            if (rule->varConditions[var][index] & (1 << bit))
+            if (rule->varConditions[var][index] & (1L << bit))
             {
                 printf("%s(%d:%s)", kb->FUNCTION_NAME[rule->varConditionFromSet[var]][function], assignement[var], kb->SET_NAMES[rule->varConditionFromSet[var]]);
                 count++;
-                if (count < finalCount)
+                if (count < finalCount || var+1 < rule->varCount)
                 {
                     printf(" ^ ");
                 }
@@ -544,7 +544,7 @@ void printRuleAssignment(Rule* rule, KnowledgeBase* kb, int assignement[MAX_VARS
         int index, bit;
         getIndexAndBit(&index, &bit, function);
         
-        if (rule->result[index] & (1 << bit))
+        if (rule->result[index] & (1L << bit))
         {
             finalCount++;
         }
@@ -555,7 +555,7 @@ void printRuleAssignment(Rule* rule, KnowledgeBase* kb, int assignement[MAX_VARS
         int index, bit;
         getIndexAndBit(&index, &bit, function);
         
-        if (rule->result[index] & (1 << bit))
+        if (rule->result[index] & (1L << bit))
         {
             printf("%s(%d:%s)", kb->FUNCTION_NAME[rule->resultFromSet][function], resultAssignement, kb->SET_NAMES[rule->resultFromSet]);
             count++;
