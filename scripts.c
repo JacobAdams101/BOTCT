@@ -163,7 +163,7 @@ void initScript(RuleSet** rs, KnowledgeBase** kb, const int SCRIPT, const int NU
     addRole(&count, "CHEF", "GOOD", "TOWNSFOLK", SCRIPT==TB, 64);
     addRole(&count, "EMPATH", "GOOD", "TOWNSFOLK", SCRIPT==TB, 64);
     addRole(&count, "FORTUNE_TELLER", "GOOD", "TOWNSFOLK", SCRIPT==TB || SCRIPT==ALFIE, 64);
-    addRole(&count, "UNDERTAKER", "GOOD", "TOWNSFOLK", SCRIPT==TB, 64);
+    addRole(&count, "UNDERTAKER", "GOOD", "TOWNSFOLK", SCRIPT==TB || SCRIPT==ALFIE, 64);
     addRole(&count, "MONK", "GOOD", "TOWNSFOLK", SCRIPT==TB, 64);
     addRole(&count, "RAVENKEEPER", "GOOD", "TOWNSFOLK", SCRIPT==TB, 64);
     addRole(&count, "VIRGIN", "GOOD", "TOWNSFOLK", SCRIPT==TB, 64);
@@ -202,6 +202,7 @@ void initScript(RuleSet** rs, KnowledgeBase** kb, const int SCRIPT, const int NU
     addRole(&count, "BOUNTY_HUNTER", "GOOD", "TOWNSFOLK", SCRIPT==ALFIE, 64);
     addRole(&count, "ACROBAT", "GOOD", "TOWNSFOLK", SCRIPT==ALFIE, 64);
     addRole(&count, "POPPY_GROWER", "GOOD", "TOWNSFOLK", SCRIPT==ALFIE, 64);
+    addRole(&count, "VILLAGE_IDIOT", "GOOD", "TOWNSFOLK", SCRIPT==ALFIE, 64);
 
     //Outsiders
     //FIRST_OUTSIDER_INDEX = count;
@@ -506,16 +507,19 @@ static void roleMutuallyExclusive(RuleSet* rs, KnowledgeBase* kb, const int NUM_
             {
                 //<PLAYER_A>is_<ROLE> AND <PLAYER_A>is_ALIVE AND <PLAYER_B>is_ALIVE => <PLAYER_B>is_NOT<ROLE>
                 // IDEA: Only one alive player can have a role
-                setTempRuleParams(rs, 2,1);
-                snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s_[NIGHT%d]", ROLE_NAMES[role], night);
-                setTempRuleResultName(rs, kb, 1, "PLAYERS", buff);
-                snprintf(buff, STRING_BUFF_SIZE, "is_%s_[NIGHT%d]", ROLE_NAMES[role], night);
-                addConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff);
-                snprintf(buff, STRING_BUFF_SIZE, "is_ALIVE_[NIGHT%d]", night);
-                addConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff);
-                snprintf(buff, STRING_BUFF_SIZE, "is_ALIVE_[NIGHT%d]", night);
-                addConditionToTempRuleName(rs,kb, 1, "PLAYERS", buff);
-                pushTempRule(rs);
+                if (strcmp(ROLE_NAMES[role], "VILLAGE_IDIOT") != 0)
+                { //Village idiots are not mutually exclusive
+                    setTempRuleParams(rs, 2,1);
+                    snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s_[NIGHT%d]", ROLE_NAMES[role], night);
+                    setTempRuleResultName(rs, kb, 1, "PLAYERS", buff);
+                    snprintf(buff, STRING_BUFF_SIZE, "is_%s_[NIGHT%d]", ROLE_NAMES[role], night);
+                    addConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff);
+                    snprintf(buff, STRING_BUFF_SIZE, "is_ALIVE_[NIGHT%d]", night);
+                    addConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff);
+                    snprintf(buff, STRING_BUFF_SIZE, "is_ALIVE_[NIGHT%d]", night);
+                    addConditionToTempRuleName(rs,kb, 1, "PLAYERS", buff);
+                    pushTempRule(rs);
+                }
 
                 //<PLAYER>is_NOT_{<ROLE_A>, <ROLE_B>...} => <PLAYER>is_<ROLE_Z>
                 // IDEA: A player MUST have one role so by deduction if only one role is remaining they are that role
@@ -1561,6 +1565,9 @@ static void poisonRules(RuleSet* rs, KnowledgeBase* kb, const int NUM_PLAYERS, c
         addConditionToTempRuleName(rs,kb, 0, "METADATA", buff);
         snprintf(buff, STRING_BUFF_SIZE, "is_NOT_VIGORMORTIS_in_PLAY_[NIGHT%d]", night);
         addConditionToTempRuleName(rs,kb, 0, "METADATA", buff);
+        //Misc
+        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_LLEECH_in_PLAY_[NIGHT%d]", night);
+        addConditionToTempRuleName(rs,kb, 0, "METADATA", buff);
         pushTempRule(rs);
 
         //Specific poisoning
@@ -1618,7 +1625,7 @@ static void poisonRules(RuleSet* rs, KnowledgeBase* kb, const int NUM_PLAYERS, c
         addConditionToTempRuleName(rs,kb, 1, "METADATA", buff);
         pushTempRule(rs);
         
-        for (int poisonRole = 0; poisonRole < 13; poisonRole++)
+        for (int poisonRole = 0; poisonRole < 14; poisonRole++)
         {
             //Contrapositive logic
             //Disabled due to a large amount of roles in play
@@ -1641,6 +1648,8 @@ static void poisonRules(RuleSet* rs, KnowledgeBase* kb, const int NUM_PLAYERS, c
             else if (poisonRole == 10) snprintf(buff, STRING_BUFF_SIZE, "is_VORTOX_ALIVE_[NIGHT%d]", night);
             else if (poisonRole == 11) snprintf(buff, STRING_BUFF_SIZE, "is_NO_DASHII_ALIVE_[NIGHT%d]", night);
             else if (poisonRole == 12) snprintf(buff, STRING_BUFF_SIZE, "is_VIGORMORTIS_ALIVE_[NIGHT%d]", night);
+            //Misc
+            else if (poisonRole == 13) snprintf(buff, STRING_BUFF_SIZE, "is_LLEECH_ALIVE_[NIGHT%d]", night);
             setTempRuleResultName(rs, kb, -1, "METADATA", buff);
 
             snprintf(buff, STRING_BUFF_SIZE, "is_POISONED_[NIGHT%d]", night);
@@ -1713,6 +1722,11 @@ static void poisonRules(RuleSet* rs, KnowledgeBase* kb, const int NUM_PLAYERS, c
             if (poisonRole != 12) 
             {
                 snprintf(buff, STRING_BUFF_SIZE, "is_NOT_VIGORMORTIS_in_PLAY_[NIGHT%d]", night);
+                addConditionToTempRuleName(rs,kb, 0, "METADATA", buff);
+            }
+            if (poisonRole != 13) 
+            {
+                snprintf(buff, STRING_BUFF_SIZE, "is_NOT_LLEECH_in_PLAY_[NIGHT%d]", night);
                 addConditionToTempRuleName(rs,kb, 0, "METADATA", buff);
             }
 

@@ -1147,7 +1147,7 @@ static void fortuneTellerPing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* 
 
         //If <PLAYER_INFO>is_FORTUNE_TELLER AND <PLAYER_INFO>is_NOT_poisonedNIGHT<night> => <PLAYER_X>is_NOT_REDHERRING
         setTempRuleParams(rs, 1,0);
-        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_REDHERRING_[NIGHT%d]", night);
+        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_REDHERRING");
         setTempRuleResultName(rs, kb, -playerX-1000, "PLAYERS", buff);
         snprintf(buff, STRING_BUFF_SIZE, "is_FORTUNE_TELLER_[NIGHT%d]", night);
         addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff, playerIDinfoFrom);
@@ -1167,7 +1167,7 @@ static void fortuneTellerPing(int playerIDinfoFrom, KnowledgeBase* kb, RuleSet* 
 
         //If <PLAYER_INFO>is_FORTUNE_TELLER AND <PLAYER_INFO>is_NOT_poisonedNIGHT<night> => <PLAYER_Y>is_NOT_REDHERRING
         setTempRuleParams(rs, 1,0);
-        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_REDHERRING_[NIGHT%d]", night);
+        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_REDHERRING");
         setTempRuleResultName(rs, kb, -playerY-1000, "PLAYERS", buff);
         snprintf(buff, STRING_BUFF_SIZE, "is_FORTUNE_TELLER_[NIGHT%d]", night);
         addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff, playerIDinfoFrom);

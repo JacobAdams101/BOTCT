@@ -1,8 +1,8 @@
 # Compiler
 CC = gcc
 
-# Compiler Flags
-CFLAGS = -Wall -O3
+# Compiler Flags changed to -ofast
+CFLAGS = -Wall -Ofast
 
 # Find all .c files in the current directory
 SRCS = $(wildcard *.c)

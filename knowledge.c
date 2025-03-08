@@ -245,6 +245,20 @@ KnowledgeBase* initKB(const int NUM_PLAYERS)
             writeRoleFunc(kb->FUNCTION_NAME, 2, index, ROLE_NAMES[roleID], "_ALIVE", night, 64);
         }
     }
+    //FABELED
+    writeFunc(kb->FUNCTION_NAME, 2, index, "DOOMSLAYER_in_PLAY", "NOT_DOOMSLAYER_in_PLAY", 64);
+    writeFunc(kb->FUNCTION_NAME, 2, index, "ANGEL_in_PLAY", "NOT_ANGEL_in_PLAY", 64);
+    writeFunc(kb->FUNCTION_NAME, 2, index, "BUDDHIST_in_PLAY", "NOT_BUDDHIST_in_PLAY", 64);
+    writeFunc(kb->FUNCTION_NAME, 2, index, "HELLS_LIBRARIAN_in_PLAY", "NOT_HELLS_LIBRARIAN_in_PLAY", 64);
+    writeFunc(kb->FUNCTION_NAME, 2, index, "REVOLUTIONARY_in_PLAY", "NOT_REVOLUTIONARY_in_PLAY", 64);
+    writeFunc(kb->FUNCTION_NAME, 2, index, "FIDDLER_in_PLAY", "NOT_FIDDLER_in_PLAY", 64);
+    writeFunc(kb->FUNCTION_NAME, 2, index, "TOYMAKER_in_PLAY", "NOT_TOYMAKER_in_PLAY", 64);
+    //CUSTOM
+    writeFunc(kb->FUNCTION_NAME, 2, index, "FIBBIN_in_PLAY", "NOT_FIBBIN_in_PLAY", 64);
+    writeFunc(kb->FUNCTION_NAME, 2, index, "DUCHESS_in_PLAY", "NOT_DUCHESS_in_PLAY", 64);
+    writeFunc(kb->FUNCTION_NAME, 2, index, "SENTINEL_in_PLAY", "NOT_SENTINEL_in_PLAY", 64);
+    writeFunc(kb->FUNCTION_NAME, 2, index, "SPIRIT_OF_IVORY_in_PLAY", "NOT_SPIRIT_OF_IVORY_in_PLAY", 64);
+    writeFunc(kb->FUNCTION_NAME, 2, index, "DJINN_in_PLAY", "NOT_DJINN_in_PLAY", 64);
 
     return kb; //Return initilized knowledge base
 }
@@ -594,7 +608,7 @@ int hasExplicitContradiction(KnowledgeBase* kb)
                 //Finding contradictions using magic bitstrings
                 if ((oddBitString << 1) & evenBitString) return 1; //If true and false
             }
-            //Deprecated code replaced by vodo bit magic ;)
+            //Deprecated code replaced by opaque voodoo bit magic ;)
             /*
             for (int function = 0; function < FUNCTION_RESULT_SIZE*INT_LENGTH; function += 2)
             {

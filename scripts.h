@@ -24,7 +24,7 @@
 
 #pragma once
 
-#define NUM_BOTCT_ROLES 79
+#define NUM_BOTCT_ROLES 80
 #include "rules.h"
 #include "knowledge.h"
 
