@@ -15,6 +15,28 @@
 #define WIDTH 1500
 #define HEIGHT 750
 
+#define MAX_UI_ELEMENTS 1000
+
+TextBox UI_ELEMENTS[MAX_UI_ELEMENTS];
+int COUNT = 0;
+int currentNight = 0;
+bool reRenderCall = false;
+
+void event_PrevNight()
+{
+    currentNight = currentNight - 1;
+    if (currentNight < 0) currentNight += NUM_DAYS;
+    reRenderCall = true;
+    printf("PREV NIGHT CLICKED!\n");
+}
+void event_NextNight()
+{
+    currentNight = currentNight + 1;
+    if (currentNight >= NUM_DAYS) currentNight -= NUM_DAYS;
+    reRenderCall = true;
+    printf("Next NIGHT CLICKED!\n");
+}
+
 void renderTextBox(SDL_Renderer *renderer, TextBox* tb)
 {
     //Draw box
@@ -24,7 +46,7 @@ void renderTextBox(SDL_Renderer *renderer, TextBox* tb)
     SDL_RenderFillRect(renderer, &tb->box);
 
     //Draw text
-    SDL_Surface *surface = TTF_RenderText_Solid(tb->font, tb->text, tb->textColor);
+    SDL_Surface *surface = TTF_RenderText_Solid(tb->font, &(tb->text[0]), tb->textColor);
     SDL_Texture *texture = SDL_CreateTextureFromSurface(renderer, surface);
     SDL_Rect dest = {tb->box.x, tb->box.y, surface->w, surface->h};
     SDL_RenderCopy(renderer, texture, NULL, &dest);
@@ -33,11 +55,6 @@ void renderTextBox(SDL_Renderer *renderer, TextBox* tb)
     SDL_FreeSurface(surface);
     SDL_DestroyTexture(texture);
 }
-
-#define MAX_UI_ELEMENTS 1000
-
-TextBox UI_ELEMENTS[MAX_UI_ELEMENTS];
-int COUNT = 0;
 
 void drawUIElements(SDL_Renderer *renderer)
 {
@@ -58,7 +75,14 @@ void resetScreen()
     COUNT = 0;
 }
 
-int addTextBox(int x, int y, int width, int height, Uint8 boxr, Uint8 boxg, Uint8 boxb, Uint8 highlightboxr, Uint8 highlightboxg, Uint8 highlightboxb, Uint8 textr, Uint8 textg, Uint8 textb, const char * text, TTF_Font *FONT)
+int addTextBox(
+    int x, int y, int width, int height, 
+    Uint8 boxr, Uint8 boxg, Uint8 boxb, 
+    Uint8 highlightboxr, Uint8 highlightboxg, Uint8 highlightboxb, 
+    Uint8 textr, Uint8 textg, Uint8 textb, 
+    const char * text, TTF_Font *FONT,
+    EventFunction clickEvent
+)
 {
     if (COUNT >= MAX_UI_ELEMENTS) return -1;
 
@@ -83,7 +107,10 @@ int addTextBox(int x, int y, int width, int height, Uint8 boxr, Uint8 boxg, Uint
     tb->textColor.b = textb;
     tb->textColor.a = 255;
     tb->font = FONT;
-    tb->text = text; 
+
+    snprintf(tb->text, STRING_BUFF_SIZE, "%s", text);
+
+    tb->clickEventFunction = clickEvent;
     COUNT++;
     return 1;
 }
@@ -107,26 +134,64 @@ void runButtonInBounds()
     for (int uiElement = 0; uiElement < COUNT; uiElement++)
     {
         TextBox* tb = &UI_ELEMENTS[uiElement];
-        if (tb->highlighted)
+        if (tb->highlighted && tb->clickEventFunction != NULL)
         {
-            printf("Clicked!\n");
+            tb->clickEventFunction();
         }
     }
 }
 
+
+
 void makeTable(KnowledgeBase* kb, TTF_Font *FONT, int night)
 {
-    char buff[64];
+    char buff[STRING_BUFF_SIZE];
 
     const int X_WIDTH = 40;
     const int Y_WIDTH = 20;
     const int X_STEP = X_WIDTH+5;
     const int Y_STEP = Y_WIDTH+5;
 
-    const int X_START;
+    const int X_START = 50;
 
     int y = 50;
     int x = X_START;
+
+    snprintf(buff, STRING_BUFF_SIZE, "ROLE TABLE [NIGHT%d]", night);
+
+    printf("buff: %s", buff);
+
+    addTextBox(
+        x, y, X_WIDTH*5, Y_WIDTH, //bb
+        0, 0, 0, //Box colour
+        0, 0, 0, //Highlighted Box colour
+        255, 255, 255, //Text colour
+        buff, 
+        FONT,
+        NULL
+    );
+    x += X_STEP*5;
+    addTextBox(
+        x, y, X_WIDTH*2, Y_WIDTH, //bb
+        50, 50, 50, //Box colour
+                100, 100, 100, //Highlighted Box colour
+        255, 255, 255, //Text colour
+        "PREV NIGHT", 
+        FONT,
+        event_PrevNight
+    );
+    x += X_STEP*2;
+    addTextBox(
+        x, y, X_WIDTH*2, Y_WIDTH, //bb
+        50, 50, 50, //Box colour
+        100, 100, 100, //Highlighted Box colour
+        255, 255, 255, //Text colour
+        "NEXT NIGHT", 
+        FONT,
+        event_NextNight
+    );
+    x = X_START;
+    y += Y_STEP;
 
     for (int role = 0; role < NUM_BOTCT_ROLES; role++)
     {
@@ -167,7 +232,8 @@ void makeTable(KnowledgeBase* kb, TTF_Font *FONT, int night)
                 100, 100, 100, //Highlighted Box colour
                 red, green, blue, //Text colour
                 ROLE_NAMES[role], 
-                FONT
+                FONT,
+                NULL
             );
 
             x += X_STEP;
@@ -180,7 +246,8 @@ void makeTable(KnowledgeBase* kb, TTF_Font *FONT, int night)
         100, 100, 100, //Highlighted Box colour
         255, 255, 255, //Text colour
         "CLASS", 
-        FONT
+        FONT,
+        NULL
     );
     x += X_STEP;
     addTextBox(
@@ -189,7 +256,8 @@ void makeTable(KnowledgeBase* kb, TTF_Font *FONT, int night)
         100, 100, 100, //Highlighted Box colour
         255, 255, 255, //Text colour
         "TEAM", 
-        FONT
+        FONT,
+        NULL
     );
     x += X_STEP;
     addTextBox(
@@ -198,7 +266,8 @@ void makeTable(KnowledgeBase* kb, TTF_Font *FONT, int night)
         100, 100, 100, //Highlighted Box colour
         255, 255, 255, //Text colour
         "POISONED", 
-        FONT
+        FONT,
+        NULL
     );
     x += X_STEP;
     addTextBox(
@@ -207,7 +276,8 @@ void makeTable(KnowledgeBase* kb, TTF_Font *FONT, int night)
         100, 100, 100, //Highlighted Box colour
         255, 255, 255, //Text colour
         "ALIVE", 
-        FONT
+        FONT,
+        NULL
     );
     x += X_STEP;
 
@@ -290,7 +360,8 @@ void makeTable(KnowledgeBase* kb, TTF_Font *FONT, int night)
                     100, 100, 100, //Highlighted Box colour
                     red, green, blue, //Text colour
                     text, 
-                    FONT
+                    FONT,
+                    NULL
                 );
                 x += X_STEP;
 
@@ -304,7 +375,8 @@ void makeTable(KnowledgeBase* kb, TTF_Font *FONT, int night)
                 100, 100, 100, //Highlighted Box colour
                 0, 255, 0, //Text colour
                 "TOWNSFOLK", 
-                FONT
+                FONT,
+                NULL
             );
             x += X_STEP;
         }
@@ -316,7 +388,8 @@ void makeTable(KnowledgeBase* kb, TTF_Font *FONT, int night)
                 100, 100, 100, //Highlighted Box colour
                 255, 0, 255, //Text colour
                 "OUTSIDER", 
-                FONT
+                FONT,
+                NULL
             );
             x += X_STEP;
         }
@@ -328,7 +401,8 @@ void makeTable(KnowledgeBase* kb, TTF_Font *FONT, int night)
                 100, 100, 100, //Highlighted Box colour
                 255, 255, 0, //Text colour
                 "MINION", 
-                FONT
+                FONT,
+                NULL
             );
             x += X_STEP;
         }
@@ -340,7 +414,8 @@ void makeTable(KnowledgeBase* kb, TTF_Font *FONT, int night)
                 100, 100, 100, //Highlighted Box colour
                 255, 0, 0, //Text colour
                 "DEMON", 
-                FONT
+                FONT,
+                NULL
             );
             x += X_STEP;
         }
@@ -352,7 +427,8 @@ void makeTable(KnowledgeBase* kb, TTF_Font *FONT, int night)
                 100, 100, 100, //Highlighted Box colour
                 255, 255, 255, //Text colour
                 "?", 
-                FONT
+                FONT,
+                NULL
             );
             x += X_STEP;
         }
@@ -365,7 +441,8 @@ void makeTable(KnowledgeBase* kb, TTF_Font *FONT, int night)
                 100, 100, 100, //Highlighted Box colour
                 0, 255, 0, //Text colour
                 "GOOD", 
-                FONT
+                FONT,
+                NULL
             );
             x += X_STEP;
         }
@@ -377,7 +454,8 @@ void makeTable(KnowledgeBase* kb, TTF_Font *FONT, int night)
                 100, 100, 100, //Highlighted Box colour
                 255, 0, 0, //Text colour
                 "EVIL", 
-                FONT
+                FONT,
+                NULL
             );
             x += X_STEP;
         }
@@ -389,7 +467,8 @@ void makeTable(KnowledgeBase* kb, TTF_Font *FONT, int night)
                 100, 100, 100, //Highlighted Box colour
                 255, 255, 255, //Text colour
                 "?", 
-                FONT
+                FONT,
+                NULL
             );
             x += X_STEP;
         }
@@ -401,7 +480,8 @@ void makeTable(KnowledgeBase* kb, TTF_Font *FONT, int night)
                 100, 100, 100, //Highlighted Box colour
                 255, 0, 0, //Text colour
                 "POISONED", 
-                FONT
+                FONT,
+                NULL
             );
             x += X_STEP;
         }
@@ -413,7 +493,8 @@ void makeTable(KnowledgeBase* kb, TTF_Font *FONT, int night)
                 100, 100, 100, //Highlighted Box colour
                 0, 255, 0, //Text colour
                 "HEALTHY", 
-                FONT
+                FONT,
+                NULL
             );
             x += X_STEP;
         }
@@ -425,7 +506,8 @@ void makeTable(KnowledgeBase* kb, TTF_Font *FONT, int night)
                 100, 100, 100, //Highlighted Box colour
                 255, 255, 255, //Text colour
                 "?", 
-                FONT
+                FONT,
+                NULL
             );
             x += X_STEP;
         }
@@ -438,7 +520,8 @@ void makeTable(KnowledgeBase* kb, TTF_Font *FONT, int night)
                 100, 100, 100, //Highlighted Box colour
                 0, 255, 0, //Text colour
                 "ALIVE", 
-                FONT
+                FONT,
+                NULL
             );
             x += X_STEP;
         }
@@ -450,7 +533,8 @@ void makeTable(KnowledgeBase* kb, TTF_Font *FONT, int night)
                 100, 100, 100, //Highlighted Box colour
                 255, 0, 0, //Text colour
                 "DEAD", 
-                FONT
+                FONT,
+                NULL
             );
             x += X_STEP;
         }
@@ -462,12 +546,21 @@ void makeTable(KnowledgeBase* kb, TTF_Font *FONT, int night)
                 100, 100, 100, //Highlighted Box colour
                 255, 255, 255, //Text colour
                 "?", 
-                FONT
+                FONT,
+                NULL
             );
             x += X_STEP;
         }
     }
 }
+
+void updateUI(KnowledgeBase* kb, TTF_Font *FONT, int night)
+{
+    currentNight = night;
+    resetScreen();
+    makeTable(kb, FONT, night);
+}
+
 //gcc -I/opt/homebrew/include uitest.c knowledge.c rules.c scripts.c solver.c ui.c util.c  -D_THREAD_SAFE -L/opt/homebrew/lib -lSDL2 -lSDL2_ttf
 int main() {
     initRand();
@@ -517,37 +610,19 @@ int main() {
 
     bool running = true;
     SDL_Event event;
-    /*
-    addTextBox(
-        100, 100, 200, 100, //bb
-        255, 0, 0, //Box colour
-        255, 100, 100, //Highlighted Box colour
-        255, 255, 255, //Text colour
-        "Hello SDL!", 
-        ARIAL_FONT
-    );
 
-    addTextBox(
-        300, 100, 200, 100, //bb
-        255, 0, 0, //Box colour
-        255, 100, 100, //Highlighted Box colour
-        255, 255, 255, //Text colour
-        "Hello SDL!", 
-        ARIAL_FONT
-    );
-    */
-    /*
-    TextBox box2;
-    TextBox* button = box2;
-    button->box= {100, 50, 100, 100};
-    button->boxColor = {255, 255, 0, 255};
-    button->textColor = {255, 255, 255, 255}; 
-    button->font = ARIAL_FONT;
-    char* text = "Button"; 
-    */
-   makeTable(kb, ARIAL_FONT, 0);
+    reRenderCall = true;
+    
+    
+   
 
     while (running) {
+        if (reRenderCall) 
+        {
+            printf("RE RENDER\n");
+            reRenderCall = false;
+            updateUI(kb, ARIAL_FONT, currentNight);
+        }
         int mouseX, mouseY;
         SDL_GetMouseState(&mouseX, &mouseY);
         updatedButtonInBounds(mouseX, mouseY);
