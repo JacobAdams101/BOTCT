@@ -12,8 +12,8 @@
 #include "util.h"
 #include "solver.h"
 
-#define WIDTH 1024
-#define HEIGHT 1024
+#define WIDTH 1500
+#define HEIGHT 750
 
 void renderTextBox(SDL_Renderer *renderer, TextBox* tb)
 {
@@ -34,7 +34,7 @@ void renderTextBox(SDL_Renderer *renderer, TextBox* tb)
     SDL_DestroyTexture(texture);
 }
 
-#define MAX_UI_ELEMENTS 100
+#define MAX_UI_ELEMENTS 1000
 
 TextBox UI_ELEMENTS[MAX_UI_ELEMENTS];
 int COUNT = 0;
@@ -118,10 +118,10 @@ void makeTable(KnowledgeBase* kb, TTF_Font *FONT, int night)
 {
     char buff[64];
 
-    const int X_WIDTH = 50;
-    const int Y_WIDTH = 25;
-    const int X_STEP = X_WIDTH+10;
-    const int Y_STEP = Y_WIDTH+10;
+    const int X_WIDTH = 40;
+    const int Y_WIDTH = 20;
+    const int X_STEP = X_WIDTH+5;
+    const int Y_STEP = Y_WIDTH+5;
 
     const int X_START;
 
@@ -174,22 +174,49 @@ void makeTable(KnowledgeBase* kb, TTF_Font *FONT, int night)
         }
     }
 
-    return;
-    printf("   CLASS   | TEAM | POISONED | ALIVE |\n");
-    printf("---------|");
-    for (int role = 0; role < NUM_BOTCT_ROLES; role++)
-    {
-        //Only print roles in the script
-        if (ROLE_IN_SCRIPT[role] == 1)
-        {
-            printf("---|");
-            
-        }
-    }
-    printf("-----------|------|----------|-------|\n");
+    addTextBox(
+        x, y, X_WIDTH, Y_WIDTH, //bb
+        50, 50, 50, //Box colour
+        100, 100, 100, //Highlighted Box colour
+        255, 255, 255, //Text colour
+        "CLASS", 
+        FONT
+    );
+    x += X_STEP;
+    addTextBox(
+        x, y, X_WIDTH, Y_WIDTH, //bb
+        50, 50, 50, //Box colour
+        100, 100, 100, //Highlighted Box colour
+        255, 255, 255, //Text colour
+        "TEAM", 
+        FONT
+    );
+    x += X_STEP;
+    addTextBox(
+        x, y, X_WIDTH, Y_WIDTH, //bb
+        50, 50, 50, //Box colour
+        100, 100, 100, //Highlighted Box colour
+        255, 255, 255, //Text colour
+        "POISONED", 
+        FONT
+    );
+    x += X_STEP;
+    addTextBox(
+        x, y, X_WIDTH, Y_WIDTH, //bb
+        50, 50, 50, //Box colour
+        100, 100, 100, //Highlighted Box colour
+        255, 255, 255, //Text colour
+        "ALIVE", 
+        FONT
+    );
+    x += X_STEP;
+
+
     int set = 0;
     for (int element = 0; element < kb->SET_SIZES[set]; element++)
     {
+        y += Y_STEP;
+        x = X_START;
         snprintf(buff, 64, "is_TOWNSFOLK_[NIGHT%d]", night);
         int isTownsfolk = isKnownName(kb, "PLAYERS", element, buff); 
         snprintf(buff, 64, "is_OUTSIDER_[NIGHT%d]", night);
@@ -215,117 +242,230 @@ void makeTable(KnowledgeBase* kb, TTF_Font *FONT, int night)
         int isDead = isKnownName(kb, "PLAYERS", element, buff); 
 
         //printTrucatedStr(kb->ELEMENT_NAMES[0][element], 9);
-        printf("|");
+
         for (int role = 0; role < NUM_BOTCT_ROLES; role++)
         {
             //Only print roles in the script
             if (ROLE_IN_SCRIPT[role] == 1)
             {
-                if (strcmp(ROLE_CLASSES[role], "DEMON") == 0) PRINT_RED
-                else if (strcmp(ROLE_CLASSES[role], "MINION") == 0) PRINT_YELLOW
-                else if (strcmp(ROLE_CLASSES[role], "OUTSIDER") == 0) PRINT_PURPLE
-                else if (strcmp(ROLE_CLASSES[role], "TOWNSFOLK") == 0) PRINT_GREEN
+                int red;
+                int green;
+                int blue;
+                if (strcmp(ROLE_CLASSES[role], "DEMON") == 0)
+                {
+                    red = 255;
+                    green = 0;
+                    blue = 0;
+                }
+                else if (strcmp(ROLE_CLASSES[role], "MINION") == 0)
+                {
+                    red = 255;
+                    green = 255;
+                    blue = 0;
+                }
+                else if (strcmp(ROLE_CLASSES[role], "OUTSIDER") == 0)
+                {
+                    red = 255;
+                    green = 0;
+                    blue = 255;
+                }
+                else if (strcmp(ROLE_CLASSES[role], "TOWNSFOLK") == 0)
+                {
+                    red = 0;
+                    green = 255;
+                    blue = 0;
+                }
                 snprintf(buff, 64, "is_%s_[NIGHT%d]", ROLE_NAMES[role], night);
                 int isRole = isKnownName(kb, "PLAYERS", element, buff); 
                 snprintf(buff, 64, "is_NOT_%s_[NIGHT%d]", ROLE_NAMES[role], night);
                 int isNotRole = isKnownName(kb, "PLAYERS", element, buff);
-                if (isRole == 1)
-                {
-                    PRINT_TITLE
-                    printf(" * ");
-                }
-                else if (isNotRole == 1)
-                {
-                    printf("   ");
-                }
-                else
-                {
-                    printf(" ? ");
-                }
-                PRINT_END
-                printf("|");
+                char* text;
+                if (isRole == 1) text = "*";
+                else if (isNotRole == 1) text = "";
+                else text = "?";
+
+                addTextBox(
+                    x, y, X_WIDTH, Y_WIDTH, //bb
+                    50, 50, 50, //Box colour
+                    100, 100, 100, //Highlighted Box colour
+                    red, green, blue, //Text colour
+                    text, 
+                    FONT
+                );
+                x += X_STEP;
+
             }
         }
         if (isTownsfolk == 1)
         {
-            PRINT_GREEN
-            printf(" TOWNSFOLK ");
-            PRINT_END
+            addTextBox(
+                x, y, X_WIDTH, Y_WIDTH, //bb
+                50, 50, 50, //Box colour
+                100, 100, 100, //Highlighted Box colour
+                0, 255, 0, //Text colour
+                "TOWNSFOLK", 
+                FONT
+            );
+            x += X_STEP;
         }
         else if (isOutsider == 1)
         {
-            PRINT_PURPLE
-            printf("  OUTSIDER ");
-            PRINT_END
+            addTextBox(
+                x, y, X_WIDTH, Y_WIDTH, //bb
+                50, 50, 50, //Box colour
+                100, 100, 100, //Highlighted Box colour
+                255, 0, 255, //Text colour
+                "OUTSIDER", 
+                FONT
+            );
+            x += X_STEP;
         }
         else if (isMinion == 1)
         {
-            PRINT_YELLOW
-            printf("   MINION  ");
-            PRINT_END
+            addTextBox(
+                x, y, X_WIDTH, Y_WIDTH, //bb
+                50, 50, 50, //Box colour
+                100, 100, 100, //Highlighted Box colour
+                255, 255, 0, //Text colour
+                "MINION", 
+                FONT
+            );
+            x += X_STEP;
         }
         else if (isDemon == 1)
         {
-            PRINT_RED
-            printf("   DEMON   ");
-            PRINT_END
+            addTextBox(
+                x, y, X_WIDTH, Y_WIDTH, //bb
+                50, 50, 50, //Box colour
+                100, 100, 100, //Highlighted Box colour
+                255, 0, 0, //Text colour
+                "DEMON", 
+                FONT
+            );
+            x += X_STEP;
         }
         else
         {
-            printf("     ?     ");
+            addTextBox(
+                x, y, X_WIDTH, Y_WIDTH, //bb
+                50, 50, 50, //Box colour
+                100, 100, 100, //Highlighted Box colour
+                255, 255, 255, //Text colour
+                "?", 
+                FONT
+            );
+            x += X_STEP;
         }
-        printf("|");
+
         if (isGood == 1)
         {
-            PRINT_GREEN
-            printf(" GOOD ");
-            PRINT_END
+            addTextBox(
+                x, y, X_WIDTH, Y_WIDTH, //bb
+                50, 50, 50, //Box colour
+                100, 100, 100, //Highlighted Box colour
+                0, 255, 0, //Text colour
+                "GOOD", 
+                FONT
+            );
+            x += X_STEP;
         }
         else if (isEvil == 1)
         {
-            PRINT_RED
-            printf(" EVIL ");
-            PRINT_END
+            addTextBox(
+                x, y, X_WIDTH, Y_WIDTH, //bb
+                50, 50, 50, //Box colour
+                100, 100, 100, //Highlighted Box colour
+                255, 0, 0, //Text colour
+                "EVIL", 
+                FONT
+            );
+            x += X_STEP;
         }
         else
         {
-            printf("  ?   ");
+            addTextBox(
+                x, y, X_WIDTH, Y_WIDTH, //bb
+                50, 50, 50, //Box colour
+                100, 100, 100, //Highlighted Box colour
+                255, 255, 255, //Text colour
+                "?", 
+                FONT
+            );
+            x += X_STEP;
         }
-        printf("|");
         if (isPoisoned == 1)
         {
-            PRINT_RED
-            printf(" POISONED ");
-            PRINT_END
+            addTextBox(
+                x, y, X_WIDTH, Y_WIDTH, //bb
+                50, 50, 50, //Box colour
+                100, 100, 100, //Highlighted Box colour
+                255, 0, 0, //Text colour
+                "POISONED", 
+                FONT
+            );
+            x += X_STEP;
         }
         else if (isNotPoisoned == 1)
         {
-            PRINT_GREEN
-            printf("  HEALTHY ");
-            PRINT_END
+            addTextBox(
+                x, y, X_WIDTH, Y_WIDTH, //bb
+                50, 50, 50, //Box colour
+                100, 100, 100, //Highlighted Box colour
+                0, 255, 0, //Text colour
+                "HEALTHY", 
+                FONT
+            );
+            x += X_STEP;
         }
         else
         {
-            printf("     ?    ");
+            addTextBox(
+                x, y, X_WIDTH, Y_WIDTH, //bb
+                50, 50, 50, //Box colour
+                100, 100, 100, //Highlighted Box colour
+                255, 255, 255, //Text colour
+                "?", 
+                FONT
+            );
+            x += X_STEP;
         }
         printf("|");
         if (isAlive == 1)
         {
-            PRINT_GREEN
-            printf(" ALIVE ");
-            PRINT_END
+            addTextBox(
+                x, y, X_WIDTH, Y_WIDTH, //bb
+                50, 50, 50, //Box colour
+                100, 100, 100, //Highlighted Box colour
+                0, 255, 0, //Text colour
+                "ALIVE", 
+                FONT
+            );
+            x += X_STEP;
         }
         else if (isDead == 1)
         {
-            PRINT_RED
-            printf(" DEAD  ");
-            PRINT_END
+            addTextBox(
+                x, y, X_WIDTH, Y_WIDTH, //bb
+                50, 50, 50, //Box colour
+                100, 100, 100, //Highlighted Box colour
+                255, 0, 0, //Text colour
+                "DEAD", 
+                FONT
+            );
+            x += X_STEP;
         }
         else
         {
-            printf("  ?    ");
+            addTextBox(
+                x, y, X_WIDTH, Y_WIDTH, //bb
+                50, 50, 50, //Box colour
+                100, 100, 100, //Highlighted Box colour
+                255, 255, 255, //Text colour
+                "?", 
+                FONT
+            );
+            x += X_STEP;
         }
-        printf("|\n");
     }
 }
 //gcc -I/opt/homebrew/include uitest.c knowledge.c rules.c scripts.c solver.c ui.c util.c  -D_THREAD_SAFE -L/opt/homebrew/lib -lSDL2 -lSDL2_ttf
