@@ -274,27 +274,10 @@ int getYNInput(char* message)
     }
     return result;
 }
-/**
- * shown_role() - used to update the knowledge base assuming a player was shown a certain role
- * this function also takes into account the innacuracies of being shown roles (drunk, lunatic etc.)
- * 
- * @kb the knowledge base to update
- * @NUM_DAYS the max number of days the game can go on for
-*/
-static void shown_role(KnowledgeBase* kb)
+
+void shown_role(KnowledgeBase* kb, int playerID, int roleID, int night)
 {
-    int playerID;
     char buff[STRING_BUFF_SIZE]; // Declare a character array to hold the string 
-    int roleID = -1;
-    int night;
-
-    printf("ENERTING: SHOWN ROLE\n");
-
-    playerID = getPlayerIDInput(kb, "For player?"); // Read player ID
-
-    night = getInt("On night?", 0, NUM_DAYS);
-
-    roleID = getRoleIDInput("Role?");
 
     if (strcmp(ROLE_CLASSES[roleID], "DEMON") == 0) //If demon team, they're either a demon or the lunatic
     {
@@ -337,24 +320,33 @@ static void shown_role(KnowledgeBase* kb)
         }
     }
 }
-
 /**
- * roleNotInGame() - used to update the knowledge base assuming a role is not in the game
+ * shown_role_UI() - used to update the knowledge base assuming a player was shown a certain role
+ * this function also takes into account the innacuracies of being shown roles (drunk, lunatic etc.)
  * 
  * @kb the knowledge base to update
  * @NUM_DAYS the max number of days the game can go on for
 */
-static  void roleNotInGame(KnowledgeBase* kb)
+static void shown_role_UI(KnowledgeBase* kb)
 {
-    char buff[STRING_BUFF_SIZE]; // Declare a character array to hold the string 
+    int playerID;
     int roleID = -1;
     int night;
 
-    printf("ENERTING: ROLE NOT IN GAME\n");
+    printf("ENERTING: SHOWN ROLE\n");
 
-    roleID = getRoleIDInput("Role not in game?");
+    playerID = getPlayerIDInput(kb, "For player?"); // Read player ID
 
-    night = getInt("On night? (Type -1 for every night)", -1, NUM_DAYS);
+    night = getInt("On night?", 0, NUM_DAYS);
+
+    roleID = getRoleIDInput("Role?");
+
+    shown_role(kb, playerID, roleID, night);
+}
+
+void roleNotInGame(KnowledgeBase* kb, int roleID, int night)
+{
+    char buff[STRING_BUFF_SIZE]; // Declare a character array to hold the string 
 
     if (night == -1)
     {
@@ -370,54 +362,29 @@ static  void roleNotInGame(KnowledgeBase* kb)
         addKnowledgeName(kb, "METADATA", 0, buff);
     }
 }
-
 /**
- * noptions() - given that a player gives you n options ("Three for Three" etc.)
- * update the knowledge base
- * Assume good "not mad" players always tell the truth (to the best of their knowledge [drunk etc])
- * Assume bad players will be lying about a good role
+ * roleNotInGame_UI() - used to update the knowledge base assuming a role is not in the game
  * 
  * @kb the knowledge base to update
  * @NUM_DAYS the max number of days the game can go on for
 */
-static void noptions(KnowledgeBase* kb)
+static void roleNotInGame_UI(KnowledgeBase* kb)
 {
-    
-    printf("ENERTING: n POSSIBILITIES\n");
-
-    int n;
-    printf("Num Roles?:\n");
-    scanf("%d", &n); // Read player ID
-
-    int playerID;
-    char input[STRING_BUFF_SIZE]; // Declare a character array to hold the string 
-    char buff[STRING_BUFF_SIZE]; // Declare a character array to hold the string 
-    int roleIDs[n];
+    int roleID = -1;
     int night;
 
-    playerID = getPlayerIDInput(kb, "For player?"); // Read player ID
+    printf("ENERTING: ROLE NOT IN GAME\n");
 
-    night = getInt("On night?", 0, NUM_DAYS);
+    roleID = getRoleIDInput("Role not in game?");
 
-    printRolesInScript();
-    for (int j = 0; j < n; j++)
-    {
-        roleIDs[j] = -1;
-    }
-    for (int j = 0; j < n; j++)
-    {
-        printf("Role %d?:\n",j);
-        
-        while (roleIDs[j] == -1)
-        {
-            scanf("%255s", input); // Read a string (up to 99 characters to leave space for the null terminator)
-            roleIDs[j] = getRoleIdFromString(input);
-            if (roleIDs[j] == -1)
-            {
-                printf("ERROR: Invalid string!\n");
-            }
-        }
-    }
+    night = getInt("On night? (Type -1 for every night)", -1, NUM_DAYS);
+
+    roleNotInGame(kb, roleID, night);
+}
+
+void noptions(KnowledgeBase* kb, int playerID, int n, int roleIDs[], int night)
+{
+    char buff[STRING_BUFF_SIZE]; // Declare a character array to hold the string 
 
     for (int i = 0; i < NUM_BOTCT_ROLES; i++)
     {
@@ -445,6 +412,56 @@ static void noptions(KnowledgeBase* kb)
             addKnowledgeName(kb, "PLAYERS", playerID, buff);
         }
     }
+}
+/**
+ * noptions_UI() - given that a player gives you n options ("Three for Three" etc.)
+ * update the knowledge base
+ * Assume good "not mad" players always tell the truth (to the best of their knowledge [drunk etc])
+ * Assume bad players will be lying about a good role
+ * 
+ * @kb the knowledge base to update
+ * @NUM_DAYS the max number of days the game can go on for
+*/
+static void noptions_UI(KnowledgeBase* kb)
+{
+    
+    printf("ENERTING: n POSSIBILITIES\n");
+
+    int n;
+    printf("Num Roles?:\n");
+    scanf("%d", &n); // Read player ID
+
+    int playerID;
+    char input[STRING_BUFF_SIZE]; // Declare a character array to hold the string 
+    
+    int roleIDs[n];
+    int night;
+
+    playerID = getPlayerIDInput(kb, "For player?"); // Read player ID
+
+    night = getInt("On night?", 0, NUM_DAYS);
+
+    printRolesInScript();
+    for (int j = 0; j < n; j++)
+    {
+        roleIDs[j] = -1;
+    }
+    for (int j = 0; j < n; j++)
+    {
+        printf("Role %d?:\n",j);
+        
+        while (roleIDs[j] == -1)
+        {
+            scanf("%255s", input); // Read a string (up to 99 characters to leave space for the null terminator)
+            roleIDs[j] = getRoleIdFromString(input);
+            if (roleIDs[j] == -1)
+            {
+                printf("ERROR: Invalid string!\n");
+            }
+        }
+    }
+
+    noptions(kb, playerID, n, roleIDs, night);
 }
 
 /**
@@ -2315,11 +2332,11 @@ int add_info(KnowledgeBase* kb, RuleSet* rs)
 
         if (strcasecmp(buff,SHOWN_ROLE) == 0)
         {
-            shown_role(kb);
+            shown_role_UI(kb);
         }
         else if (strcmp(buff,ROLE_NOT_IN_GAME) == 0)
         {
-            roleNotInGame(kb);
+            roleNotInGame_UI(kb);
         }
         else if (strcasecmp(buff,PING) == 0)
         {
@@ -2327,7 +2344,7 @@ int add_info(KnowledgeBase* kb, RuleSet* rs)
         }
         else if (strcasecmp(buff,N_POSSIBILITIES) == 0)
         {
-            noptions(kb);
+            noptions_UI(kb);
         }
         else if (strcasecmp(buff,POISONED) == 0)
         {

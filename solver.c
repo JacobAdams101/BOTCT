@@ -48,7 +48,7 @@
  * 
  * @return TRUE if a contradiction was found
 */
-static int inferImplicitFacts(KnowledgeBase* kb, RuleSet* rs, int numRounds, int verbose)
+int inferImplicitFacts(KnowledgeBase* kb, RuleSet* rs, int numRounds, int verbose)
 {
     //Loop for a maximum number of rounds
     for (int i = 0; i < numRounds; i++)

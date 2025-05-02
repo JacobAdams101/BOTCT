@@ -26,7 +26,7 @@
 
 #include "rules.h"
 #include "knowledge.h"
-
+#include "rules.h"
 
 #define NUM_SOLVE_STEPS 5
 
@@ -42,3 +42,5 @@
  * @NUM_DAYS the maxium number of days the game can go on for
 */
 void solve(KnowledgeBase* kb, RuleSet* rs, const int NUM_PLAYERS, const int NUM_MINIONS, const int NUM_DEMONS, const int BASE_OUTSIDERS);
+
+int inferImplicitFacts(KnowledgeBase* kb, RuleSet* rs, int numRounds, int verbose);

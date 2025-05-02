@@ -6,7 +6,7 @@
 #include "constants.h"
 
 // Define a function type
-typedef void (*EventFunction)();
+typedef void (*EventFunction)(int);
 
 typedef struct {
     SDL_Rect box;
@@ -17,4 +17,5 @@ typedef struct {
     char text[STRING_BUFF_SIZE]; 
     int highlighted;
     EventFunction clickEventFunction;
+    int eventID;
 } TextBox;

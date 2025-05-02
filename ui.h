@@ -117,3 +117,11 @@ int getInt(char* message, int min, int max);
  * @NUM_DAYS the max number of days the game can go on for
 */
 int add_info(KnowledgeBase* kb, RuleSet* rs);
+
+/*
+ * EXTERNAL UI CALLS
+*/
+
+void shown_role(KnowledgeBase* kb, int playerID, int roleID, int night);
+void roleNotInGame(KnowledgeBase* kb, int roleID, int night);
+void noptions(KnowledgeBase* kb, int playerID, int n, int roleIDs[], int night);

@@ -1,3 +1,27 @@
+/*
+ * MIT License
+ * 
+ * Copyright (c) 2025 Jacob Adams
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
 #include <stdbool.h>
@@ -12,29 +36,51 @@
 #include "util.h"
 #include "solver.h"
 
-#define WIDTH 1500
-#define HEIGHT 750
+#define WIDTH 1600
+#define HEIGHT 900
 
 #define MAX_UI_ELEMENTS 1000
+#define MAX_UI_ZONES 7
 
-TextBox UI_ELEMENTS[MAX_UI_ELEMENTS];
-int COUNT = 0;
+/***************************************************
+ * UI ELEMENTS
+ ***************************************************/
+TextBox UI_ELEMENTS[MAX_UI_ZONES][MAX_UI_ELEMENTS];
+int COUNT[MAX_UI_ZONES];
 int currentNight = 0;
 bool reRenderCall = false;
+int subMenuOpen = 0;
+int subSubMenuOpen = 0;
+int subSubSubMenuOpen = 0;
+const int MAX_BUTTON_OPTIONS = NUM_BOTCT_ROLES+1;
+int subSubSubSubMenuSelected[MAX_BUTTON_OPTIONS];
+int subSubSubSubSubMenuSelected[MAX_BUTTON_OPTIONS*3];
 
+/***************************************************
+ * PROGRAM DATA
+ ***************************************************/
+KnowledgeBase* KNOWLEDGE_BASE = NULL;
+KnowledgeBase* REVERT_KB = NULL;
+RuleSet* RULE_SET = NULL;
+
+
+
+/***************************************************
+ * UI CODE
+ ***************************************************/
 void event_PrevNight()
 {
     currentNight = currentNight - 1;
     if (currentNight < 0) currentNight += NUM_DAYS;
     reRenderCall = true;
-    printf("PREV NIGHT CLICKED!\n");
+    //printf("PREV NIGHT CLICKED!\n");
 }
 void event_NextNight()
 {
     currentNight = currentNight + 1;
     if (currentNight >= NUM_DAYS) currentNight -= NUM_DAYS;
     reRenderCall = true;
-    printf("Next NIGHT CLICKED!\n");
+    //printf("Next NIGHT CLICKED!\n");
 }
 
 void renderTextBox(SDL_Renderer *renderer, TextBox* tb)
@@ -46,9 +92,14 @@ void renderTextBox(SDL_Renderer *renderer, TextBox* tb)
     SDL_RenderFillRect(renderer, &tb->box);
 
     //Draw text
-    SDL_Surface *surface = TTF_RenderText_Solid(tb->font, &(tb->text[0]), tb->textColor);
+    SDL_Surface *surface = TTF_RenderText_Blended(tb->font, &(tb->text[0]), tb->textColor);
     SDL_Texture *texture = SDL_CreateTextureFromSurface(renderer, surface);
-    SDL_Rect dest = {tb->box.x, tb->box.y, surface->w, surface->h};
+    SDL_Rect dest = {
+        tb->box.x + (tb->box.w - surface->w) / 2,
+        tb->box.y + (tb->box.h - surface->h) / 2,
+        surface->w,
+        surface->h
+    };
     SDL_RenderCopy(renderer, texture, NULL, &dest);
 
     //Free memory
@@ -61,18 +112,21 @@ void drawUIElements(SDL_Renderer *renderer)
     // Clear screen
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
     SDL_RenderClear(renderer);
-    for (int uiElement = 0; uiElement < COUNT; uiElement++)
+    for (int uiZone = 0; uiZone < MAX_UI_ZONES; uiZone++)
     {
-        TextBox* tb = &UI_ELEMENTS[uiElement];
-        renderTextBox(renderer, tb);
+        for (int uiElement = 0; uiElement < COUNT[uiZone]; uiElement++)
+        {
+            TextBox* tb = &UI_ELEMENTS[uiZone][uiElement];
+            renderTextBox(renderer, tb);
+        }
     }
     SDL_RenderPresent(renderer);
-    SDL_Delay(16);
+    
 }
 
-void resetScreen()
+void resetScreen(int uiZone)
 {
-    COUNT = 0;
+    COUNT[uiZone] = 0;
 }
 
 int addTextBox(
@@ -81,12 +135,14 @@ int addTextBox(
     Uint8 highlightboxr, Uint8 highlightboxg, Uint8 highlightboxb, 
     Uint8 textr, Uint8 textg, Uint8 textb, 
     const char * text, TTF_Font *FONT,
-    EventFunction clickEvent
+    EventFunction clickEvent,
+    int eventID,
+    int uiZone
 )
 {
-    if (COUNT >= MAX_UI_ELEMENTS) return -1;
+    if (COUNT[uiZone] >= MAX_UI_ELEMENTS) return -1;
 
-    TextBox* tb = &UI_ELEMENTS[COUNT];
+    TextBox* tb = &UI_ELEMENTS[uiZone][COUNT[uiZone]];
     tb->box.x = x;
     tb->box.y = y;
     tb->box.w = width;
@@ -111,7 +167,8 @@ int addTextBox(
     snprintf(tb->text, STRING_BUFF_SIZE, "%s", text);
 
     tb->clickEventFunction = clickEvent;
-    COUNT++;
+    tb->eventID = eventID;
+    COUNT[uiZone]++;
     return 1;
 }
 
@@ -122,21 +179,27 @@ int isInBounds(TextBox* tb, int x, int y)
 
 void updatedButtonInBounds(int mx, int my)
 {
-    for (int uiElement = 0; uiElement < COUNT; uiElement++)
+    for (int uiZone = 0; uiZone < MAX_UI_ZONES; uiZone++)
     {
-        TextBox* tb = &UI_ELEMENTS[uiElement];
-        tb->highlighted = isInBounds(tb, mx, my);
+        for (int uiElement = 0; uiElement < COUNT[uiZone]; uiElement++)
+        {
+            TextBox* tb = &UI_ELEMENTS[uiZone][uiElement];
+            tb->highlighted = isInBounds(tb, mx, my);
+        }
     }
 }
 
 void runButtonInBounds()
 {
-    for (int uiElement = 0; uiElement < COUNT; uiElement++)
+    for (int uiZone = 0; uiZone < MAX_UI_ZONES; uiZone++)
     {
-        TextBox* tb = &UI_ELEMENTS[uiElement];
-        if (tb->highlighted && tb->clickEventFunction != NULL)
+        for (int uiElement = 0; uiElement < COUNT[uiZone]; uiElement++)
         {
-            tb->clickEventFunction();
+            TextBox* tb = &UI_ELEMENTS[uiZone][uiElement];
+            if (tb->highlighted && tb->clickEventFunction != NULL)
+            {
+                tb->clickEventFunction(tb->eventID);
+            }
         }
     }
 }
@@ -148,7 +211,7 @@ void makeTable(KnowledgeBase* kb, TTF_Font *FONT, int night)
     char buff[STRING_BUFF_SIZE];
 
     const int X_WIDTH = 40;
-    const int Y_WIDTH = 20;
+    const int Y_WIDTH = 15;
     const int X_STEP = X_WIDTH+5;
     const int Y_STEP = Y_WIDTH+5;
 
@@ -159,7 +222,7 @@ void makeTable(KnowledgeBase* kb, TTF_Font *FONT, int night)
 
     snprintf(buff, STRING_BUFF_SIZE, "ROLE TABLE [NIGHT%d]", night);
 
-    printf("buff: %s", buff);
+    //printf("buff: %s", buff);
 
     addTextBox(
         x, y, X_WIDTH*5, Y_WIDTH, //bb
@@ -168,7 +231,9 @@ void makeTable(KnowledgeBase* kb, TTF_Font *FONT, int night)
         255, 255, 255, //Text colour
         buff, 
         FONT,
-        NULL
+        NULL,
+        0,
+        0
     );
     x += X_STEP*5;
     addTextBox(
@@ -178,7 +243,9 @@ void makeTable(KnowledgeBase* kb, TTF_Font *FONT, int night)
         255, 255, 255, //Text colour
         "PREV NIGHT", 
         FONT,
-        event_PrevNight
+        event_PrevNight,
+        0,
+        0
     );
     x += X_STEP*2;
     addTextBox(
@@ -188,7 +255,9 @@ void makeTable(KnowledgeBase* kb, TTF_Font *FONT, int night)
         255, 255, 255, //Text colour
         "NEXT NIGHT", 
         FONT,
-        event_NextNight
+        event_NextNight,
+        0,
+        0
     );
     x = X_START;
     y += Y_STEP;
@@ -225,15 +294,17 @@ void makeTable(KnowledgeBase* kb, TTF_Font *FONT, int night)
                 green = 255;
                 blue = 0;
             }
-
+            snprintf(buff, STRING_BUFF_SIZE, "%.*s", 3, ROLE_NAMES[role]);
             addTextBox(
                 x, y, X_WIDTH, Y_WIDTH, //bb
                 50, 50, 50, //Box colour
                 100, 100, 100, //Highlighted Box colour
                 red, green, blue, //Text colour
-                ROLE_NAMES[role], 
+                buff, 
                 FONT,
-                NULL
+                NULL,
+                0,
+                0
             );
 
             x += X_STEP;
@@ -247,7 +318,9 @@ void makeTable(KnowledgeBase* kb, TTF_Font *FONT, int night)
         255, 255, 255, //Text colour
         "CLASS", 
         FONT,
-        NULL
+        NULL,
+        0,
+        0
     );
     x += X_STEP;
     addTextBox(
@@ -257,7 +330,9 @@ void makeTable(KnowledgeBase* kb, TTF_Font *FONT, int night)
         255, 255, 255, //Text colour
         "TEAM", 
         FONT,
-        NULL
+        NULL,
+        0,
+        0
     );
     x += X_STEP;
     addTextBox(
@@ -267,7 +342,9 @@ void makeTable(KnowledgeBase* kb, TTF_Font *FONT, int night)
         255, 255, 255, //Text colour
         "POISONED", 
         FONT,
-        NULL
+        NULL,
+        0,
+        0
     );
     x += X_STEP;
     addTextBox(
@@ -277,7 +354,9 @@ void makeTable(KnowledgeBase* kb, TTF_Font *FONT, int night)
         255, 255, 255, //Text colour
         "ALIVE", 
         FONT,
-        NULL
+        NULL,
+        0,
+        0
     );
     x += X_STEP;
 
@@ -286,7 +365,20 @@ void makeTable(KnowledgeBase* kb, TTF_Font *FONT, int night)
     for (int element = 0; element < kb->SET_SIZES[set]; element++)
     {
         y += Y_STEP;
-        x = X_START;
+        x = X_START - X_STEP;
+        snprintf(buff, STRING_BUFF_SIZE, "%s", kb->ELEMENT_NAMES[0][element]);
+        addTextBox(
+            x, y, X_WIDTH, Y_WIDTH, //bb
+            0, 0, 0, //Box colour
+            0, 0, 0, //Highlighted Box colour
+            255, 255, 255, //Text colour
+            buff, 
+            FONT,
+            NULL,
+            0,
+            0
+        );
+        x += X_STEP;
         snprintf(buff, 64, "is_TOWNSFOLK_[NIGHT%d]", night);
         int isTownsfolk = isKnownName(kb, "PLAYERS", element, buff); 
         snprintf(buff, 64, "is_OUTSIDER_[NIGHT%d]", night);
@@ -361,7 +453,9 @@ void makeTable(KnowledgeBase* kb, TTF_Font *FONT, int night)
                     red, green, blue, //Text colour
                     text, 
                     FONT,
-                    NULL
+                    NULL,
+                    0,
+                    0
                 );
                 x += X_STEP;
 
@@ -376,7 +470,9 @@ void makeTable(KnowledgeBase* kb, TTF_Font *FONT, int night)
                 0, 255, 0, //Text colour
                 "TOWNSFOLK", 
                 FONT,
-                NULL
+                NULL,
+                0,
+                0
             );
             x += X_STEP;
         }
@@ -389,7 +485,9 @@ void makeTable(KnowledgeBase* kb, TTF_Font *FONT, int night)
                 255, 0, 255, //Text colour
                 "OUTSIDER", 
                 FONT,
-                NULL
+                NULL,
+                0,
+                0
             );
             x += X_STEP;
         }
@@ -402,7 +500,9 @@ void makeTable(KnowledgeBase* kb, TTF_Font *FONT, int night)
                 255, 255, 0, //Text colour
                 "MINION", 
                 FONT,
-                NULL
+                NULL,
+                0,
+                0
             );
             x += X_STEP;
         }
@@ -415,7 +515,9 @@ void makeTable(KnowledgeBase* kb, TTF_Font *FONT, int night)
                 255, 0, 0, //Text colour
                 "DEMON", 
                 FONT,
-                NULL
+                NULL,
+                0,
+                0
             );
             x += X_STEP;
         }
@@ -428,7 +530,9 @@ void makeTable(KnowledgeBase* kb, TTF_Font *FONT, int night)
                 255, 255, 255, //Text colour
                 "?", 
                 FONT,
-                NULL
+                NULL,
+                0,
+                0
             );
             x += X_STEP;
         }
@@ -442,7 +546,9 @@ void makeTable(KnowledgeBase* kb, TTF_Font *FONT, int night)
                 0, 255, 0, //Text colour
                 "GOOD", 
                 FONT,
-                NULL
+                NULL,
+                0,
+                0
             );
             x += X_STEP;
         }
@@ -455,7 +561,9 @@ void makeTable(KnowledgeBase* kb, TTF_Font *FONT, int night)
                 255, 0, 0, //Text colour
                 "EVIL", 
                 FONT,
-                NULL
+                NULL,
+                0,
+                0
             );
             x += X_STEP;
         }
@@ -468,7 +576,9 @@ void makeTable(KnowledgeBase* kb, TTF_Font *FONT, int night)
                 255, 255, 255, //Text colour
                 "?", 
                 FONT,
-                NULL
+                NULL,
+                0,
+                0
             );
             x += X_STEP;
         }
@@ -481,7 +591,9 @@ void makeTable(KnowledgeBase* kb, TTF_Font *FONT, int night)
                 255, 0, 0, //Text colour
                 "POISONED", 
                 FONT,
-                NULL
+                NULL,
+                0,
+                0
             );
             x += X_STEP;
         }
@@ -494,7 +606,9 @@ void makeTable(KnowledgeBase* kb, TTF_Font *FONT, int night)
                 0, 255, 0, //Text colour
                 "HEALTHY", 
                 FONT,
-                NULL
+                NULL,
+                0,
+                0
             );
             x += X_STEP;
         }
@@ -507,11 +621,12 @@ void makeTable(KnowledgeBase* kb, TTF_Font *FONT, int night)
                 255, 255, 255, //Text colour
                 "?", 
                 FONT,
-                NULL
+                NULL,
+                0,
+                0
             );
             x += X_STEP;
         }
-        printf("|");
         if (isAlive == 1)
         {
             addTextBox(
@@ -521,7 +636,9 @@ void makeTable(KnowledgeBase* kb, TTF_Font *FONT, int night)
                 0, 255, 0, //Text colour
                 "ALIVE", 
                 FONT,
-                NULL
+                NULL,
+                0,
+                0
             );
             x += X_STEP;
         }
@@ -534,7 +651,9 @@ void makeTable(KnowledgeBase* kb, TTF_Font *FONT, int night)
                 255, 0, 0, //Text colour
                 "DEAD", 
                 FONT,
-                NULL
+                NULL,
+                0,
+                0
             );
             x += X_STEP;
         }
@@ -547,19 +666,1461 @@ void makeTable(KnowledgeBase* kb, TTF_Font *FONT, int night)
                 255, 255, 255, //Text colour
                 "?", 
                 FONT,
-                NULL
+                NULL,
+                0,
+                0
             );
             x += X_STEP;
         }
     }
 }
 
-void updateUI(KnowledgeBase* kb, TTF_Font *FONT, int night)
+void updateUITable(KnowledgeBase* kb, TTF_Font *FONT, int night)
 {
     currentNight = night;
-    resetScreen();
+    resetScreen(0);
     makeTable(kb, FONT, night);
 }
+
+void getButtonColours(bool selected, int* r, int* g, int* b, int* sr, int* sg, int* sb)
+{
+    const int normR = 50;
+    const int normG = 50;
+    const int normB = 50;
+
+    const int normselectedR = 100;
+    const int normselectedG = 100;
+    const int normselectedB = 100;
+
+    const int openR = 150;
+    const int openG = 150;
+    const int openB = 150;
+
+    if (selected)
+    {
+        *r = openR;
+        *g = openG;
+        *b = openB;
+        *sr = openR;
+        *sg = openG;
+        *sb = openB;
+
+    }
+    else
+    {
+        *r = normR;
+        *g = normG;
+        *b = normB;
+        *sr = normselectedR;
+        *sg = normselectedG;
+        *sb = normselectedB;
+    }   
+}
+
+void resetSubMenu()
+{
+    subMenuOpen = 0;
+}
+void resetSubSubMenu()
+{
+    subSubMenuOpen = 0;
+}
+void resetSubSubSubMenu()
+{
+    subSubSubMenuOpen = 0;
+}
+void resetSubSubSubSubMenu()
+{
+    for (int i = 0; i < MAX_BUTTON_OPTIONS; i++) subSubSubSubMenuSelected[i] = 0;
+}
+void resetSubSubSubSubSubMenu()
+{
+    for (int i = 0; i < MAX_BUTTON_OPTIONS*3; i++) subSubSubSubSubMenuSelected[i] = 0;
+}
+
+void openSubMenu(int eventID)
+{
+    subMenuOpen = eventID;
+    reRenderCall = true;
+
+    resetSubSubMenu();
+    resetSubSubSubMenu();
+    resetSubSubSubSubMenu();
+    resetSubSubSubSubSubMenu();
+}
+void openSubSubMenu(int eventID)
+{
+    subSubMenuOpen = eventID;
+    reRenderCall = true;
+
+    resetSubSubSubMenu();
+    resetSubSubSubSubMenu();
+    resetSubSubSubSubSubMenu();
+}
+void openSubSubSubMenu(int eventID)
+{
+    subSubSubMenuOpen = eventID;
+    reRenderCall = true;
+
+    resetSubSubSubSubMenu();
+    resetSubSubSubSubSubMenu();
+}
+void toggleSubSubSubSubMenu(int eventID)
+{
+    subSubSubSubMenuSelected[eventID] = subSubSubSubMenuSelected[eventID] == 1 ? 0 : 1;
+    reRenderCall = true;
+    resetSubSubSubSubSubMenu();
+}
+void selectSubSubSubSubMenu(int eventID)
+{
+    for (int i = 0; i < MAX_BUTTON_OPTIONS; i++) subSubSubSubMenuSelected[i] = 0;
+    subSubSubSubMenuSelected[eventID] = 1;
+    reRenderCall = true;
+    resetSubSubSubSubSubMenu();
+}
+void toggleSubSubSubSubSubMenu(int eventID)
+{
+    subSubSubSubSubMenuSelected[eventID] = subSubSubSubSubMenuSelected[eventID] == 1 ? 0 : 1;
+    reRenderCall = true;
+}
+void selectSubSubSubSubSubMenu(int eventID)
+{
+    int range = (eventID / MAX_BUTTON_OPTIONS) * MAX_BUTTON_OPTIONS;
+    for (int i = range; i < range+MAX_BUTTON_OPTIONS; i++) subSubSubSubSubMenuSelected[i] = 0;
+    subSubSubSubSubMenuSelected[eventID] = 1;
+    reRenderCall = true;
+}
+
+void finish(int eventID)
+{
+    subMenuOpen = 9;
+
+    int contradiction = inferImplicitFacts(KNOWLEDGE_BASE, RULE_SET, NUM_SOLVE_STEPS, 1);
+    if (contradiction == 0)
+    { //Optimise ruleset only if no contradictions were produced
+        printHeading("OPTIMISE RULESET");
+        optimiseRuleset(RULE_SET, KNOWLEDGE_BASE);
+        copyTo(REVERT_KB, KNOWLEDGE_BASE);
+    }
+
+    if (contradiction == 1)
+    {
+        printRedHeading("CONTRADICTION FOUND!"); //UI HEADING
+        printf("Rolling back Knowledge base\n");
+        //Roll back knowledge base
+        copyTo(KNOWLEDGE_BASE, REVERT_KB);
+    }
+    
+    reRenderCall = true;
+}
+
+void confirm()
+{
+    int night;
+    int playerID;
+    int roleID;
+    switch(subMenuOpen)
+    {
+        case 1: //Shown Role
+            night = subSubMenuOpen-1;
+            playerID = subSubSubMenuOpen-1;
+            for (int i = 0; i < MAX_BUTTON_OPTIONS; i++)
+            {
+                if (subSubSubSubMenuSelected[i] == 1)
+                {
+                    roleID = i-1;
+                    break;
+                }
+            }
+            shown_role(KNOWLEDGE_BASE, playerID, roleID, night);
+            printf("YAY\n");
+            break;
+        case 2: //Player Possibilities
+            break;
+        case 3: //Role not In Game
+            break;
+        case 4: //PLayer is/is not poisoned
+            break;
+        case 5: //Redherring 
+            break;
+        case 6: //Num deaths / Ressurections
+            break;
+        case 7: //Player Ping
+            break;
+        case 8: //reset Data
+            break;
+        case 9: //Finish
+            break;
+        default:
+            break;
+
+    }
+}
+
+int canConfirm()
+{
+    int FAIL = 0;
+    int SUCCESS = 1;
+    switch(subMenuOpen)
+    {
+        case 1: //Shown Role
+            for (int i = 0; i < MAX_BUTTON_OPTIONS; i++)
+            {
+                if (subSubSubSubMenuSelected[i] == 1) break;
+                if (i == MAX_BUTTON_OPTIONS-1) return FAIL;
+            }
+            return SUCCESS;
+        case 2: //Player Possibilities
+            for (int i = 0; i < MAX_BUTTON_OPTIONS; i++)
+            {
+                if (subSubSubSubMenuSelected[i] == 1) break;
+                if (i == MAX_BUTTON_OPTIONS-1) return FAIL;
+            }
+            return SUCCESS;
+        case 3: //Role not In Game
+            return subSubSubMenuOpen != 0;
+        case 4: //PLayer is/is not poisoned
+            for (int i = 0; i < MAX_BUTTON_OPTIONS; i++)
+            {
+                if (subSubSubSubMenuSelected[i] == 1) break;
+                if (i == MAX_BUTTON_OPTIONS-1) return FAIL;
+            }
+            return SUCCESS;
+        case 5: //Redherring 
+            for (int i = 0; i < MAX_BUTTON_OPTIONS; i++)
+            {
+                if (subSubSubSubMenuSelected[i] == 1) break;
+                if (i == MAX_BUTTON_OPTIONS-1) return FAIL;
+            }
+            return SUCCESS;
+        case 6: //Num deaths / Ressurections
+            for (int i = 0; i < MAX_BUTTON_OPTIONS; i++)
+            {
+                if (subSubSubSubMenuSelected[i] == 1) break;
+                if (i == MAX_BUTTON_OPTIONS-1) return FAIL;
+            }
+            return SUCCESS;
+        case 7: //Player Ping
+            for (int i = 0; i < MAX_BUTTON_OPTIONS; i++)
+            {
+                if (subSubSubSubSubMenuSelected[i] == 1) break;
+                if (i == MAX_BUTTON_OPTIONS-1) return FAIL;
+            }
+            return SUCCESS;
+        case 8: //reset Data
+            break;
+        case 9: //Finish
+            break;
+        default:
+            break;
+
+    }
+    return FAIL;
+}   
+
+void updateConfirmButton(TTF_Font *FONT, KnowledgeBase* kb)
+{
+    //UI Zone for this menu
+    const int MY_UI_ZONE = 6;
+    //reset menu UI zone
+    resetScreen(MY_UI_ZONE);
+    char buff[STRING_BUFF_SIZE];
+
+    const int X_WIDTH = 256;
+    const int Y_WIDTH = 40;
+
+
+    const int X_START = 50;
+
+    int Y_START = 440;
+
+    int y = Y_START;
+    int x = X_START;
+
+    int red, green, blue;
+    int selectedRed, selectedGreen, selectedBlue;
+
+    int count = 1;
+
+    if (canConfirm())
+    {
+        addTextBox(
+            x, y, X_WIDTH, Y_WIDTH, //bb
+            50, 150, 50, //Box colour
+            100, 200, 100, //Highlighted Box colour
+            255, 255, 255, //Text colour
+            "CONFIRM", 
+            FONT,
+            confirm,
+            0,
+            MY_UI_ZONE
+        );
+    }
+}
+
+void updateSubSubSubSubMenu(TTF_Font *FONT, KnowledgeBase* kb)
+{
+    //UI Zone for this menu
+    const int MY_UI_ZONE = 5;
+    //reset menu UI zone
+    resetScreen(MY_UI_ZONE);
+    char buff[STRING_BUFF_SIZE];
+
+    //If the previous menu doesn't have a selected menu open
+    for (int i = 0; i < MAX_BUTTON_OPTIONS; i++)
+    {
+        if (subSubSubSubMenuSelected[i] == 1) break;
+        if (i == MAX_BUTTON_OPTIONS-1) return;
+    }
+
+    //printf("DRAWING SUB MENU\n");
+
+    const int X_WIDTH = 128;
+    const int Y_WIDTH = 20;
+    const int X_STEP = X_WIDTH+5;
+    const int Y_STEP = Y_WIDTH+5;
+
+    const int X_START = 530+315;
+
+    int Y_START = 500;
+
+    int y = Y_START;
+    int x = X_START;
+
+    int red, green, blue;
+    int selectedRed, selectedGreen, selectedBlue;
+
+    int count = 1;
+
+    if (subMenuOpen == 7)
+    {
+        //printf("DRAWING SUB MENU YAY\n");
+        //Drawing roles
+        for (int role = 0; role < NUM_BOTCT_ROLES; role++)
+        {
+            if (ROLE_IN_SCRIPT[role])
+            {
+                getButtonColours(subSubSubSubSubMenuSelected[role+1] == 1, &red, &green, &blue, &selectedRed, &selectedGreen, &selectedBlue);
+                snprintf(buff, STRING_BUFF_SIZE, "Role: %s", ROLE_NAMES[role]);
+                addTextBox(
+                    x, y, X_WIDTH, Y_WIDTH, //bb
+                    red, green, blue, //Box colour
+                    selectedRed, selectedGreen, selectedBlue, //Highlighted Box colour
+                    255, 255, 255, //Text colour
+                    buff, 
+                    FONT,
+                    selectSubSubSubSubSubMenu,
+                    role+1,
+                    MY_UI_ZONE
+                );
+                y += Y_STEP;
+
+                if (y > HEIGHT-Y_STEP-10)
+                {
+                    y = Y_START;
+                    x += X_STEP;
+                }
+            }
+        }
+        y = Y_START;
+        x += X_STEP;
+        //Drawing players
+        for (int player = 0; player < kb->SET_SIZES[0]; player++)
+        {
+            getButtonColours(subSubSubSubSubMenuSelected[MAX_BUTTON_OPTIONS+player+1] == 1, &red, &green, &blue, &selectedRed, &selectedGreen, &selectedBlue);
+            snprintf(buff, STRING_BUFF_SIZE, "Player: %s", kb->ELEMENT_NAMES[0][player]);
+            addTextBox(
+                x, y, X_WIDTH, Y_WIDTH, //bb
+                red, green, blue, //Box colour
+                selectedRed, selectedGreen, selectedBlue, //Highlighted Box colour
+                255, 255, 255, //Text colour
+                buff, 
+                FONT,
+                toggleSubSubSubSubSubMenu,
+                MAX_BUTTON_OPTIONS+player+1,
+                MY_UI_ZONE
+            );
+            y += Y_STEP;
+        }
+        y = Y_START;
+        x += X_STEP;
+        //Drawing count
+        for (int count = 0; count <= 2; count++)
+        {
+            getButtonColours(subSubSubSubSubMenuSelected[(MAX_BUTTON_OPTIONS*2)+count+1] == 1, &red, &green, &blue, &selectedRed, &selectedGreen, &selectedBlue);
+            snprintf(buff, STRING_BUFF_SIZE, "%d", count);
+            addTextBox(
+                x, y, X_WIDTH, Y_WIDTH, //bb
+                red, green, blue, //Box colour
+                selectedRed, selectedGreen, selectedBlue, //Highlighted Box colour
+                255, 255, 255, //Text colour
+                buff, 
+                FONT,
+                selectSubSubSubSubSubMenu,
+                (MAX_BUTTON_OPTIONS*2)+count+1,
+                MY_UI_ZONE
+            );
+            y += Y_STEP;
+        }
+    }
+
+
+}
+
+void updateSubSubSubMenu(TTF_Font *FONT, KnowledgeBase* kb)
+{
+    //UI Zone for this menu
+    const int MY_UI_ZONE = 4;
+    //reset menu UI zone
+    resetScreen(MY_UI_ZONE);
+    char buff[STRING_BUFF_SIZE];
+
+    //If the previous menu doesn't have a selected menu open
+    if (subSubSubMenuOpen == 0) return;
+
+    const int X_WIDTH = 128;
+    const int Y_WIDTH = 20;
+    const int X_STEP = X_WIDTH+5;
+    const int Y_STEP = Y_WIDTH+5;
+
+    const int X_START = 530;
+
+    int Y_START = 500;
+
+    int y = Y_START;
+    int x = X_START;
+
+    int red, green, blue;
+    int selectedRed, selectedGreen, selectedBlue;
+
+    int count = 1;
+
+    switch(subMenuOpen)
+    {
+        case 1: //Shown Role
+            for (int role = 0; role < NUM_BOTCT_ROLES; role++)
+            {
+                if (ROLE_IN_SCRIPT[role])
+                {
+                    getButtonColours(subSubSubSubMenuSelected[role+1] == 1, &red, &green, &blue, &selectedRed, &selectedGreen, &selectedBlue);
+                    snprintf(buff, STRING_BUFF_SIZE, "Role: %s", ROLE_NAMES[role]);
+                    addTextBox(
+                        x, y, X_WIDTH, Y_WIDTH, //bb
+                        red, green, blue, //Box colour
+                        selectedRed, selectedGreen, selectedBlue, //Highlighted Box colour
+                        255, 255, 255, //Text colour
+                        buff, 
+                        FONT,
+                        selectSubSubSubSubMenu,
+                        role+1,
+                        MY_UI_ZONE
+                    );
+                    y += Y_STEP;
+
+                    if (y > HEIGHT-Y_STEP-10)
+                    {
+                        y = Y_START;
+                        x += X_STEP;
+                    }
+                }
+            }
+            break;
+        case 2: //Player Possibilities
+            for (int role = 0; role < NUM_BOTCT_ROLES; role++)
+            {
+                if (ROLE_IN_SCRIPT[role])
+                {
+                    getButtonColours(subSubSubSubMenuSelected[role+1] == 1, &red, &green, &blue, &selectedRed, &selectedGreen, &selectedBlue);
+                    snprintf(buff, STRING_BUFF_SIZE, "Role: %s", ROLE_NAMES[role]);
+                    addTextBox(
+                        x, y, X_WIDTH, Y_WIDTH, //bb
+                        red, green, blue, //Box colour
+                        selectedRed, selectedGreen, selectedBlue, //Highlighted Box colour
+                        255, 255, 255, //Text colour
+                        buff, 
+                        FONT,
+                        toggleSubSubSubSubMenu,
+                        role+1,
+                        MY_UI_ZONE
+                    );
+                    y += Y_STEP;
+
+                    if (y > HEIGHT-Y_STEP-10)
+                    {
+                        y = Y_START;
+                        x += X_STEP;
+                    }
+                }
+            }
+            break;
+        case 3: //Role not In Game
+            //MENU NOT NEEDED
+            break;
+        case 4: //PLayer is/is not poisoned
+            getButtonColours(subSubSubSubMenuSelected[1] == 1, &red, &green, &blue, &selectedRed, &selectedGreen, &selectedBlue);
+            snprintf(buff, STRING_BUFF_SIZE, "Poisoned");
+            addTextBox(
+                x, y, X_WIDTH, Y_WIDTH, //bb
+                red, green, blue, //Box colour
+                selectedRed, selectedGreen, selectedBlue, //Highlighted Box colour
+                255, 255, 255, //Text colour
+                buff, 
+                FONT,
+                selectSubSubSubSubMenu,
+                1,
+                MY_UI_ZONE
+            );
+            y += Y_STEP;
+            getButtonColours(subSubSubSubMenuSelected[2] == 1, &red, &green, &blue, &selectedRed, &selectedGreen, &selectedBlue);
+            snprintf(buff, STRING_BUFF_SIZE, "Healthy");
+            addTextBox(
+                x, y, X_WIDTH, Y_WIDTH, //bb
+                red, green, blue, //Box colour
+                selectedRed, selectedGreen, selectedBlue, //Highlighted Box colour
+                255, 255, 255, //Text colour
+                buff, 
+                FONT,
+                selectSubSubSubSubMenu,
+                2,
+                MY_UI_ZONE
+            );
+            break;
+        case 5: //Redherring 
+            getButtonColours(subSubSubSubMenuSelected[1] == 1, &red, &green, &blue, &selectedRed, &selectedGreen, &selectedBlue);
+            snprintf(buff, STRING_BUFF_SIZE, "Red Herring");
+            addTextBox(
+                x, y, X_WIDTH, Y_WIDTH, //bb
+                red, green, blue, //Box colour
+                selectedRed, selectedGreen, selectedBlue, //Highlighted Box colour
+                255, 255, 255, //Text colour
+                buff, 
+                FONT,
+                selectSubSubSubSubMenu,
+                1,
+                MY_UI_ZONE
+            );
+            y += Y_STEP;
+            getButtonColours(subSubSubSubMenuSelected[2] == 1, &red, &green, &blue, &selectedRed, &selectedGreen, &selectedBlue);
+            snprintf(buff, STRING_BUFF_SIZE, "Not Red Herring");
+            addTextBox(
+                x, y, X_WIDTH, Y_WIDTH, //bb
+                red, green, blue, //Box colour
+                selectedRed, selectedGreen, selectedBlue, //Highlighted Box colour
+                255, 255, 255, //Text colour
+                buff, 
+                FONT,
+                selectSubSubSubSubMenu,
+                2,
+                MY_UI_ZONE
+            );
+            break;
+        case 6: //Num deaths / Ressurections
+            for (int player = 0; player < kb->SET_SIZES[0]; player++)
+            {
+                getButtonColours(subSubSubSubMenuSelected[player+1] == 1, &red, &green, &blue, &selectedRed, &selectedGreen, &selectedBlue);
+                snprintf(buff, STRING_BUFF_SIZE, "Player: %s", kb->ELEMENT_NAMES[0][player]);
+                addTextBox(
+                    x, y, X_WIDTH, Y_WIDTH, //bb
+                    red, green, blue, //Box colour
+                    selectedRed, selectedGreen, selectedBlue, //Highlighted Box colour
+                    255, 255, 255, //Text colour
+                    buff, 
+                    FONT,
+                    toggleSubSubSubSubMenu,
+                    player+1,
+                    MY_UI_ZONE
+                );
+                y += Y_STEP;
+            }
+            break;
+        case 7: //Player Ping
+
+        
+            count = 1;
+            getButtonColours(subSubSubSubMenuSelected[count] == 1, &red, &green, &blue, &selectedRed, &selectedGreen, &selectedBlue);
+            snprintf(buff, STRING_BUFF_SIZE, "WASHERWOMAN");
+            addTextBox(
+                x, y, X_WIDTH, Y_WIDTH, //bb
+                red, green, blue, //Box colour
+                selectedRed, selectedGreen, selectedBlue, //Highlighted Box colour
+                255, 255, 255, //Text colour
+                buff, 
+                FONT,
+                selectSubSubSubSubMenu,
+                count,
+                MY_UI_ZONE
+            );
+            y += Y_STEP;
+            count++;
+            getButtonColours(subSubSubSubMenuSelected[count] == 1, &red, &green, &blue, &selectedRed, &selectedGreen, &selectedBlue);
+            snprintf(buff, STRING_BUFF_SIZE, "LIBRARIAN");
+            addTextBox(
+                x, y, X_WIDTH, Y_WIDTH, //bb
+                red, green, blue, //Box colour
+                selectedRed, selectedGreen, selectedBlue, //Highlighted Box colour
+                255, 255, 255, //Text colour
+                buff, 
+                FONT,
+                selectSubSubSubSubMenu,
+                count,
+                MY_UI_ZONE
+            );
+            y += Y_STEP;
+            count++;
+            getButtonColours(subSubSubSubMenuSelected[count] == 1, &red, &green, &blue, &selectedRed, &selectedGreen, &selectedBlue);
+            snprintf(buff, STRING_BUFF_SIZE, "INVESTIGATOR");
+            addTextBox(
+                x, y, X_WIDTH, Y_WIDTH, //bb
+                red, green, blue, //Box colour
+                selectedRed, selectedGreen, selectedBlue, //Highlighted Box colour
+                255, 255, 255, //Text colour
+                buff, 
+                FONT,
+                selectSubSubSubSubMenu,
+                count,
+                MY_UI_ZONE
+            );
+            y += Y_STEP;
+            count++;
+            getButtonColours(subSubSubSubMenuSelected[count] == 1, &red, &green, &blue, &selectedRed, &selectedGreen, &selectedBlue);
+            snprintf(buff, STRING_BUFF_SIZE, "CHEF");
+            addTextBox(
+                x, y, X_WIDTH, Y_WIDTH, //bb
+                red, green, blue, //Box colour
+                selectedRed, selectedGreen, selectedBlue, //Highlighted Box colour
+                255, 255, 255, //Text colour
+                buff, 
+                FONT,
+                selectSubSubSubSubMenu,
+                count,
+                MY_UI_ZONE
+            );
+            y += Y_STEP;
+            count++;
+            getButtonColours(subSubSubSubMenuSelected[count] == 1, &red, &green, &blue, &selectedRed, &selectedGreen, &selectedBlue);
+            snprintf(buff, STRING_BUFF_SIZE, "EMPATH");
+            addTextBox(
+                x, y, X_WIDTH, Y_WIDTH, //bb
+                red, green, blue, //Box colour
+                selectedRed, selectedGreen, selectedBlue, //Highlighted Box colour
+                255, 255, 255, //Text colour
+                buff, 
+                FONT,
+                selectSubSubSubSubMenu,
+                count,
+                MY_UI_ZONE
+            );
+            y += Y_STEP;
+            count++;
+            getButtonColours(subSubSubSubMenuSelected[count] == 1, &red, &green, &blue, &selectedRed, &selectedGreen, &selectedBlue);
+            snprintf(buff, STRING_BUFF_SIZE, "FORTUNE_TELLER");
+            addTextBox(
+                x, y, X_WIDTH, Y_WIDTH, //bb
+                red, green, blue, //Box colour
+                selectedRed, selectedGreen, selectedBlue, //Highlighted Box colour
+                255, 255, 255, //Text colour
+                buff, 
+                FONT,
+                selectSubSubSubSubMenu,
+                count,
+                MY_UI_ZONE
+            );
+            y += Y_STEP;
+            count++;
+            getButtonColours(subSubSubSubMenuSelected[count] == 1, &red, &green, &blue, &selectedRed, &selectedGreen, &selectedBlue);
+            snprintf(buff, STRING_BUFF_SIZE, "UNDERTAKER");
+            addTextBox(
+                x, y, X_WIDTH, Y_WIDTH, //bb
+                red, green, blue, //Box colour
+                selectedRed, selectedGreen, selectedBlue, //Highlighted Box colour
+                255, 255, 255, //Text colour
+                buff, 
+                FONT,
+                selectSubSubSubSubMenu,
+                count,
+                MY_UI_ZONE
+            );
+            y += Y_STEP;
+            count++;
+            getButtonColours(subSubSubSubMenuSelected[count] == 1, &red, &green, &blue, &selectedRed, &selectedGreen, &selectedBlue);
+            snprintf(buff, STRING_BUFF_SIZE, "MONK");
+            addTextBox(
+                x, y, X_WIDTH, Y_WIDTH, //bb
+                red, green, blue, //Box colour
+                selectedRed, selectedGreen, selectedBlue, //Highlighted Box colour
+                255, 255, 255, //Text colour
+                buff, 
+                FONT,
+                selectSubSubSubSubMenu,
+                count,
+                MY_UI_ZONE
+            );
+            y += Y_STEP;
+            count++;
+            getButtonColours(subSubSubSubMenuSelected[count] == 1, &red, &green, &blue, &selectedRed, &selectedGreen, &selectedBlue);
+            snprintf(buff, STRING_BUFF_SIZE, "RAVENKEEPER");
+            addTextBox(
+                x, y, X_WIDTH, Y_WIDTH, //bb
+                red, green, blue, //Box colour
+                selectedRed, selectedGreen, selectedBlue, //Highlighted Box colour
+                255, 255, 255, //Text colour
+                buff, 
+                FONT,
+                selectSubSubSubSubMenu,
+                count,
+                MY_UI_ZONE
+            );
+            y += Y_STEP;
+            count++;
+
+
+            getButtonColours(subSubSubSubMenuSelected[count] == 1, &red, &green, &blue, &selectedRed, &selectedGreen, &selectedBlue);
+            snprintf(buff, STRING_BUFF_SIZE, "CLOCKMAKER");
+            addTextBox(
+                x, y, X_WIDTH, Y_WIDTH, //bb
+                red, green, blue, //Box colour
+                selectedRed, selectedGreen, selectedBlue, //Highlighted Box colour
+                255, 255, 255, //Text colour
+                buff, 
+                FONT,
+                selectSubSubSubSubMenu,
+                count,
+                MY_UI_ZONE
+            );
+            y += Y_STEP;
+            count++;
+            getButtonColours(subSubSubSubMenuSelected[count] == 1, &red, &green, &blue, &selectedRed, &selectedGreen, &selectedBlue);
+            snprintf(buff, STRING_BUFF_SIZE, "DREAMER");
+            addTextBox(
+                x, y, X_WIDTH, Y_WIDTH, //bb
+                red, green, blue, //Box colour
+                selectedRed, selectedGreen, selectedBlue, //Highlighted Box colour
+                255, 255, 255, //Text colour
+                buff, 
+                FONT,
+                selectSubSubSubSubMenu,
+                count,
+                MY_UI_ZONE
+            );
+            y += Y_STEP;
+            count++;
+            getButtonColours(subSubSubSubMenuSelected[count] == 1, &red, &green, &blue, &selectedRed, &selectedGreen, &selectedBlue);
+            snprintf(buff, STRING_BUFF_SIZE, "SNAKE_CHARMER");
+            addTextBox(
+                x, y, X_WIDTH, Y_WIDTH, //bb
+                red, green, blue, //Box colour
+                selectedRed, selectedGreen, selectedBlue, //Highlighted Box colour
+                255, 255, 255, //Text colour
+                buff, 
+                FONT,
+                selectSubSubSubSubMenu,
+                count,
+                MY_UI_ZONE
+            );
+            y += Y_STEP;
+            count++;
+            getButtonColours(subSubSubSubMenuSelected[count] == 1, &red, &green, &blue, &selectedRed, &selectedGreen, &selectedBlue);
+            snprintf(buff, STRING_BUFF_SIZE, "MATHEMATICIAN");
+            addTextBox(
+                x, y, X_WIDTH, Y_WIDTH, //bb
+                red, green, blue, //Box colour
+                selectedRed, selectedGreen, selectedBlue, //Highlighted Box colour
+                255, 255, 255, //Text colour
+                buff, 
+                FONT,
+                selectSubSubSubSubMenu,
+                count,
+                MY_UI_ZONE
+            );
+            y += Y_STEP;
+            count++;
+            getButtonColours(subSubSubSubMenuSelected[count] == 1, &red, &green, &blue, &selectedRed, &selectedGreen, &selectedBlue);
+            snprintf(buff, STRING_BUFF_SIZE, "FLOWERGIRL");
+            addTextBox(
+                x, y, X_WIDTH, Y_WIDTH, //bb
+                red, green, blue, //Box colour
+                selectedRed, selectedGreen, selectedBlue, //Highlighted Box colour
+                255, 255, 255, //Text colour
+                buff, 
+                FONT,
+                selectSubSubSubSubMenu,
+                count,
+                MY_UI_ZONE
+            );
+            y += Y_STEP;
+            count++;
+            getButtonColours(subSubSubSubMenuSelected[count] == 1, &red, &green, &blue, &selectedRed, &selectedGreen, &selectedBlue);
+            snprintf(buff, STRING_BUFF_SIZE, "TOWN_CRIER");
+            addTextBox(
+                x, y, X_WIDTH, Y_WIDTH, //bb
+                red, green, blue, //Box colour
+                selectedRed, selectedGreen, selectedBlue, //Highlighted Box colour
+                255, 255, 255, //Text colour
+                buff, 
+                FONT,
+                selectSubSubSubSubMenu,
+                count,
+                MY_UI_ZONE
+            );
+            y = Y_START;
+            x += X_STEP;
+            count++;
+            getButtonColours(subSubSubSubMenuSelected[count] == 1, &red, &green, &blue, &selectedRed, &selectedGreen, &selectedBlue);
+            snprintf(buff, STRING_BUFF_SIZE, "ORACLE");
+            addTextBox(
+                x, y, X_WIDTH, Y_WIDTH, //bb
+                red, green, blue, //Box colour
+                selectedRed, selectedGreen, selectedBlue, //Highlighted Box colour
+                255, 255, 255, //Text colour
+                buff, 
+                FONT,
+                selectSubSubSubSubMenu,
+                count,
+                MY_UI_ZONE
+            );
+            y += Y_STEP;
+            count++;
+            getButtonColours(subSubSubSubMenuSelected[count] == 1, &red, &green, &blue, &selectedRed, &selectedGreen, &selectedBlue);
+            snprintf(buff, STRING_BUFF_SIZE, "SAVANT");
+            addTextBox(
+                x, y, X_WIDTH, Y_WIDTH, //bb
+                red, green, blue, //Box colour
+                selectedRed, selectedGreen, selectedBlue, //Highlighted Box colour
+                255, 255, 255, //Text colour
+                buff, 
+                FONT,
+                selectSubSubSubSubMenu,
+                count,
+                MY_UI_ZONE
+            );
+            y += Y_STEP;
+            count++;
+            getButtonColours(subSubSubSubMenuSelected[count] == 1, &red, &green, &blue, &selectedRed, &selectedGreen, &selectedBlue);
+            snprintf(buff, STRING_BUFF_SIZE, "SEAMSTRESS");
+            addTextBox(
+                x, y, X_WIDTH, Y_WIDTH, //bb
+                red, green, blue, //Box colour
+                selectedRed, selectedGreen, selectedBlue, //Highlighted Box colour
+                255, 255, 255, //Text colour
+                buff, 
+                FONT,
+                selectSubSubSubSubMenu,
+                count,
+                MY_UI_ZONE
+            );
+            y += Y_STEP;
+            count++;
+            getButtonColours(subSubSubSubMenuSelected[count] == 1, &red, &green, &blue, &selectedRed, &selectedGreen, &selectedBlue);
+            snprintf(buff, STRING_BUFF_SIZE, "PHILOSOPHER");
+            addTextBox(
+                x, y, X_WIDTH, Y_WIDTH, //bb
+                red, green, blue, //Box colour
+                selectedRed, selectedGreen, selectedBlue, //Highlighted Box colour
+                255, 255, 255, //Text colour
+                buff, 
+                FONT,
+                selectSubSubSubSubMenu,
+                count,
+                MY_UI_ZONE
+            );
+            y += Y_STEP;
+            count++;
+            getButtonColours(subSubSubSubMenuSelected[count] == 1, &red, &green, &blue, &selectedRed, &selectedGreen, &selectedBlue);
+            snprintf(buff, STRING_BUFF_SIZE, "ARTIST");
+            addTextBox(
+                x, y, X_WIDTH, Y_WIDTH, //bb
+                red, green, blue, //Box colour
+                selectedRed, selectedGreen, selectedBlue, //Highlighted Box colour
+                255, 255, 255, //Text colour
+                buff, 
+                FONT,
+                selectSubSubSubSubMenu,
+                count,
+                MY_UI_ZONE
+            );
+            y += Y_STEP;
+            count++;
+            getButtonColours(subSubSubSubMenuSelected[count] == 1, &red, &green, &blue, &selectedRed, &selectedGreen, &selectedBlue);
+            snprintf(buff, STRING_BUFF_SIZE, "JUGGLER");
+            addTextBox(
+                x, y, X_WIDTH, Y_WIDTH, //bb
+                red, green, blue, //Box colour
+                selectedRed, selectedGreen, selectedBlue, //Highlighted Box colour
+                255, 255, 255, //Text colour
+                buff, 
+                FONT,
+                selectSubSubSubSubMenu,
+                count,
+                MY_UI_ZONE
+            );
+            y += Y_STEP;
+            count++;
+            getButtonColours(subSubSubSubMenuSelected[count] == 1, &red, &green, &blue, &selectedRed, &selectedGreen, &selectedBlue);
+            snprintf(buff, STRING_BUFF_SIZE, "SAGE");
+            addTextBox(
+                x, y, X_WIDTH, Y_WIDTH, //bb
+                red, green, blue, //Box colour
+                selectedRed, selectedGreen, selectedBlue, //Highlighted Box colour
+                255, 255, 255, //Text colour
+                buff, 
+                FONT,
+                selectSubSubSubSubMenu,
+                count,
+                MY_UI_ZONE
+            );
+            y += Y_STEP;
+            count++;
+
+
+            getButtonColours(subSubSubSubMenuSelected[count] == 1, &red, &green, &blue, &selectedRed, &selectedGreen, &selectedBlue);
+            snprintf(buff, STRING_BUFF_SIZE, "GRANDMOTHER");
+            addTextBox(
+                x, y, X_WIDTH, Y_WIDTH, //bb
+                red, green, blue, //Box colour
+                selectedRed, selectedGreen, selectedBlue, //Highlighted Box colour
+                255, 255, 255, //Text colour
+                buff, 
+                FONT,
+                selectSubSubSubSubMenu,
+                count,
+                MY_UI_ZONE
+            );
+            y += Y_STEP;
+            count++;
+            getButtonColours(subSubSubSubMenuSelected[count] == 1, &red, &green, &blue, &selectedRed, &selectedGreen, &selectedBlue);
+            snprintf(buff, STRING_BUFF_SIZE, "CHAMBERMAID");
+            addTextBox(
+                x, y, X_WIDTH, Y_WIDTH, //bb
+                red, green, blue, //Box colour
+                selectedRed, selectedGreen, selectedBlue, //Highlighted Box colour
+                255, 255, 255, //Text colour
+                buff, 
+                FONT,
+                selectSubSubSubSubMenu,
+                count,
+                MY_UI_ZONE
+            );
+            y += Y_STEP;
+            count++;
+            getButtonColours(subSubSubSubMenuSelected[count] == 1, &red, &green, &blue, &selectedRed, &selectedGreen, &selectedBlue);
+            snprintf(buff, STRING_BUFF_SIZE, "EXORCIST");
+            addTextBox(
+                x, y, X_WIDTH, Y_WIDTH, //bb
+                red, green, blue, //Box colour
+                selectedRed, selectedGreen, selectedBlue, //Highlighted Box colour
+                255, 255, 255, //Text colour
+                buff, 
+                FONT,
+                selectSubSubSubSubMenu,
+                count,
+                MY_UI_ZONE
+            );
+            y += Y_STEP;
+            count++;
+            getButtonColours(subSubSubSubMenuSelected[count] == 1, &red, &green, &blue, &selectedRed, &selectedGreen, &selectedBlue);
+            snprintf(buff, STRING_BUFF_SIZE, "INNKEEPER");
+            addTextBox(
+                x, y, X_WIDTH, Y_WIDTH, //bb
+                red, green, blue, //Box colour
+                selectedRed, selectedGreen, selectedBlue, //Highlighted Box colour
+                255, 255, 255, //Text colour
+                buff, 
+                FONT,
+                selectSubSubSubSubMenu,
+                count,
+                MY_UI_ZONE
+            );
+            y += Y_STEP;
+            count++;
+            getButtonColours(subSubSubSubMenuSelected[count] == 1, &red, &green, &blue, &selectedRed, &selectedGreen, &selectedBlue);
+            snprintf(buff, STRING_BUFF_SIZE, "GAMBLER");
+            addTextBox(
+                x, y, X_WIDTH, Y_WIDTH, //bb
+                red, green, blue, //Box colour
+                selectedRed, selectedGreen, selectedBlue, //Highlighted Box colour
+                255, 255, 255, //Text colour
+                buff, 
+                FONT,
+                selectSubSubSubSubMenu,
+                count,
+                MY_UI_ZONE
+            );
+            y += Y_STEP;
+            count++;
+            getButtonColours(subSubSubSubMenuSelected[count] == 1, &red, &green, &blue, &selectedRed, &selectedGreen, &selectedBlue);
+            snprintf(buff, STRING_BUFF_SIZE, "GOSSIP");
+            addTextBox(
+                x, y, X_WIDTH, Y_WIDTH, //bb
+                red, green, blue, //Box colour
+                selectedRed, selectedGreen, selectedBlue, //Highlighted Box colour
+                255, 255, 255, //Text colour
+                buff, 
+                FONT,
+                selectSubSubSubSubMenu,
+                count,
+                MY_UI_ZONE
+            );
+            y += Y_STEP;
+            count++;
+            getButtonColours(subSubSubSubMenuSelected[count] == 1, &red, &green, &blue, &selectedRed, &selectedGreen, &selectedBlue);
+            snprintf(buff, STRING_BUFF_SIZE, "COURTIER");
+            addTextBox(
+                x, y, X_WIDTH, Y_WIDTH, //bb
+                red, green, blue, //Box colour
+                selectedRed, selectedGreen, selectedBlue, //Highlighted Box colour
+                255, 255, 255, //Text colour
+                buff, 
+                FONT,
+                selectSubSubSubSubMenu,
+                count,
+                MY_UI_ZONE
+            );
+            y += Y_STEP;
+            count++;
+            getButtonColours(subSubSubSubMenuSelected[count] == 1, &red, &green, &blue, &selectedRed, &selectedGreen, &selectedBlue);
+            snprintf(buff, STRING_BUFF_SIZE, "PROFESSOR");
+            addTextBox(
+                x, y, X_WIDTH, Y_WIDTH, //bb
+                red, green, blue, //Box colour
+                selectedRed, selectedGreen, selectedBlue, //Highlighted Box colour
+                255, 255, 255, //Text colour
+                buff, 
+                FONT,
+                selectSubSubSubSubMenu,
+                count,
+                MY_UI_ZONE
+            );
+            y += Y_STEP;
+            count++;
+            getButtonColours(subSubSubSubMenuSelected[count] == 1, &red, &green, &blue, &selectedRed, &selectedGreen, &selectedBlue);
+            snprintf(buff, STRING_BUFF_SIZE, "MINSTREL");
+            addTextBox(
+                x, y, X_WIDTH, Y_WIDTH, //bb
+                red, green, blue, //Box colour
+                selectedRed, selectedGreen, selectedBlue, //Highlighted Box colour
+                255, 255, 255, //Text colour
+                buff, 
+                FONT,
+                selectSubSubSubSubMenu,
+                count,
+                MY_UI_ZONE
+            );
+            y += Y_STEP;
+            count++;
+            break;
+        case 8: //reset Data
+            break;
+        case 9: //Finish
+            break;
+        default:
+            break;
+
+    }
+}
+
+void updateSubSubMenu(TTF_Font *FONT, KnowledgeBase* kb)
+{
+    //UI Zone for this menu
+    const int MY_UI_ZONE = 3;
+    //reset menu UI zone
+    resetScreen(MY_UI_ZONE);
+    char buff[STRING_BUFF_SIZE];
+
+    //If the previous menu doesn't have a selected menu open
+    if (subSubMenuOpen == 0) return;
+
+    const int X_WIDTH = 128;
+    const int Y_WIDTH = 20;
+    const int X_STEP = X_WIDTH+5;
+    const int Y_STEP = Y_WIDTH+5;
+
+    const int X_START = 370;
+
+    int Y_START = 500;
+
+    int y = Y_START;
+    int x = X_START;
+
+    int red, green, blue;
+    int selectedRed, selectedGreen, selectedBlue;
+
+    switch(subMenuOpen)
+    {
+        case 1: //Shown Role
+            for (int player = 0; player < kb->SET_SIZES[0]; player++)
+            {
+                getButtonColours(subSubSubMenuOpen == player+1, &red, &green, &blue, &selectedRed, &selectedGreen, &selectedBlue);
+                snprintf(buff, STRING_BUFF_SIZE, "Player: %s", kb->ELEMENT_NAMES[0][player]);
+                addTextBox(
+                    x, y, X_WIDTH, Y_WIDTH, //bb
+                    red, green, blue, //Box colour
+                    selectedRed, selectedGreen, selectedBlue, //Highlighted Box colour
+                    255, 255, 255, //Text colour
+                    buff, 
+                    FONT,
+                    openSubSubSubMenu,
+                    player+1,
+                    MY_UI_ZONE
+                );
+                y += Y_STEP;
+            }
+            break;
+
+        case 2: //Player Possibilities
+            for (int player = 0; player < kb->SET_SIZES[0]; player++)
+            {
+                getButtonColours(subSubSubMenuOpen == player+1, &red, &green, &blue, &selectedRed, &selectedGreen, &selectedBlue);
+                snprintf(buff, STRING_BUFF_SIZE, "Player: %s", kb->ELEMENT_NAMES[0][player]);
+                addTextBox(
+                    x, y, X_WIDTH, Y_WIDTH, //bb
+                    red, green, blue, //Box colour
+                    selectedRed, selectedGreen, selectedBlue, //Highlighted Box colour
+                    255, 255, 255, //Text colour
+                    buff, 
+                    FONT,
+                    openSubSubSubMenu,
+                    player+1,
+                    MY_UI_ZONE
+                );
+                y += Y_STEP;
+            }
+            break;
+
+        case 3: //Role not In Game
+            for (int role = 0; role < NUM_BOTCT_ROLES; role++)
+            {
+                if (ROLE_IN_SCRIPT[role])
+                {
+                    getButtonColours(subSubSubMenuOpen == role+1, &red, &green, &blue, &selectedRed, &selectedGreen, &selectedBlue);
+                    snprintf(buff, STRING_BUFF_SIZE, "Role: %s", ROLE_NAMES[role]);
+                    addTextBox(
+                        x, y, X_WIDTH, Y_WIDTH, //bb
+                        red, green, blue, //Box colour
+                        selectedRed, selectedGreen, selectedBlue, //Highlighted Box colour
+                        255, 255, 255, //Text colour
+                        buff, 
+                        FONT,
+                        openSubSubSubMenu,
+                        role+1,
+                        MY_UI_ZONE
+                    );
+                    y += Y_STEP;
+
+                    if (y > HEIGHT-Y_STEP-10)
+                    {
+                        y = Y_START;
+                        x += X_STEP;
+                    }
+                }
+            }
+            break;
+        case 4: //PLayer is/is not poisoned
+            for (int player = 0; player < kb->SET_SIZES[0]; player++)
+            {
+                getButtonColours(subSubSubMenuOpen == player+1, &red, &green, &blue, &selectedRed, &selectedGreen, &selectedBlue);
+                snprintf(buff, STRING_BUFF_SIZE, "Player: %s", kb->ELEMENT_NAMES[0][player]);
+                addTextBox(
+                    x, y, X_WIDTH, Y_WIDTH, //bb
+                    red, green, blue, //Box colour
+                    selectedRed, selectedGreen, selectedBlue, //Highlighted Box colour
+                    255, 255, 255, //Text colour
+                    buff, 
+                    FONT,
+                    openSubSubSubMenu,
+                    player+1,
+                    MY_UI_ZONE
+                );
+                y += Y_STEP;
+            }
+            break;
+        case 5: //Redherring 
+            for (int player = 0; player < kb->SET_SIZES[0]; player++)
+            {
+                getButtonColours(subSubSubMenuOpen == player+1, &red, &green, &blue, &selectedRed, &selectedGreen, &selectedBlue);
+                snprintf(buff, STRING_BUFF_SIZE, "Player: %s", kb->ELEMENT_NAMES[0][player]);
+                addTextBox(
+                    x, y, X_WIDTH, Y_WIDTH, //bb
+                    red, green, blue, //Box colour
+                    selectedRed, selectedGreen, selectedBlue, //Highlighted Box colour
+                    255, 255, 255, //Text colour
+                    buff, 
+                    FONT,
+                    openSubSubSubMenu,
+                    player+1,
+                    MY_UI_ZONE
+                );
+                y += Y_STEP;
+            }
+            break;
+        case 6: //Num deaths / Ressurections
+            getButtonColours(subSubSubMenuOpen == 1, &red, &green, &blue, &selectedRed, &selectedGreen, &selectedBlue);
+            snprintf(buff, STRING_BUFF_SIZE, "Night Death");
+            addTextBox(
+                x, y, X_WIDTH, Y_WIDTH, //bb
+                red, green, blue, //Box colour
+                selectedRed, selectedGreen, selectedBlue, //Highlighted Box colour
+                255, 255, 255, //Text colour
+                buff, 
+                FONT,
+                openSubSubSubMenu,
+                1,
+                MY_UI_ZONE
+            );
+            y += Y_STEP;
+            getButtonColours(subSubSubMenuOpen == 2, &red, &green, &blue, &selectedRed, &selectedGreen, &selectedBlue);
+            snprintf(buff, STRING_BUFF_SIZE, "Day Death");
+            addTextBox(
+                x, y, X_WIDTH, Y_WIDTH, //bb
+                red, green, blue, //Box colour
+                selectedRed, selectedGreen, selectedBlue, //Highlighted Box colour
+                255, 255, 255, //Text colour
+                buff, 
+                FONT,
+                openSubSubSubMenu,
+                2,
+                MY_UI_ZONE
+            );
+            y += Y_STEP;
+            getButtonColours(subSubSubMenuOpen == 3, &red, &green, &blue, &selectedRed, &selectedGreen, &selectedBlue);
+            snprintf(buff, STRING_BUFF_SIZE, "Hanging Death");
+            addTextBox(
+                x, y, X_WIDTH, Y_WIDTH, //bb
+                red, green, blue, //Box colour
+                selectedRed, selectedGreen, selectedBlue, //Highlighted Box colour
+                255, 255, 255, //Text colour
+                buff, 
+                FONT,
+                openSubSubSubMenu,
+                3,
+                MY_UI_ZONE
+            );
+            break;
+        case 7: //Player Ping
+            for (int player = 0; player < kb->SET_SIZES[0]; player++)
+            {
+                getButtonColours(subSubSubMenuOpen == player+1, &red, &green, &blue, &selectedRed, &selectedGreen, &selectedBlue);
+                snprintf(buff, STRING_BUFF_SIZE, "Player: %s", kb->ELEMENT_NAMES[0][player]);
+                addTextBox(
+                    x, y, X_WIDTH, Y_WIDTH, //bb
+                    red, green, blue, //Box colour
+                    selectedRed, selectedGreen, selectedBlue, //Highlighted Box colour
+                    255, 255, 255, //Text colour
+                    buff, 
+                    FONT,
+                    openSubSubSubMenu,
+                    player+1,
+                    MY_UI_ZONE
+                );
+                y += Y_STEP;
+            }
+            break;
+        case 8: //reset Data
+            break;
+        case 9: //reset Data
+            break;
+        default:
+            break;
+
+    }
+}
+
+void updateSubMenu(TTF_Font *FONT, KnowledgeBase* kb)
+{
+    
+    //UI Zone for this menu
+    const int MY_UI_ZONE = 2;
+    //reset menu UI zone
+    resetScreen(MY_UI_ZONE);
+    char buff[STRING_BUFF_SIZE];
+
+    //If the previous menu doesn't have a selected menu open
+    if (subMenuOpen == 0) return;
+
+    const int X_WIDTH = 128;
+    const int Y_WIDTH = 20;
+    const int X_STEP = X_WIDTH+5;
+    const int Y_STEP = Y_WIDTH+5;
+
+    const int X_START = 210;
+
+    int Y_START = 500;
+
+    int y = Y_START;
+    int x = X_START;
+
+    int red, green, blue;
+    int selectedRed, selectedGreen, selectedBlue;
+
+    for (int night = 0; night < NUM_DAYS; night++)
+    {
+        getButtonColours(subSubMenuOpen == night+1, &red, &green, &blue, &selectedRed, &selectedGreen, &selectedBlue);
+        snprintf(buff, STRING_BUFF_SIZE, "Night: %d", night);
+        addTextBox(
+            x, y, X_WIDTH, Y_WIDTH, //bb
+            red, green, blue, //Box colour
+            selectedRed, selectedGreen, selectedBlue, //Highlighted Box colour
+            255, 255, 255, //Text colour
+            buff, 
+            FONT,
+            openSubSubMenu,
+            night+1,
+            MY_UI_ZONE
+        );
+        y += Y_STEP;
+    }
+}
+
+void updateFirstMenu(TTF_Font *FONT)
+{
+    //UI Zone for this menu
+    const int MY_UI_ZONE = 1;
+    //reset menu UI zone
+    resetScreen(MY_UI_ZONE);
+    char buff[STRING_BUFF_SIZE];
+
+    const int X_WIDTH = 128;
+    const int Y_WIDTH = 20;
+    const int X_STEP = X_WIDTH+5;
+    const int Y_STEP = Y_WIDTH+5;
+
+    const int X_START = 50;
+
+    int y = 500;
+    int x = X_START;
+
+    int red, green, blue;
+    int selectedRed, selectedGreen, selectedBlue;
+
+    
+
+    getButtonColours(subMenuOpen == 1, &red, &green, &blue, &selectedRed, &selectedGreen, &selectedBlue);
+    addTextBox(
+        x, y, X_WIDTH, Y_WIDTH, //bb
+        red, green, blue, //Box colour
+        selectedRed, selectedGreen, selectedBlue, //Highlighted Box colour
+        255, 255, 255, //Text colour
+        "SHOWN ROLE", 
+        FONT,
+        openSubMenu,
+        1,
+        MY_UI_ZONE
+    );
+    y += Y_STEP;
+
+    getButtonColours(subMenuOpen == 2, &red, &green, &blue, &selectedRed, &selectedGreen, &selectedBlue);
+    addTextBox(
+        x, y, X_WIDTH, Y_WIDTH, //bb
+        red, green, blue, //Box colour
+        selectedRed, selectedGreen, selectedBlue, //Highlighted Box colour
+        255, 255, 255, //Text colour
+        "PLAYER POSSIBBILITIES", 
+        FONT,
+        openSubMenu,
+        2,
+        MY_UI_ZONE
+    );
+    y += Y_STEP;
+
+    getButtonColours(subMenuOpen == 3, &red, &green, &blue, &selectedRed, &selectedGreen, &selectedBlue);
+    addTextBox(
+        x, y, X_WIDTH, Y_WIDTH, //bb
+        red, green, blue, //Box colour
+        selectedRed, selectedGreen, selectedBlue, //Highlighted Box colour
+        255, 255, 255, //Text colour
+        "ROLE NOT IN GAME", 
+        FONT,
+        openSubMenu,
+        3,
+        MY_UI_ZONE
+    );
+    y += Y_STEP;
+
+    getButtonColours(subMenuOpen == 4, &red, &green, &blue, &selectedRed, &selectedGreen, &selectedBlue);
+    addTextBox(
+        x, y, X_WIDTH, Y_WIDTH, //bb
+        red, green, blue, //Box colour
+        selectedRed, selectedGreen, selectedBlue, //Highlighted Box colour
+        255, 255, 255, //Text colour
+        "POISONED/HEALTHY", 
+        FONT,
+        openSubMenu,
+        4,
+        MY_UI_ZONE
+    );
+    y += Y_STEP;
+
+    getButtonColours(subMenuOpen == 5, &red, &green, &blue, &selectedRed, &selectedGreen, &selectedBlue);
+    addTextBox(
+        x, y, X_WIDTH, Y_WIDTH, //bb
+        red, green, blue, //Box colour
+        selectedRed, selectedGreen, selectedBlue, //Highlighted Box colour
+        255, 255, 255, //Text colour
+        "RED HERRING", 
+        FONT,
+        openSubMenu,
+        5,
+        MY_UI_ZONE
+    );
+    y += Y_STEP;
+
+    getButtonColours(subMenuOpen == 6, &red, &green, &blue, &selectedRed, &selectedGreen, &selectedBlue);
+    addTextBox(
+        x, y, X_WIDTH, Y_WIDTH, //bb
+        red, green, blue, //Box colour
+        selectedRed, selectedGreen, selectedBlue, //Highlighted Box colour
+        255, 255, 255, //Text colour
+        "DEATHS / RES", 
+        FONT,
+        openSubMenu,
+        6,
+        MY_UI_ZONE
+    );
+    y += Y_STEP;
+
+    getButtonColours(subMenuOpen == 7, &red, &green, &blue, &selectedRed, &selectedGreen, &selectedBlue);
+    addTextBox(
+        x, y, X_WIDTH, Y_WIDTH, //bb
+        red, green, blue, //Box colour
+        selectedRed, selectedGreen, selectedBlue, //Highlighted Box colour
+        255, 255, 255, //Text colour
+        "PLAYER PINGS", 
+        FONT,
+        openSubMenu,
+        7,
+        MY_UI_ZONE
+    );
+    y += Y_STEP;
+
+    getButtonColours(subMenuOpen == 8, &red, &green, &blue, &selectedRed, &selectedGreen, &selectedBlue);
+    addTextBox(
+        x, y, X_WIDTH, Y_WIDTH, //bb
+        red, green, blue, //Box colour
+        selectedRed, selectedGreen, selectedBlue, //Highlighted Box colour
+        255, 255, 255, //Text colour
+        "RESET DATA", 
+        FONT,
+        openSubMenu,
+        8,
+        MY_UI_ZONE
+    );
+    y += Y_STEP;
+
+    getButtonColours(subMenuOpen == 9, &red, &green, &blue, &selectedRed, &selectedGreen, &selectedBlue);
+    addTextBox(
+        x, y, X_WIDTH, Y_WIDTH, //bb
+        red, green, blue, //Box colour
+        selectedRed, selectedGreen, selectedBlue, //Highlighted Box colour
+        255, 255, 255, //Text colour
+        "FINISH", 
+        FONT,
+        finish,
+        0,
+        MY_UI_ZONE
+    );
+    y += Y_STEP;
+}
+
+
 
 //gcc -I/opt/homebrew/include uitest.c knowledge.c rules.c scripts.c solver.c ui.c util.c  -D_THREAD_SAFE -L/opt/homebrew/lib -lSDL2 -lSDL2_ttf
 int main() {
@@ -581,13 +2142,13 @@ int main() {
     printf("There are %d(+2) outsiders in the game\n", BASE_OUTSIDERS);
 
     printf("INITIALIZE KNOWLEDGE BASE...\n");
-    //Make knowlegde base
-    KnowledgeBase* kb = NULL;
-    RuleSet* rs = NULL;
+    
 
-    initScript(&rs, &kb, SCRIPT, NUM_PLAYERS, NUM_MINIONS, NUM_DEMONS, BASE_OUTSIDERS);
+    initScript(&RULE_SET, &KNOWLEDGE_BASE, SCRIPT, NUM_PLAYERS, NUM_MINIONS, NUM_DEMONS, BASE_OUTSIDERS);
+    REVERT_KB = initKB(NUM_PLAYERS); //For backup incase of contradictions
+    copyTo(REVERT_KB, KNOWLEDGE_BASE);
 
-    getNames(kb->ELEMENT_NAMES, NUM_PLAYERS);
+    getNames(KNOWLEDGE_BASE->ELEMENT_NAMES, NUM_PLAYERS);
     
     //Don't print rules
     //printRules(rs, kb);
@@ -613,15 +2174,21 @@ int main() {
 
     reRenderCall = true;
     
-    
+    updateFirstMenu(ARIAL_FONT);
    
 
     while (running) {
         if (reRenderCall) 
         {
-            printf("RE RENDER\n");
+            //printf("RE RENDER\n");
             reRenderCall = false;
-            updateUI(kb, ARIAL_FONT, currentNight);
+            updateUITable(KNOWLEDGE_BASE, ARIAL_FONT, currentNight);
+            updateFirstMenu(ARIAL_FONT);
+            updateSubMenu(ARIAL_FONT, KNOWLEDGE_BASE);
+            updateSubSubMenu(ARIAL_FONT, KNOWLEDGE_BASE);
+            updateSubSubSubMenu(ARIAL_FONT, KNOWLEDGE_BASE);
+            updateSubSubSubSubMenu(ARIAL_FONT, KNOWLEDGE_BASE);
+            updateConfirmButton(ARIAL_FONT, KNOWLEDGE_BASE);
         }
         int mouseX, mouseY;
         SDL_GetMouseState(&mouseX, &mouseY);
@@ -636,6 +2203,7 @@ int main() {
 
         
         drawUIElements(renderer);  
+        SDL_Delay(8);
     }
 
     TTF_CloseFont(ARIAL_FONT);
