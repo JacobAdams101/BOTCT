@@ -811,6 +811,7 @@ void finish(int eventID)
         copyTo(KNOWLEDGE_BASE, REVERT_KB);
     }
     
+    printf("FINISHED CONFIRM!\n");
     reRenderCall = true;
 }
 
@@ -2180,14 +2181,21 @@ int main() {
     while (running) {
         if (reRenderCall) 
         {
-            //printf("RE RENDER\n");
+            printf("RE RENDER!\n");
             reRenderCall = false;
+            printf("-TABLE!\n");
             updateUITable(KNOWLEDGE_BASE, ARIAL_FONT, currentNight);
+            printf("-FIRST MENU!\n");
             updateFirstMenu(ARIAL_FONT);
+            printf("-SUB MENU!\n");
             updateSubMenu(ARIAL_FONT, KNOWLEDGE_BASE);
+            printf("-SUB SUB MENU!\n");
             updateSubSubMenu(ARIAL_FONT, KNOWLEDGE_BASE);
+            printf("-SUB SUB SUB MENU!\n");
             updateSubSubSubMenu(ARIAL_FONT, KNOWLEDGE_BASE);
+            printf("-SUB SUB SUB SUB MENU!\n");
             updateSubSubSubSubMenu(ARIAL_FONT, KNOWLEDGE_BASE);
+            printf("-CONFIRM MENU!\n");
             updateConfirmButton(ARIAL_FONT, KNOWLEDGE_BASE);
         }
         int mouseX, mouseY;
