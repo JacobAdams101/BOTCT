@@ -858,8 +858,25 @@ void confirm()
             roleNotInGame(KNOWLEDGE_BASE, roleID, night);
             break;
         case 4: //PLayer is/is not poisoned
+            night = subSubMenuOpen-1;
+            playerID = subSubSubMenuOpen-1;
+            if (subSubSubSubMenuSelected[1] == 1)
+            {
+                poisoned(KNOWLEDGE_BASE, playerID, night);
+            }
+            if (subSubSubSubMenuSelected[2] == 1)
+            {
+                notPoisoned(KNOWLEDGE_BASE, playerID, night);
+            }
             break;
         case 5: //Redherring 
+            night = subSubMenuOpen-1;
+            playerID = subSubSubMenuOpen-1;
+            if (subSubSubSubMenuSelected[1] == 1)
+            {
+                redHerring(KNOWLEDGE_BASE, playerID);
+            }
+
             break;
         case 6: //Num deaths / Ressurections
             break;

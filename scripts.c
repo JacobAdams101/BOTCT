@@ -1650,11 +1650,10 @@ static void poisonRules(RuleSet* rs, KnowledgeBase* kb, const int NUM_PLAYERS, c
             else if (poisonRole == 12) snprintf(buff, STRING_BUFF_SIZE, "is_VIGORMORTIS_ALIVE_[NIGHT%d]", night);
             //Misc
             else if (poisonRole == 13) snprintf(buff, STRING_BUFF_SIZE, "is_LLEECH_ALIVE_[NIGHT%d]", night);
-            setTempRuleResultName(rs, kb, -1, "METADATA", buff);
+            setTempRuleResultName(rs, kb, 0, "METADATA", buff);
 
             snprintf(buff, STRING_BUFF_SIZE, "is_POISONED_[NIGHT%d]", night);
             addConditionToTempRuleName(rs,kb, 1, "PLAYERS", buff);
-            pushTempRule(rs);
 
             //TB
             if (poisonRole != 0) 

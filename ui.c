@@ -464,16 +464,22 @@ static void noptions_UI(KnowledgeBase* kb)
     noptions(kb, playerID, n, roleIDs, night);
 }
 
+void poisoned(KnowledgeBase* kb, int playerID, int night)
+{
+    char buff[STRING_BUFF_SIZE]; // Declare a character array to hold the string 
+
+    snprintf(buff, STRING_BUFF_SIZE, "is_POISONED_[NIGHT%d]", night);
+    addKnowledgeName(kb, "PLAYERS", playerID, buff);
+}
+
 /**
  * poisoned() - assume that a player is poisoned
  * 
  * @kb the knowledge base to update
  * @NUM_DAYS the max number of days the game can go on for
 */
-static void poisoned(KnowledgeBase* kb)
+static void poisoned_UI(KnowledgeBase* kb)
 {
-    char buff[STRING_BUFF_SIZE]; // Declare a character array to hold the string 
-
     int playerID;
     int night;
 
@@ -483,7 +489,14 @@ static void poisoned(KnowledgeBase* kb)
 
     night = getInt("On night?", 0, NUM_DAYS);
 
-    snprintf(buff, STRING_BUFF_SIZE, "is_POISONED_[NIGHT%d]", night);
+    poisoned(kb, playerID, night);
+}
+
+void notPoisoned(KnowledgeBase* kb, int playerID, int night)
+{
+    char buff[STRING_BUFF_SIZE]; // Declare a character array to hold the string 
+
+    snprintf(buff, STRING_BUFF_SIZE, "is_NOT_POISONED_[NIGHT%d]", night);
     addKnowledgeName(kb, "PLAYERS", playerID, buff);
 }
 
@@ -493,10 +506,8 @@ static void poisoned(KnowledgeBase* kb)
  * @kb the knowledge base to update
  * @NUM_DAYS the max number of days the game can go on for
 */
-static void notPoisoned(KnowledgeBase* kb)
+static void notPoisoned_UI(KnowledgeBase* kb)
 {
-    char buff[STRING_BUFF_SIZE]; // Declare a character array to hold the string 
-
     int playerID;
     int night;
 
@@ -506,8 +517,12 @@ static void notPoisoned(KnowledgeBase* kb)
 
     night = getInt("On night?", 0, NUM_DAYS);
 
-    snprintf(buff, STRING_BUFF_SIZE, "is_NOT_POISONED_[NIGHT%d]", night);
-    addKnowledgeName(kb, "PLAYERS", playerID, buff);
+    notPoisoned(kb, playerID, night);
+}
+
+void redHerring(KnowledgeBase* kb, int playerID)
+{
+    addKnowledgeName(kb, "PLAYERS", playerID, "is_REDHERRING");
 }
 
 /**
@@ -516,7 +531,7 @@ static void notPoisoned(KnowledgeBase* kb)
  * @kb the knowledge base to update
  * @NUM_DAYS the max number of days the game can go on for
 */
-static void redHerring(KnowledgeBase* kb)
+static void redHerring_UI(KnowledgeBase* kb)
 {
     int playerID;
 
@@ -524,34 +539,12 @@ static void redHerring(KnowledgeBase* kb)
 
     playerID = getPlayerIDInput(kb, "Which player is the red herring?"); // Read player ID
 
-    addKnowledgeName(kb, "PLAYERS", playerID, "is_REDHERRING");
+    redHerring(kb, playerID);
 }
 
-/**
- * diedInNight() - assume that a player died in the night
- * 
- * @kb the knowledge base to update
- * @NUM_DAYS the max number of days the game can go on for
-*/
-static void diedInNight(KnowledgeBase* kb)
+void diedInNight(KnowledgeBase* kb, int n, int playerID[], int night)
 {
     char buff[STRING_BUFF_SIZE]; // Declare a character array to hold the string 
-
-    int night;
-
-    printf("ENERTING: PLAYER(s) DIED IN NIGHT\n");
-
-    int n;
-    n = getInt("Num Deaths?", 0, 17);
-
-    night = getInt("On night?", 0, NUM_DAYS);
-
-    int playerID[n];
-
-    for (int i = 0; i < n; i++)
-    {
-        playerID[i] = getPlayerIDInput(kb, "Which player(s) died in the night?"); // Read player ID
-    }
 
     for (int i = 0; i < kb->SET_SIZES[0]; i++)
     {
@@ -574,18 +567,16 @@ static void diedInNight(KnowledgeBase* kb)
 }
 
 /**
- * hung() - assume that a player was hung
+ * diedInNight() - assume that a player died in the night
  * 
  * @kb the knowledge base to update
  * @NUM_DAYS the max number of days the game can go on for
 */
-static void hung(KnowledgeBase* kb)
+static void diedInNight_UI(KnowledgeBase* kb)
 {
-    char buff[STRING_BUFF_SIZE]; // Declare a character array to hold the string 
-
     int night;
 
-    printf("ENERTING: PLAYER(s) HUNG\n");
+    printf("ENERTING: PLAYER(s) DIED IN NIGHT\n");
 
     int n;
     n = getInt("Num Deaths?", 0, 17);
@@ -596,8 +587,14 @@ static void hung(KnowledgeBase* kb)
 
     for (int i = 0; i < n; i++)
     {
-        playerID[i] = getPlayerIDInput(kb, "Which player(s) were hung?"); // Read player ID
+        playerID[i] = getPlayerIDInput(kb, "Which player(s) died in the night?"); // Read player ID
     }
+    diedInNight(kb, n, playerID, night);
+}
+
+void hung(KnowledgeBase* kb, int n, int playerID[], int night)
+{
+    char buff[STRING_BUFF_SIZE]; // Declare a character array to hold the string 
 
     for (int i = 0; i < kb->SET_SIZES[0]; i++)
     {
@@ -618,20 +615,17 @@ static void hung(KnowledgeBase* kb)
         }
     }
 }
-
 /**
- * nominationDeath() - assume that a player died instantly when nominating another player
+ * hung() - assume that a player was hung
  * 
  * @kb the knowledge base to update
  * @NUM_DAYS the max number of days the game can go on for
 */
-static void nominationDeath(KnowledgeBase* kb)
+static void hung_UI(KnowledgeBase* kb)
 {
-    char buff[STRING_BUFF_SIZE]; // Declare a character array to hold the string 
-
     int night;
 
-    printf("ENERTING: PLAYER(s) NOMINATION DEATH\n");
+    printf("ENERTING: PLAYER(s) HUNG\n");
 
     int n;
     n = getInt("Num Deaths?", 0, 17);
@@ -642,8 +636,15 @@ static void nominationDeath(KnowledgeBase* kb)
 
     for (int i = 0; i < n; i++)
     {
-        playerID[i] = getPlayerIDInput(kb, "Which player(s) died when nominating someone?"); // Read player ID
+        playerID[i] = getPlayerIDInput(kb, "Which player(s) were hung?"); // Read player ID
     }
+
+    hung(kb, n, playerID, night);
+}
+
+void nominationDeath(KnowledgeBase* kb, int n, int playerID[], int night)
+{
+    char buff[STRING_BUFF_SIZE]; // Declare a character array to hold the string
 
     for (int i = 0; i < kb->SET_SIZES[0]; i++)
     {
@@ -664,23 +665,20 @@ static void nominationDeath(KnowledgeBase* kb)
         }
     }
 }
-
 /**
- * nominationDeath() - assume that a player was ressurrected
+ * nominationDeath() - assume that a player died instantly when nominating another player
  * 
  * @kb the knowledge base to update
  * @NUM_DAYS the max number of days the game can go on for
 */
-static void resurrected(KnowledgeBase* kb)
-{
-    char buff[STRING_BUFF_SIZE]; // Declare a character array to hold the string 
-
+static void nominationDeath_UI(KnowledgeBase* kb)
+{ 
     int night;
 
-    printf("ENERTING: PLAYER(s) RESURRECTED\n");
+    printf("ENERTING: PLAYER(s) NOMINATION DEATH\n");
 
     int n;
-    n = getInt("Num Resurrections?", 0, 17);
+    n = getInt("Num Deaths?", 0, 17);
 
     night = getInt("On night?", 0, NUM_DAYS);
 
@@ -688,8 +686,13 @@ static void resurrected(KnowledgeBase* kb)
 
     for (int i = 0; i < n; i++)
     {
-        playerID[i] = getPlayerIDInput(kb, "Which player(s) were resurrected?"); // Read player ID
+        playerID[i] = getPlayerIDInput(kb, "Which player(s) died when nominating someone?"); // Read player ID
     }
+    nominationDeath(kb, n, playerID, night);
+}
+void resurrected(KnowledgeBase* kb, int n, int playerID[], int night)
+{
+    char buff[STRING_BUFF_SIZE]; // Declare a character array to hold the string
 
     for (int i = 0; i < kb->SET_SIZES[0]; i++)
     {
@@ -709,6 +712,31 @@ static void resurrected(KnowledgeBase* kb)
             addKnowledgeName(kb, "PLAYERS", i, buff);
         }
     }
+}
+/**
+ * resurrected() - assume that a player was ressurrected
+ * 
+ * @kb the knowledge base to update
+ * @NUM_DAYS the max number of days the game can go on for
+*/
+static void resurrected_UI(KnowledgeBase* kb)
+{ 
+    int night;
+
+    printf("ENERTING: PLAYER(s) RESURRECTED\n");
+
+    int n;
+    n = getInt("Num Resurrections?", 0, 17);
+
+    night = getInt("On night?", 0, NUM_DAYS);
+
+    int playerID[n];
+
+    for (int i = 0; i < n; i++)
+    {
+        playerID[i] = getPlayerIDInput(kb, "Which player(s) were resurrected?"); // Read player ID
+    }
+    resurrected(kb, n, playerID, night);
 }
 
 /**
@@ -2348,27 +2376,27 @@ int add_info(KnowledgeBase* kb, RuleSet* rs)
         }
         else if (strcasecmp(buff,POISONED) == 0)
         {
-            poisoned(kb);
+            poisoned_UI(kb);
         }
         else if (strcasecmp(buff,NOT_POISONED) == 0)
         {
-            notPoisoned(kb);
+            notPoisoned_UI(kb);
         }
         else if (strcasecmp(buff,RED_HERRING) == 0)
         {
-            redHerring(kb);
+            redHerring_UI(kb);
         }
         else if (strcasecmp(buff,DIED) == 0)
         {
-            diedInNight(kb);
+            diedInNight_UI(kb);
         }
         else if (strcasecmp(buff,HUNG) == 0)
         {
-            hung(kb);
+            hung_UI(kb);
         }
         else if (strcasecmp(buff,NOMINATION_DEATH) == 0)
         {
-            nominationDeath(kb);
+            nominationDeath_UI(kb);
         }
         else if (strcasecmp(buff,FAILED_HANGING) == 0)
         {
@@ -2376,7 +2404,7 @@ int add_info(KnowledgeBase* kb, RuleSet* rs)
         }
         else if (strcasecmp(buff,RESURRECTED) == 0)
         {
-            resurrected(kb);
+            resurrected_UI(kb);
         }
         else if (strcasecmp(buff,RESET) == 0)
         {
