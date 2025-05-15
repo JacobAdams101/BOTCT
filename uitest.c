@@ -22,6 +22,39 @@
  * SOFTWARE.
  */
 
+/*
+ *
+ * ====> BLOOD ON THE CLOCKTOWER SOLVER
+ * ==> By Jacob Adams
+ * 
+ * This program is designed to aid with games of blood on the clocktower
+ * Do NOT use without the consent of your storyteller as that would ruin the game
+ * 
+ * The intention of this program is to help with notetaking and in the late game suggest potential worlds
+ * 
+ * 
+ * ====> LIMITATIONS
+ * 
+ * - This program cannot iterate over all possible worlds and therefore will not be able to always eliminate cases
+ * as well as the best human players can
+ * 
+ * - This program can only use roles from the following scripts:
+ * "Trouble Brewing", "Sects and Violets" and "Bad Moon Rising" (As of 24/02/2025)
+ * 
+ * - This program often assumes the "Metascript" of every role in the 3 standard scripts:
+ * "Trouble Brewing", "Sects and Violets" and "Bad Moon Rising" (As of 24/02/2025)
+ * Becuase of this some features may be redudant in some scripts or seem unnessecary
+ * 
+ * - Do not support Windows... pthreads moment :(
+ * 
+ * The solver partitions information into nights nights run from the sleeping phase to the voting phase
+ * For a clear example, see the diagram below:
+ * 
+ * | SEEN ROLE | NIGHT | DAYTIME | VOTING | NIGHT | DAYTIME | VOTING | NIGHT | DAYTIME | VOTING | NIGHT |
+ * |_DAY 0_____________|_DAY 1____________________|_DAY 2____________________|_DAY 3____________________|
+ * 
+ */
+
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
 #include <stdbool.h>
@@ -65,11 +98,13 @@ KnowledgeBase* REVERT_KB = NULL;
 
 ProbKnowledgeBase* WORLD_TALLY = NULL;
 
+int WORLD_GENERATION = 1;
+
 RuleSet* RULE_SET = NULL;
 
 
-const int NUM_THREADS = 8;
-const int NUM_ITERATIONS = 16;
+const int NUM_THREADS = 10;
+const int NUM_ITERATIONS = 8;
 
 ProbKnowledgeBase* threadTallies[NUM_THREADS];
 KnowledgeBase* possibleWorldKB[NUM_THREADS];
@@ -465,9 +500,9 @@ void makeTable(KnowledgeBase* kb, ProbKnowledgeBase* probkb, TTF_Font *FONT, int
                 snprintf(buff, 64, "is_NOT_%s_[NIGHT%d]", ROLE_NAMES[role], night);
                 int isNotRole = getProbIntPercentageName(probkb, kb, "PLAYERS", element, buff);
                 
-                if (isRole == 100) snprintf(buff, 64, "  *  ");
-                else if (isNotRole == 100) snprintf(buff, 64, "     ");
-                else snprintf(buff, 64, "%02d-%02d", isRole, isNotRole);
+                if (isRole == 100) snprintf(buff, 64, " * ");
+                else if (isNotRole == 100) snprintf(buff, 64, "   ");
+                else snprintf(buff, 64, "%02d%%", isRole);
 
                 addTextBox(
                     x, y, X_WIDTH, Y_WIDTH, //bb
@@ -1306,45 +1341,9 @@ void finish()
 
     if (contradiction == 0)
     {
-        for (int i = 0; i < NUM_THREADS; i++)
-        {
-            resetProbKnowledgeBase(threadTallies[i]);
-        }
-        //Generate NUM_THREADS thread arguments
-        for (int i = 0; i < NUM_THREADS; i++)
-        {
-            
-            
-            
-            threadArgs[i]->kb = KNOWLEDGE_BASE; //We MUST promise to never touch this in the thread
-            threadArgs[i]->possibleWorldKB = possibleWorldKB[i]; //Working block of memory
-            threadArgs[i]->possibleWorldRevertKB = possibleWorldTempKB[i]; //Working block of memory
-            threadArgs[i]->determinedInNWorlds = threadTallies[i]; //The output tallies
-            threadArgs[i]->rs = RULE_SET;
-            threadArgs[i]->numIterations = NUM_ITERATIONS;
-            
-        }
-        //Set off NUM_THREADS-1 threads
-        for (int i = 0; i < NUM_THREADS-1; i++)
-        {
-            pthread_create(&threads[i], NULL, &getProbApprox, (void *) threadArgs[i]);
-        }
-
-        //Run one on this thread
-        getProbApprox((void *) threadArgs[NUM_THREADS-1]);
-
-        //Wait for all threads to finish
-        for (int i = 0; i < NUM_THREADS; i++)
-        {
-            void *aretreive;
-            pthread_join(threads[i], &aretreive);
-        }
         //Compute total tally
         resetProbKnowledgeBase(WORLD_TALLY);
-        for (int i = 0; i < NUM_THREADS; i++)
-        {
-            mergeProbKnowledge(WORLD_TALLY, threadTallies[i]);
-        }
+        WORLD_GENERATION++;
     }
     
     printf("FINISHED CONFIRM!\n");
@@ -2803,6 +2802,26 @@ int main() {
                 }
             }
         }
+    }
+
+    //Generate NUM_THREADS thread arguments
+    for (int i = 0; i < NUM_THREADS; i++)
+    {
+        threadArgs[i]->kb = KNOWLEDGE_BASE; //We MUST promise to never touch this in the thread
+        threadArgs[i]->possibleWorldKB = possibleWorldKB[i]; //Working block of memory
+        threadArgs[i]->possibleWorldRevertKB = possibleWorldTempKB[i]; //Working block of memory
+        threadArgs[i]->determinedInNWorlds = threadTallies[i]; //The output tallies
+        threadArgs[i]->worldTally = WORLD_TALLY;
+        threadArgs[i]->worldGeneration = &WORLD_GENERATION;
+        threadArgs[i]->reRenderCall = &reRenderCall;
+        threadArgs[i]->rs = RULE_SET;
+        threadArgs[i]->numIterations = NUM_ITERATIONS;
+        
+    }
+    //Set off NUM_THREADS-1 threads
+    for (int i = 0; i < NUM_THREADS; i++)
+    {
+        pthread_create(&threads[i], NULL, &getProbApproxContinuous, (void *) threadArgs[i]);
     }
     
     //Don't print rules
