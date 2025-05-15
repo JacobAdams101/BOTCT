@@ -262,6 +262,7 @@ void makeTable(KnowledgeBase* kb, TTF_Font *FONT, int night)
     x = X_START;
     y += Y_STEP;
 
+
     for (int role = 0; role < NUM_BOTCT_ROLES; role++)
     {
         //Only print roles in the script
@@ -311,6 +312,7 @@ void makeTable(KnowledgeBase* kb, TTF_Font *FONT, int night)
         }
     }
 
+    
     addTextBox(
         x, y, X_WIDTH, Y_WIDTH, //bb
         50, 50, 50, //Box colour
@@ -360,7 +362,6 @@ void makeTable(KnowledgeBase* kb, TTF_Font *FONT, int night)
     );
     x += X_STEP;
 
-
     int set = 0;
     for (int element = 0; element < kb->SET_SIZES[set]; element++)
     {
@@ -378,6 +379,7 @@ void makeTable(KnowledgeBase* kb, TTF_Font *FONT, int night)
             0,
             0
         );
+        
         x += X_STEP;
         snprintf(buff, 64, "is_TOWNSFOLK_[NIGHT%d]", night);
         int isTownsfolk = isKnownName(kb, "PLAYERS", element, buff); 
@@ -404,7 +406,6 @@ void makeTable(KnowledgeBase* kb, TTF_Font *FONT, int night)
         int isDead = isKnownName(kb, "PLAYERS", element, buff); 
 
         //printTrucatedStr(kb->ELEMENT_NAMES[0][element], 9);
-
         for (int role = 0; role < NUM_BOTCT_ROLES; role++)
         {
             //Only print roles in the script
@@ -443,7 +444,7 @@ void makeTable(KnowledgeBase* kb, TTF_Font *FONT, int night)
                 int isNotRole = isKnownName(kb, "PLAYERS", element, buff);
                 char* text;
                 if (isRole == 1) text = "*";
-                else if (isNotRole == 1) text = "";
+                else if (isNotRole == 1) text = " ";
                 else text = "?";
 
                 addTextBox(
@@ -791,17 +792,17 @@ void selectSubSubSubSubSubMenu(int eventID)
     reRenderCall = true;
 }
 
-void finish(int eventID)
+void finish()
 {
-    subMenuOpen = 9;
-
     int contradiction = inferImplicitFacts(KNOWLEDGE_BASE, RULE_SET, NUM_SOLVE_STEPS, 1);
+    
     if (contradiction == 0)
     { //Optimise ruleset only if no contradictions were produced
         printHeading("OPTIMISE RULESET");
         optimiseRuleset(RULE_SET, KNOWLEDGE_BASE);
         copyTo(REVERT_KB, KNOWLEDGE_BASE);
     }
+        
 
     if (contradiction == 1)
     {
@@ -820,6 +821,8 @@ void confirm()
     int night;
     int playerID;
     int roleID;
+    int count;
+    int roleIDs[NUM_BOTCT_ROLES];
     switch(subMenuOpen)
     {
         case 1: //Shown Role
@@ -834,11 +837,25 @@ void confirm()
                 }
             }
             shown_role(KNOWLEDGE_BASE, playerID, roleID, night);
-            printf("YAY\n");
             break;
         case 2: //Player Possibilities
+            night = subSubMenuOpen-1;
+            playerID = subSubSubMenuOpen-1;
+            count = 0;
+            for (int i = 0; i < MAX_BUTTON_OPTIONS; i++)
+            {
+                if (subSubSubSubMenuSelected[i] == 1)
+                {
+                    roleIDs[count] = i-1;
+                    count++;
+                }
+            }
+            noptions(KNOWLEDGE_BASE, playerID, count, roleIDs, night);
             break;
         case 3: //Role not In Game
+            night = subSubMenuOpen-1;
+            roleID = subSubSubMenuOpen-1;
+            roleNotInGame(KNOWLEDGE_BASE, roleID, night);
             break;
         case 4: //PLayer is/is not poisoned
             break;
@@ -856,6 +873,9 @@ void confirm()
             break;
 
     }
+
+    finish();
+    reRenderCall = true;
 }
 
 int canConfirm()
@@ -2105,7 +2125,7 @@ void updateFirstMenu(TTF_Font *FONT)
         MY_UI_ZONE
     );
     y += Y_STEP;
-
+    /*
     getButtonColours(subMenuOpen == 9, &red, &green, &blue, &selectedRed, &selectedGreen, &selectedBlue);
     addTextBox(
         x, y, X_WIDTH, Y_WIDTH, //bb
@@ -2119,6 +2139,7 @@ void updateFirstMenu(TTF_Font *FONT)
         MY_UI_ZONE
     );
     y += Y_STEP;
+    */
 }
 
 
