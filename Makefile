@@ -1,8 +1,9 @@
 # Compiler
 CC = gcc
 
-# Compiler Flags changed to -ofast
-CFLAGS = -Wall -Ofast
+# Compiler Flags with SDL2 support
+CFLAGS = -Wall -Ofast `sdl2-config --cflags`
+LDFLAGS = -D_THREAD_SAFE `sdl2-config --libs` -lSDL2_ttf
 
 # Find all .c files in the current directory
 SRCS = $(wildcard *.c)
@@ -18,7 +19,7 @@ all: $(TARGET)
 
 # Link object files into the executable
 $(TARGET): $(OBJS)
-	$(CC) $(OBJS) -o $(TARGET)
+	$(CC) $(OBJS) -o $(TARGET) $(LDFLAGS)
 
 # Compile .c files into .o files
 %.o: %.c

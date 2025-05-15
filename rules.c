@@ -407,7 +407,7 @@ void optimiseRuleset(RuleSet* rs, KnowledgeBase* kb)
        rs->RULE_ACTIVE[rule] = canRuleProvideNovelInformation(rs->RULES[rule], kb);
        if (rs->RULE_ACTIVE[rule] == 0) count++;
     }
-    printf("%d / %d rules disabled", count, rs->NUM_RULES);
+    //printf("%d / %d rules disabled\n", count, rs->NUM_RULES);
 }
 
 /**

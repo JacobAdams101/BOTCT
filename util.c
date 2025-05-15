@@ -30,6 +30,7 @@
 
 #include "util.h"
 #include "constants.h"
+
 /**
  * getRandInt() - returns a random integer between two values
  *

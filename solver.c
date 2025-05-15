@@ -37,6 +37,8 @@
 #include "util.h"
 #include "solver.h"
 
+pthread_mutex_t lock; // Mutex to protect shared data
+
 /**
  * inferImplicitFacts() - helper function to iterate inferknowledgeBaseFromRules()
  * with some basic optimisations
@@ -48,7 +50,7 @@
  * 
  * @return TRUE if a contradiction was found
 */
-static int inferImplicitFacts(KnowledgeBase* kb, RuleSet* rs, int numRounds, int verbose)
+int inferImplicitFacts(KnowledgeBase* kb, RuleSet* rs, int numRounds, int verbose)
 {
     //Loop for a maximum number of rounds
     for (int i = 0; i < numRounds; i++)
@@ -62,24 +64,11 @@ static int inferImplicitFacts(KnowledgeBase* kb, RuleSet* rs, int numRounds, int
     return 0;
 }
 
-/*
- * struct to store function args for getProbApprox()
-*/
-struct getProbApproxArgs
-{
-    KnowledgeBase* kb;
-    KnowledgeBase* possibleWorldKB;
-    KnowledgeBase*** possibleWorldRevertKB;
-    ProbKnowledgeBase* determinedInNWorlds;
-    RuleSet* rs;
-    int numIterations;
-};
-
 #define MAX_FALIURES 256
 
-static int assignRoleForWorld(KnowledgeBase* possibleWorldKB, KnowledgeBase*** possibleWorldRevertKB, ProbKnowledgeBase* determinedInNWorlds, RuleSet* rs, int avaliable[5][MAX_SET_ELEMENTS], int night, int playerIndex, int *failures, int permute[], int isroleIndexes[NUM_DAYS][NUM_BOTCT_ROLES], int notroleIndexes[NUM_DAYS][NUM_BOTCT_ROLES]);
+static int assignRoleForWorld(KnowledgeBase* possibleWorldKB, KnowledgeBase*** possibleWorldRevertKB, ProbKnowledgeBase* determinedInNWorlds, RuleSet* rs, int avaliable[5][MAX_SET_ELEMENTS], int night, int playerIndex, int *failures, int permute[], int isroleIndexes[NUM_DAYS][NUM_BOTCT_ROLES], int notroleIndexes[NUM_DAYS][NUM_BOTCT_ROLES], int poisonedIndexes[NUM_DAYS], int notPoisonedIndexes[NUM_DAYS]);
 
-static int assignRoleForWorld(KnowledgeBase* possibleWorldKB, KnowledgeBase*** possibleWorldRevertKB, ProbKnowledgeBase* determinedInNWorlds, RuleSet* rs, int avaliable[5][MAX_SET_ELEMENTS], int night, int playerIndex, int *failures, int permute[], int isroleIndexes[NUM_DAYS][NUM_BOTCT_ROLES], int notroleIndexes[NUM_DAYS][NUM_BOTCT_ROLES])
+static int assignRoleForWorld(KnowledgeBase* possibleWorldKB, KnowledgeBase*** possibleWorldRevertKB, ProbKnowledgeBase* determinedInNWorlds, RuleSet* rs, int avaliable[5][MAX_SET_ELEMENTS], int night, int playerIndex, int *failures, int permute[], int isroleIndexes[NUM_DAYS][NUM_BOTCT_ROLES], int notroleIndexes[NUM_DAYS][NUM_BOTCT_ROLES], int poisonedIndexes[NUM_DAYS], int notPoisonedIndexes[NUM_DAYS])
 {
     //Choose player from random permutation to remove certain biases in allocation
     int player = permute[playerIndex];
@@ -87,6 +76,9 @@ static int assignRoleForWorld(KnowledgeBase* possibleWorldKB, KnowledgeBase*** p
     KnowledgeBase* myLayerRevertKB = possibleWorldRevertKB[night][player];
 
     
+
+    int isPoisoned = isKnown(possibleWorldKB, 0, player, poisonedIndexes[night]);
+    int isNotPoisoned = isKnown(possibleWorldKB, 0, player, notPoisonedIndexes[night]);
 
     int avaliableRoles = 0;
     int roleAvalaliable[NUM_BOTCT_ROLES];
@@ -119,6 +111,20 @@ static int assignRoleForWorld(KnowledgeBase* possibleWorldKB, KnowledgeBase*** p
     while (avaliableRoles > 0)
     {
         int selectedRoleID = getRandIntNotIn(roleAvalaliable, avaliableRoles);
+
+        //Decide if the players need to be poisoned on this night
+        if (isPoisoned == 0 && isNotPoisoned == 0)
+        {
+            int poisoned = getRandInt(0, 5);
+            if (poisoned == 0)
+            {
+                addKnowledge(possibleWorldKB, 0, player, poisonedIndexes[night]);
+            }
+            else
+            {
+                addKnowledge(possibleWorldKB, 0, player, notPoisonedIndexes[night]);
+            }
+        }
 
         //Assume true
         //NOTE: swapped out for faster code
@@ -160,7 +166,7 @@ static int assignRoleForWorld(KnowledgeBase* possibleWorldKB, KnowledgeBase*** p
             //If there are deeper levels to infer look for them
 
             //See if deeper level inference leads to a good world
-            int result = assignRoleForWorld(possibleWorldKB, possibleWorldRevertKB, determinedInNWorlds, rs, avaliable, nextNight, nextPlayerIndex, failures, permute, isroleIndexes, notroleIndexes);
+            int result = assignRoleForWorld(possibleWorldKB, possibleWorldRevertKB, determinedInNWorlds, rs, avaliable, nextNight, nextPlayerIndex, failures, permute, isroleIndexes, notroleIndexes, poisonedIndexes, notPoisonedIndexes);
             if (result == 1) return 1;
             if (*failures > MAX_FALIURES) return -1; 
         }
@@ -183,7 +189,7 @@ static int assignRoleForWorld(KnowledgeBase* possibleWorldKB, KnowledgeBase*** p
  * @determinedInNWorlds the tally to add the score to if the world works
  * @rs the ruleset
 */
-static void buildWorld(KnowledgeBase* possibleWorldKB, KnowledgeBase*** possibleWorldRevertKB, ProbKnowledgeBase* determinedInNWorlds, RuleSet* rs, int isroleIndexes[NUM_DAYS][NUM_BOTCT_ROLES], int notroleIndexes[NUM_DAYS][NUM_BOTCT_ROLES])
+static void buildWorld(KnowledgeBase* possibleWorldKB, KnowledgeBase*** possibleWorldRevertKB, ProbKnowledgeBase* determinedInNWorlds, RuleSet* rs, int isroleIndexes[NUM_DAYS][NUM_BOTCT_ROLES], int notroleIndexes[NUM_DAYS][NUM_BOTCT_ROLES], int poisonedIndexes[NUM_DAYS], int notPoisonedIndexes[NUM_DAYS])
 {
     //Build permutations to remove symptoms from always assigning orders in one way
     int permute[possibleWorldKB->SET_SIZES[0]];
@@ -210,10 +216,10 @@ static void buildWorld(KnowledgeBase* possibleWorldKB, KnowledgeBase*** possible
      * once/if every player is assigned roles add this to the tally
     */
     int faliures = 0;
-    int result = assignRoleForWorld(possibleWorldKB, possibleWorldRevertKB, determinedInNWorlds, rs, avaliable, 0, 0, &faliures, permute, isroleIndexes, notroleIndexes);
+    int result = assignRoleForWorld(possibleWorldKB, possibleWorldRevertKB, determinedInNWorlds, rs, avaliable, 0, 0, &faliures, permute, isroleIndexes, notroleIndexes, poisonedIndexes, notPoisonedIndexes);
     if (result == -1) 
     {
-        printf("WORLD HAD TOO MANY CONRADICTIONS\n");
+        //printf("WORLD HAD TOO MANY CONRADICTIONS\n");
         return; //If no valid world was found
     }
 
@@ -228,20 +234,12 @@ static void buildWorld(KnowledgeBase* possibleWorldKB, KnowledgeBase*** possible
             weight *= term;
         }
     }
-    printf("FOUND WORLD (Scaling Weight=%f)!\n", weight);
+    //printf("FOUND WORLD (Scaling Weight=%f)!\n", weight);
     //Add weighted tally
     addKBtoProbTally(possibleWorldKB, determinedInNWorlds, weight);
 }
 
-/**
- * getProbApprox() - tries to randomly build worlds to approximate the probability
- * of different events
- * 
- * @void_arg the arguments
- * 
- * @return NULL
-*/
-static void* getProbApprox(void* void_arg)
+void* getProbApproxContinuous(void* void_arg)
 {
     //Arguments
     struct getProbApproxArgs *args = (struct getProbApproxArgs*) void_arg; //Get arguments by casting
@@ -250,13 +248,18 @@ static void* getProbApprox(void* void_arg)
     KnowledgeBase* possibleWorldKB = args->possibleWorldKB;
     KnowledgeBase*** possibleWorldRevertKB = args->possibleWorldRevertKB;
     ProbKnowledgeBase* determinedInNWorlds = args->determinedInNWorlds;
+    ProbKnowledgeBase* worldTally = args->worldTally;
     RuleSet* rs = args->rs;
+    int* worldGeneration = args->worldGeneration;
+    bool* reRenderCall = args->reRenderCall;
     int numIterations = args->numIterations;
 
     //Cache role data locations for fast lookup
     char buff[STRING_BUFF_SIZE];
     int isroleIndexes[NUM_DAYS][NUM_BOTCT_ROLES];
     int notroleIndexes[NUM_DAYS][NUM_BOTCT_ROLES];
+    int poisonedIndexes[NUM_DAYS];
+    int notPoisonedIndexes[NUM_DAYS];
     for (int night = 0; night < NUM_DAYS; night++)
     {
         for (int role = 0; role < NUM_BOTCT_ROLES; role++)
@@ -266,188 +269,38 @@ static void* getProbApprox(void* void_arg)
             snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s_[NIGHT%d]", ROLE_NAMES[role], night);
             notroleIndexes[night][role] = getSetFunctionIDWithName(kb, 0, buff, 1);
         }
-    }
-    
-    for (int i = 0; i < numIterations; i++)
-    {
-        copyTo(possibleWorldKB, kb);
-        buildWorld(possibleWorldKB, possibleWorldRevertKB, determinedInNWorlds, rs, isroleIndexes, notroleIndexes);
-    }
-    return NULL;
-}
-
-/**
- * solve() - a function to ask the user for informaiton and tries to solve the game
- * 
- * @kb the knowledge base to use
- * @rs the ruleset
- * @NUM_PLAYERS the number of players in the game
- * @NUM_MINIONS the number of base starting minions in the game
- * @NUM_DEMONS the number of base starting demons in the game
- * @BASE_OUTSIDERS the number of abse starting outsiders in the game
- * @NUM_DAYS the maxium number of days the game can go on for
-*/
-void solve(KnowledgeBase* kb, RuleSet* rs, const int NUM_PLAYERS, const int NUM_MINIONS, const int NUM_DEMONS, const int BASE_OUTSIDERS)
-{
-    char buff[STRING_BUFF_SIZE];
-    //Store tallies of possible worlds
-    ProbKnowledgeBase* worldTally = initProbKB();
-
-    KnowledgeBase* revertKB = initKB(NUM_PLAYERS); //For backup incase of contradictions
-
-
-    const int NUM_THREADS = 16;
-    const int NUM_ITERATIONS = 256;
-
-    ProbKnowledgeBase* threadTallies[NUM_THREADS];
-    KnowledgeBase* possibleWorldKB[NUM_THREADS];
-    KnowledgeBase*** possibleWorldTempKB[NUM_THREADS];
-    struct getProbApproxArgs* threadArgs[NUM_THREADS];
-
-    //Thread object
-    pthread_t threads[NUM_THREADS-1];
-    
-    for (int i = 0; i < NUM_THREADS; i++)
-    {
-        possibleWorldKB[i] = initKB(NUM_PLAYERS);
-        threadTallies[i] = initProbKB();
-        possibleWorldTempKB[i] = (KnowledgeBase***)malloc(NUM_DAYS * sizeof(KnowledgeBase***));
-        if (possibleWorldTempKB[i] == NULL)
-        {
-            printf("MALLOC FAILED!\n");
-            return;
-        }
-        for (int j = 0; j < NUM_DAYS; j++)
-        {
-            possibleWorldTempKB[i][j] = (KnowledgeBase**)malloc(MAX_SET_ELEMENTS * sizeof(KnowledgeBase**));
-            if (possibleWorldTempKB[i][j] == NULL)
-            {
-                printf("MALLOC FAILED!\n");
-                return;
-            }
-            for (int k = 0; k < MAX_SET_ELEMENTS; k++)
-            {
-                //possibleWorldTempKB[i][j][k] = (KnowledgeBase*)malloc(NUM_DAYS * sizeof(KnowledgeBase*));
-                
-                possibleWorldTempKB[i][j][k] = initKB(NUM_PLAYERS);
-                if (possibleWorldTempKB[i][j][k] == NULL)
-                {
-                    printf("MALLOC FAILED!\n");
-                    return;
-                }
-            }
-        }
+        snprintf(buff, STRING_BUFF_SIZE, "is_POISONED_[NIGHT%d]", night);
+        poisonedIndexes[night] = getSetFunctionIDWithName(kb, 0, buff, 1);
+        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_POISONED_[NIGHT%d]", night);
+        notPoisonedIndexes[night] = getSetFunctionIDWithName(kb, 0, buff, 1);
     }
 
-
-    printf("BEGIN GAME LOOP...\n");
-
-    int contradiction;
+    int myGeneration = *worldGeneration;
     
+    //Loop forever adding 
     while (1)
     {
-        //Create copy as backup incase of contradictions
-        copyTo(revertKB, kb);
-        int runProb = add_info(kb, rs);
-
-        printHeading("INFER FACTS"); //UI HEADING
-        contradiction = inferImplicitFacts(kb, rs, NUM_SOLVE_STEPS, 1);
-        
-        if (contradiction == 0)
-        { //Optimise ruleset only if no contradictions were produced
-            printHeading("OPTIMISE RULESET");
-            optimiseRuleset(rs, kb);
-        }
-        
-        
-        //Commented out for being too slow: further optimisation is needed
-        //NOTE: Re-added after optimisation
-        //Probability analysis
-        /*
-         * IDEA: try setting random elements to true see if the world produces any contradictions
-         * tally up all TRUE functions in worlds without contradictions compute prob estimate off that
-        */
-        if (runProb == 1 && contradiction == 0)
-        { //If no immediate contradictions 
-            printHeading("PROBABILITY ANALYSIS"); //UI HEADING
-            for (int i = 0; i < NUM_THREADS; i++)
-            {
-                resetProbKnowledgeBase(threadTallies[i]);
-            }
-            //Generate NUM_THREADS thread arguments
-            for (int i = 0; i < NUM_THREADS; i++)
-            {
-                
-                //Create arguments in strctures to pass into new thread
-                threadArgs[i] = (struct getProbApproxArgs*) malloc(sizeof(struct getProbApproxArgs));
-                
-                threadArgs[i]->kb = kb; //We MUST promise to never touch this in the thread
-                threadArgs[i]->possibleWorldKB = possibleWorldKB[i]; //Working block of memory
-                threadArgs[i]->possibleWorldRevertKB = possibleWorldTempKB[i]; //Working block of memory
-                threadArgs[i]->determinedInNWorlds = threadTallies[i]; //The output tallies
-                threadArgs[i]->rs = rs;
-                threadArgs[i]->numIterations = NUM_ITERATIONS;
-                
-            }
-            //Set off NUM_THREADS-1 threads
-            for (int i = 0; i < NUM_THREADS-1; i++)
-            {
-                pthread_create(&threads[i], NULL, &getProbApprox, (void *) threadArgs[i]);
-            }
-
-            //Run one on this thread
-            getProbApprox((void *) threadArgs[NUM_THREADS-1]);
-
-            //Wait for all threads to finish
-            for (int i = 0; i < NUM_THREADS; i++)
-            {
-                void *aretreive;
-                pthread_join(threads[i], &aretreive);
-            }
-            //Compute total tally
-            resetProbKnowledgeBase(worldTally);
-            for (int i = 0; i < NUM_THREADS; i++)
-            {
-                free(threadArgs[i]);
-                mergeProbKnowledge(worldTally, threadTallies[i]);
-            }
-        }
-        
-
-        if (contradiction == 0)
+        resetProbKnowledgeBase(determinedInNWorlds);
+        for (int i = 0; i < numIterations; i++)
         {
-            printHeading("KNOWLEDGE BASE"); //UI HEADING
-            printKnowledgeBase(kb);
-            
-            if (runProb == 1)
-            {
-                for (int night = 0; night < NUM_DAYS; night++)
-                {
-                    snprintf(buff, STRING_BUFF_SIZE, "ROLE INFORMATION [NIGHT %d]", night);
-                    printHeading(buff); //UI HEADING
-                    printProbPlayerTable(kb, worldTally, night);
-                    printProbRoleTable(kb, worldTally, night);
-                }
-            }
-            else
-            {
-                for (int night = 0; night < NUM_DAYS; night++)
-                {
-                    snprintf(buff, STRING_BUFF_SIZE, "ROLE INFORMATION [NIGHT %d]", night);
-                    printHeading(buff); //UI HEADING
-                    printPlayerTable(kb, night);
-                    printRoleTable(kb, night);
-                }
-            }
+            if (myGeneration != *worldGeneration) break;
+            copyTo(possibleWorldKB, kb);
+            buildWorld(possibleWorldKB, possibleWorldRevertKB, determinedInNWorlds, rs, isroleIndexes, notroleIndexes, poisonedIndexes, notPoisonedIndexes);
         }
 
-        if (contradiction == 1)
+        if (myGeneration == *worldGeneration) 
         {
-            printRedHeading("CONTRADICTION FOUND!"); //UI HEADING
-            printf("Rolling back Knowledge base\n");
-            //Roll back knowledge base
-            copyTo(kb, revertKB);
+            pthread_mutex_lock(&lock);   // Lock before accessing shared data                  
+                // Critical section
+                mergeProbKnowledge(worldTally, determinedInNWorlds);
+                *reRenderCall = true;
+            pthread_mutex_unlock(&lock); // Unlock after done
         }
-
+        else 
+        {
+            myGeneration = *worldGeneration;
+        }
     }
+
+    return NULL;
 }

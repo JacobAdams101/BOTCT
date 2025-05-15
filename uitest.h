@@ -24,28 +24,22 @@
 
 #pragma once
 
-#include "rules.h"
-#include "knowledge.h"
-#include "rules.h"
-#include <stdbool.h>
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_ttf.h>
 
-#define NUM_SOLVE_STEPS 5
+#include "constants.h"
 
-int inferImplicitFacts(KnowledgeBase* kb, RuleSet* rs, int numRounds, int verbose);
+// Define a function type
+typedef void (*EventFunction)(int);
 
-void* getProbApproxContinuous(void* void_arg);
-/*
- * struct to store function args for getProbApprox()
-*/
-struct getProbApproxArgs
-{
-    KnowledgeBase* kb;
-    KnowledgeBase* possibleWorldKB;
-    KnowledgeBase*** possibleWorldRevertKB;
-    ProbKnowledgeBase* determinedInNWorlds;
-    ProbKnowledgeBase* worldTally;
-    RuleSet* rs;
-    int* worldGeneration;
-    bool* reRenderCall;
-    int numIterations;
-};
+typedef struct {
+    SDL_Rect box;
+    SDL_Color boxColor;
+    SDL_Color highlightColor;
+    SDL_Color textColor; 
+    TTF_Font *font;
+    char text[STRING_BUFF_SIZE]; 
+    int highlighted;
+    EventFunction clickEventFunction;
+    int eventID;
+} TextBox;
