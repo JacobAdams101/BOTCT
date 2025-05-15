@@ -66,9 +66,9 @@ int inferImplicitFacts(KnowledgeBase* kb, RuleSet* rs, int numRounds, int verbos
 
 #define MAX_FALIURES 256
 
-static int assignRoleForWorld(KnowledgeBase* possibleWorldKB, KnowledgeBase*** possibleWorldRevertKB, ProbKnowledgeBase* determinedInNWorlds, RuleSet* rs, int avaliable[5][MAX_SET_ELEMENTS], int night, int playerIndex, int *failures, int permute[], int isroleIndexes[NUM_DAYS][NUM_BOTCT_ROLES], int notroleIndexes[NUM_DAYS][NUM_BOTCT_ROLES]);
+static int assignRoleForWorld(KnowledgeBase* possibleWorldKB, KnowledgeBase*** possibleWorldRevertKB, ProbKnowledgeBase* determinedInNWorlds, RuleSet* rs, int avaliable[5][MAX_SET_ELEMENTS], int night, int playerIndex, int *failures, int permute[], int isroleIndexes[NUM_DAYS][NUM_BOTCT_ROLES], int notroleIndexes[NUM_DAYS][NUM_BOTCT_ROLES], int poisonedIndexes[NUM_DAYS], int notPoisonedIndexes[NUM_DAYS]);
 
-static int assignRoleForWorld(KnowledgeBase* possibleWorldKB, KnowledgeBase*** possibleWorldRevertKB, ProbKnowledgeBase* determinedInNWorlds, RuleSet* rs, int avaliable[5][MAX_SET_ELEMENTS], int night, int playerIndex, int *failures, int permute[], int isroleIndexes[NUM_DAYS][NUM_BOTCT_ROLES], int notroleIndexes[NUM_DAYS][NUM_BOTCT_ROLES])
+static int assignRoleForWorld(KnowledgeBase* possibleWorldKB, KnowledgeBase*** possibleWorldRevertKB, ProbKnowledgeBase* determinedInNWorlds, RuleSet* rs, int avaliable[5][MAX_SET_ELEMENTS], int night, int playerIndex, int *failures, int permute[], int isroleIndexes[NUM_DAYS][NUM_BOTCT_ROLES], int notroleIndexes[NUM_DAYS][NUM_BOTCT_ROLES], int poisonedIndexes[NUM_DAYS], int notPoisonedIndexes[NUM_DAYS])
 {
     //Choose player from random permutation to remove certain biases in allocation
     int player = permute[playerIndex];
@@ -76,6 +76,9 @@ static int assignRoleForWorld(KnowledgeBase* possibleWorldKB, KnowledgeBase*** p
     KnowledgeBase* myLayerRevertKB = possibleWorldRevertKB[night][player];
 
     
+
+    int isPoisoned = isKnown(possibleWorldKB, 0, player, poisonedIndexes[night]);
+    int isNotPoisoned = isKnown(possibleWorldKB, 0, player, notPoisonedIndexes[night]);
 
     int avaliableRoles = 0;
     int roleAvalaliable[NUM_BOTCT_ROLES];
@@ -108,6 +111,20 @@ static int assignRoleForWorld(KnowledgeBase* possibleWorldKB, KnowledgeBase*** p
     while (avaliableRoles > 0)
     {
         int selectedRoleID = getRandIntNotIn(roleAvalaliable, avaliableRoles);
+
+        //Decide if the players need to be poisoned on this night
+        if (isPoisoned == 0 && isNotPoisoned == 0)
+        {
+            int poisoned = getRandInt(0, 5);
+            if (poisoned == 0)
+            {
+                addKnowledge(possibleWorldKB, 0, player, poisonedIndexes[night]);
+            }
+            else
+            {
+                addKnowledge(possibleWorldKB, 0, player, notPoisonedIndexes[night]);
+            }
+        }
 
         //Assume true
         //NOTE: swapped out for faster code
@@ -149,7 +166,7 @@ static int assignRoleForWorld(KnowledgeBase* possibleWorldKB, KnowledgeBase*** p
             //If there are deeper levels to infer look for them
 
             //See if deeper level inference leads to a good world
-            int result = assignRoleForWorld(possibleWorldKB, possibleWorldRevertKB, determinedInNWorlds, rs, avaliable, nextNight, nextPlayerIndex, failures, permute, isroleIndexes, notroleIndexes);
+            int result = assignRoleForWorld(possibleWorldKB, possibleWorldRevertKB, determinedInNWorlds, rs, avaliable, nextNight, nextPlayerIndex, failures, permute, isroleIndexes, notroleIndexes, poisonedIndexes, notPoisonedIndexes);
             if (result == 1) return 1;
             if (*failures > MAX_FALIURES) return -1; 
         }
@@ -172,7 +189,7 @@ static int assignRoleForWorld(KnowledgeBase* possibleWorldKB, KnowledgeBase*** p
  * @determinedInNWorlds the tally to add the score to if the world works
  * @rs the ruleset
 */
-static void buildWorld(KnowledgeBase* possibleWorldKB, KnowledgeBase*** possibleWorldRevertKB, ProbKnowledgeBase* determinedInNWorlds, RuleSet* rs, int isroleIndexes[NUM_DAYS][NUM_BOTCT_ROLES], int notroleIndexes[NUM_DAYS][NUM_BOTCT_ROLES])
+static void buildWorld(KnowledgeBase* possibleWorldKB, KnowledgeBase*** possibleWorldRevertKB, ProbKnowledgeBase* determinedInNWorlds, RuleSet* rs, int isroleIndexes[NUM_DAYS][NUM_BOTCT_ROLES], int notroleIndexes[NUM_DAYS][NUM_BOTCT_ROLES], int poisonedIndexes[NUM_DAYS], int notPoisonedIndexes[NUM_DAYS])
 {
     //Build permutations to remove symptoms from always assigning orders in one way
     int permute[possibleWorldKB->SET_SIZES[0]];
@@ -199,7 +216,7 @@ static void buildWorld(KnowledgeBase* possibleWorldKB, KnowledgeBase*** possible
      * once/if every player is assigned roles add this to the tally
     */
     int faliures = 0;
-    int result = assignRoleForWorld(possibleWorldKB, possibleWorldRevertKB, determinedInNWorlds, rs, avaliable, 0, 0, &faliures, permute, isroleIndexes, notroleIndexes);
+    int result = assignRoleForWorld(possibleWorldKB, possibleWorldRevertKB, determinedInNWorlds, rs, avaliable, 0, 0, &faliures, permute, isroleIndexes, notroleIndexes, poisonedIndexes, notPoisonedIndexes);
     if (result == -1) 
     {
         //printf("WORLD HAD TOO MANY CONRADICTIONS\n");
@@ -241,6 +258,8 @@ void* getProbApproxContinuous(void* void_arg)
     char buff[STRING_BUFF_SIZE];
     int isroleIndexes[NUM_DAYS][NUM_BOTCT_ROLES];
     int notroleIndexes[NUM_DAYS][NUM_BOTCT_ROLES];
+    int poisonedIndexes[NUM_DAYS];
+    int notPoisonedIndexes[NUM_DAYS];
     for (int night = 0; night < NUM_DAYS; night++)
     {
         for (int role = 0; role < NUM_BOTCT_ROLES; role++)
@@ -250,6 +269,10 @@ void* getProbApproxContinuous(void* void_arg)
             snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s_[NIGHT%d]", ROLE_NAMES[role], night);
             notroleIndexes[night][role] = getSetFunctionIDWithName(kb, 0, buff, 1);
         }
+        snprintf(buff, STRING_BUFF_SIZE, "is_POISONED_[NIGHT%d]", night);
+        poisonedIndexes[night] = getSetFunctionIDWithName(kb, 0, buff, 1);
+        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_POISONED_[NIGHT%d]", night);
+        notPoisonedIndexes[night] = getSetFunctionIDWithName(kb, 0, buff, 1);
     }
 
     int myGeneration = *worldGeneration;
@@ -262,7 +285,7 @@ void* getProbApproxContinuous(void* void_arg)
         {
             if (myGeneration != *worldGeneration) break;
             copyTo(possibleWorldKB, kb);
-            buildWorld(possibleWorldKB, possibleWorldRevertKB, determinedInNWorlds, rs, isroleIndexes, notroleIndexes);
+            buildWorld(possibleWorldKB, possibleWorldRevertKB, determinedInNWorlds, rs, isroleIndexes, notroleIndexes, poisonedIndexes, notPoisonedIndexes);
         }
 
         if (myGeneration == *worldGeneration) 

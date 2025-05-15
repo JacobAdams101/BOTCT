@@ -496,8 +496,8 @@ void makeTable(KnowledgeBase* kb, ProbKnowledgeBase* probkb, TTF_Font *FONT, int
 
                 addTextBox(
                     x, y, X_WIDTH, Y_WIDTH, //bb
-                    50, 50, 50, //Box colour
-                    100, 100, 100, //Highlighted Box colour
+                    25+(isRole*2), 25+(isRole*2), 25+(isRole*2), //Box colour
+                    250, 250, 250, //Highlighted Box colour
                     red, green, blue, //Text colour
                     buff, 
                     FONT,
