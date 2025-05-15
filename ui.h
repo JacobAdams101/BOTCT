@@ -132,3 +132,14 @@ void diedInNight(KnowledgeBase* kb, int n, int playerID[], int night);
 void hung(KnowledgeBase* kb, int n, int playerID[], int night);
 void nominationDeath(KnowledgeBase* kb, int n, int playerID[], int night);
 void resurrected(KnowledgeBase* kb, int n, int playerID[], int night);
+
+void washerWomanPing(int playerIDinfoFrom, int selectedRole, int playerX, int playerY, KnowledgeBase* kb, RuleSet* rs);
+void librarianPing(int playerIDinfoFrom, int selectedRole, int playerX, int playerY, KnowledgeBase* kb, RuleSet* rs);
+void investigatorPing(int playerIDinfoFrom, int selectedRole, int playerX, int playerY, KnowledgeBase* kb, RuleSet* rs);
+void chefPing(int playerIDinfoFrom, int countPairs, KnowledgeBase* kb, RuleSet* rs);
+void empathPing(int playerIDinfoFrom, int countEvil, int night, KnowledgeBase* kb, RuleSet* rs);
+void fortuneTellerPing(int playerIDinfoFrom, int count, int playerX, int playerY, int night, KnowledgeBase* kb, RuleSet* rs);
+void undertakerPing(int playerIDinfoFrom, int selectedRole, int playerX, int night, KnowledgeBase* kb, RuleSet* rs);
+void monkPing(int playerIDinfoFrom, int playerX, int night, KnowledgeBase* kb, RuleSet* rs);
+void ravenkeeperPing(int playerIDinfoFrom, int selectedRole, int playerX, int night, KnowledgeBase* kb, RuleSet* rs);
+void clockmakerPing(int playerIDinfoFrom, int numSteps, KnowledgeBase* kb, RuleSet* rs);

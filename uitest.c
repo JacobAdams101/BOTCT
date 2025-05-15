@@ -485,16 +485,6 @@ void makeTable(KnowledgeBase* kb, ProbKnowledgeBase* probkb, TTF_Font *FONT, int
                     green = 255;
                     blue = 0;
                 }
-                /*
-                snprintf(buff, 64, "is_%s_[NIGHT%d]", ROLE_NAMES[role], night);
-                int isRole = isKnownName(kb, "PLAYERS", element, buff); 
-                snprintf(buff, 64, "is_NOT_%s_[NIGHT%d]", ROLE_NAMES[role], night);
-                int isNotRole = isKnownName(kb, "PLAYERS", element, buff);
-                char* text;
-                if (isRole == 1) text = "*";
-                else if (isNotRole == 1) text = " ";
-                else text = "?";
-                */
                 snprintf(buff, 64, "is_%s_[NIGHT%d]", ROLE_NAMES[role], night);
                 int isRole = getProbIntPercentageName(probkb, kb, "PLAYERS", element, buff); 
                 snprintf(buff, 64, "is_NOT_%s_[NIGHT%d]", ROLE_NAMES[role], night);
@@ -733,475 +723,6 @@ void makeTable(KnowledgeBase* kb, ProbKnowledgeBase* probkb, TTF_Font *FONT, int
     }
 }
 
-void makeTable_OLD(KnowledgeBase* kb, TTF_Font *FONT, int night)
-{
-    char buff[STRING_BUFF_SIZE];
-
-    const int X_WIDTH = 40;
-    const int Y_WIDTH = 15;
-    const int X_STEP = X_WIDTH+5;
-    const int Y_STEP = Y_WIDTH+5;
-
-    const int X_START = 50;
-
-    int y = 50;
-    int x = X_START;
-
-    snprintf(buff, STRING_BUFF_SIZE, "ROLE TABLE [NIGHT%d]", night);
-
-    //printf("buff: %s", buff);
-
-    addTextBox(
-        x, y, X_WIDTH*5, Y_WIDTH, //bb
-        0, 0, 0, //Box colour
-        0, 0, 0, //Highlighted Box colour
-        255, 255, 255, //Text colour
-        buff, 
-        FONT,
-        NULL,
-        0,
-        0
-    );
-    x += X_STEP*5;
-    addTextBox(
-        x, y, X_WIDTH*2, Y_WIDTH, //bb
-        50, 50, 50, //Box colour
-                100, 100, 100, //Highlighted Box colour
-        255, 255, 255, //Text colour
-        "PREV NIGHT", 
-        FONT,
-        event_PrevNight,
-        0,
-        0
-    );
-    x += X_STEP*2;
-    addTextBox(
-        x, y, X_WIDTH*2, Y_WIDTH, //bb
-        50, 50, 50, //Box colour
-        100, 100, 100, //Highlighted Box colour
-        255, 255, 255, //Text colour
-        "NEXT NIGHT", 
-        FONT,
-        event_NextNight,
-        0,
-        0
-    );
-    x = X_START;
-    y += Y_STEP;
-
-
-    for (int role = 0; role < NUM_BOTCT_ROLES; role++)
-    {
-        //Only print roles in the script
-        if (ROLE_IN_SCRIPT[role] == 1)
-        {
-            int red;
-            int green;
-            int blue;
-            if (strcmp(ROLE_CLASSES[role], "DEMON") == 0)
-            {
-                red = 255;
-                green = 0;
-                blue = 0;
-            }
-            else if (strcmp(ROLE_CLASSES[role], "MINION") == 0)
-            {
-                red = 255;
-                green = 255;
-                blue = 0;
-            }
-            else if (strcmp(ROLE_CLASSES[role], "OUTSIDER") == 0)
-            {
-                red = 255;
-                green = 0;
-                blue = 255;
-            }
-            else if (strcmp(ROLE_CLASSES[role], "TOWNSFOLK") == 0)
-            {
-                red = 0;
-                green = 255;
-                blue = 0;
-            }
-            snprintf(buff, STRING_BUFF_SIZE, "%.*s", 3, ROLE_NAMES[role]);
-            addTextBox(
-                x, y, X_WIDTH, Y_WIDTH, //bb
-                50, 50, 50, //Box colour
-                100, 100, 100, //Highlighted Box colour
-                red, green, blue, //Text colour
-                buff, 
-                FONT,
-                NULL,
-                0,
-                0
-            );
-
-            x += X_STEP;
-        }
-    }
-
-    
-    addTextBox(
-        x, y, X_WIDTH, Y_WIDTH, //bb
-        50, 50, 50, //Box colour
-        100, 100, 100, //Highlighted Box colour
-        255, 255, 255, //Text colour
-        "CLASS", 
-        FONT,
-        NULL,
-        0,
-        0
-    );
-    x += X_STEP;
-    addTextBox(
-        x, y, X_WIDTH, Y_WIDTH, //bb
-        50, 50, 50, //Box colour
-        100, 100, 100, //Highlighted Box colour
-        255, 255, 255, //Text colour
-        "TEAM", 
-        FONT,
-        NULL,
-        0,
-        0
-    );
-    x += X_STEP;
-    addTextBox(
-        x, y, X_WIDTH, Y_WIDTH, //bb
-        50, 50, 50, //Box colour
-        100, 100, 100, //Highlighted Box colour
-        255, 255, 255, //Text colour
-        "POISONED", 
-        FONT,
-        NULL,
-        0,
-        0
-    );
-    x += X_STEP;
-    addTextBox(
-        x, y, X_WIDTH, Y_WIDTH, //bb
-        50, 50, 50, //Box colour
-        100, 100, 100, //Highlighted Box colour
-        255, 255, 255, //Text colour
-        "ALIVE", 
-        FONT,
-        NULL,
-        0,
-        0
-    );
-    x += X_STEP;
-
-    int set = 0;
-    for (int element = 0; element < kb->SET_SIZES[set]; element++)
-    {
-        y += Y_STEP;
-        x = X_START - X_STEP;
-        snprintf(buff, STRING_BUFF_SIZE, "%s", kb->ELEMENT_NAMES[0][element]);
-        addTextBox(
-            x, y, X_WIDTH, Y_WIDTH, //bb
-            0, 0, 0, //Box colour
-            0, 0, 0, //Highlighted Box colour
-            255, 255, 255, //Text colour
-            buff, 
-            FONT,
-            NULL,
-            0,
-            0
-        );
-        
-        x += X_STEP;
-        snprintf(buff, 64, "is_TOWNSFOLK_[NIGHT%d]", night);
-        int isTownsfolk = isKnownName(kb, "PLAYERS", element, buff); 
-        snprintf(buff, 64, "is_OUTSIDER_[NIGHT%d]", night);
-        int isOutsider = isKnownName(kb, "PLAYERS", element, buff); 
-        snprintf(buff, 64, "is_MINION_[NIGHT%d]", night);
-        int isMinion = isKnownName(kb, "PLAYERS", element, buff); 
-        snprintf(buff, 64, "is_DEMON_[NIGHT%d]", night);
-        int isDemon = isKnownName(kb, "PLAYERS", element, buff); 
-
-        snprintf(buff, 64, "is_GOOD_[NIGHT%d]", night);
-        int isGood = isKnownName(kb, "PLAYERS", element, buff); 
-        snprintf(buff, 64, "is_EVIL_[NIGHT%d]", night);
-        int isEvil = isKnownName(kb, "PLAYERS", element, buff); 
-
-        snprintf(buff, 64, "is_POISONED_[NIGHT%d]", night);
-        int isPoisoned = isKnownName(kb, "PLAYERS", element, buff); 
-        snprintf(buff, 64, "is_NOT_POISONED_[NIGHT%d]", night);
-        int isNotPoisoned = isKnownName(kb, "PLAYERS", element, buff); 
-
-        snprintf(buff, 64, "is_ALIVE_[NIGHT%d]", night);
-        int isAlive = isKnownName(kb, "PLAYERS", element, buff); 
-        snprintf(buff, 64, "is_DEAD_[NIGHT%d]", night);
-        int isDead = isKnownName(kb, "PLAYERS", element, buff); 
-
-        //printTrucatedStr(kb->ELEMENT_NAMES[0][element], 9);
-        for (int role = 0; role < NUM_BOTCT_ROLES; role++)
-        {
-            //Only print roles in the script
-            if (ROLE_IN_SCRIPT[role] == 1)
-            {
-                int red;
-                int green;
-                int blue;
-                if (strcmp(ROLE_CLASSES[role], "DEMON") == 0)
-                {
-                    red = 255;
-                    green = 0;
-                    blue = 0;
-                }
-                else if (strcmp(ROLE_CLASSES[role], "MINION") == 0)
-                {
-                    red = 255;
-                    green = 255;
-                    blue = 0;
-                }
-                else if (strcmp(ROLE_CLASSES[role], "OUTSIDER") == 0)
-                {
-                    red = 255;
-                    green = 0;
-                    blue = 255;
-                }
-                else if (strcmp(ROLE_CLASSES[role], "TOWNSFOLK") == 0)
-                {
-                    red = 0;
-                    green = 255;
-                    blue = 0;
-                }
-                snprintf(buff, 64, "is_%s_[NIGHT%d]", ROLE_NAMES[role], night);
-                int isRole = isKnownName(kb, "PLAYERS", element, buff); 
-                snprintf(buff, 64, "is_NOT_%s_[NIGHT%d]", ROLE_NAMES[role], night);
-                int isNotRole = isKnownName(kb, "PLAYERS", element, buff);
-                char* text;
-                if (isRole == 1) text = "*";
-                else if (isNotRole == 1) text = " ";
-                else text = "?";
-
-                addTextBox(
-                    x, y, X_WIDTH, Y_WIDTH, //bb
-                    50, 50, 50, //Box colour
-                    100, 100, 100, //Highlighted Box colour
-                    red, green, blue, //Text colour
-                    text, 
-                    FONT,
-                    NULL,
-                    0,
-                    0
-                );
-                x += X_STEP;
-
-            }
-        }
-        if (isTownsfolk == 1)
-        {
-            addTextBox(
-                x, y, X_WIDTH, Y_WIDTH, //bb
-                50, 50, 50, //Box colour
-                100, 100, 100, //Highlighted Box colour
-                0, 255, 0, //Text colour
-                "TOWNSFOLK", 
-                FONT,
-                NULL,
-                0,
-                0
-            );
-            x += X_STEP;
-        }
-        else if (isOutsider == 1)
-        {
-            addTextBox(
-                x, y, X_WIDTH, Y_WIDTH, //bb
-                50, 50, 50, //Box colour
-                100, 100, 100, //Highlighted Box colour
-                255, 0, 255, //Text colour
-                "OUTSIDER", 
-                FONT,
-                NULL,
-                0,
-                0
-            );
-            x += X_STEP;
-        }
-        else if (isMinion == 1)
-        {
-            addTextBox(
-                x, y, X_WIDTH, Y_WIDTH, //bb
-                50, 50, 50, //Box colour
-                100, 100, 100, //Highlighted Box colour
-                255, 255, 0, //Text colour
-                "MINION", 
-                FONT,
-                NULL,
-                0,
-                0
-            );
-            x += X_STEP;
-        }
-        else if (isDemon == 1)
-        {
-            addTextBox(
-                x, y, X_WIDTH, Y_WIDTH, //bb
-                50, 50, 50, //Box colour
-                100, 100, 100, //Highlighted Box colour
-                255, 0, 0, //Text colour
-                "DEMON", 
-                FONT,
-                NULL,
-                0,
-                0
-            );
-            x += X_STEP;
-        }
-        else
-        {
-            addTextBox(
-                x, y, X_WIDTH, Y_WIDTH, //bb
-                50, 50, 50, //Box colour
-                100, 100, 100, //Highlighted Box colour
-                255, 255, 255, //Text colour
-                "?", 
-                FONT,
-                NULL,
-                0,
-                0
-            );
-            x += X_STEP;
-        }
-
-        if (isGood == 1)
-        {
-            addTextBox(
-                x, y, X_WIDTH, Y_WIDTH, //bb
-                50, 50, 50, //Box colour
-                100, 100, 100, //Highlighted Box colour
-                0, 255, 0, //Text colour
-                "GOOD", 
-                FONT,
-                NULL,
-                0,
-                0
-            );
-            x += X_STEP;
-        }
-        else if (isEvil == 1)
-        {
-            addTextBox(
-                x, y, X_WIDTH, Y_WIDTH, //bb
-                50, 50, 50, //Box colour
-                100, 100, 100, //Highlighted Box colour
-                255, 0, 0, //Text colour
-                "EVIL", 
-                FONT,
-                NULL,
-                0,
-                0
-            );
-            x += X_STEP;
-        }
-        else
-        {
-            addTextBox(
-                x, y, X_WIDTH, Y_WIDTH, //bb
-                50, 50, 50, //Box colour
-                100, 100, 100, //Highlighted Box colour
-                255, 255, 255, //Text colour
-                "?", 
-                FONT,
-                NULL,
-                0,
-                0
-            );
-            x += X_STEP;
-        }
-        if (isPoisoned == 1)
-        {
-            addTextBox(
-                x, y, X_WIDTH, Y_WIDTH, //bb
-                50, 50, 50, //Box colour
-                100, 100, 100, //Highlighted Box colour
-                255, 0, 0, //Text colour
-                "POISONED", 
-                FONT,
-                NULL,
-                0,
-                0
-            );
-            x += X_STEP;
-        }
-        else if (isNotPoisoned == 1)
-        {
-            addTextBox(
-                x, y, X_WIDTH, Y_WIDTH, //bb
-                50, 50, 50, //Box colour
-                100, 100, 100, //Highlighted Box colour
-                0, 255, 0, //Text colour
-                "HEALTHY", 
-                FONT,
-                NULL,
-                0,
-                0
-            );
-            x += X_STEP;
-        }
-        else
-        {
-            addTextBox(
-                x, y, X_WIDTH, Y_WIDTH, //bb
-                50, 50, 50, //Box colour
-                100, 100, 100, //Highlighted Box colour
-                255, 255, 255, //Text colour
-                "?", 
-                FONT,
-                NULL,
-                0,
-                0
-            );
-            x += X_STEP;
-        }
-        if (isAlive == 1)
-        {
-            addTextBox(
-                x, y, X_WIDTH, Y_WIDTH, //bb
-                50, 50, 50, //Box colour
-                100, 100, 100, //Highlighted Box colour
-                0, 255, 0, //Text colour
-                "ALIVE", 
-                FONT,
-                NULL,
-                0,
-                0
-            );
-            x += X_STEP;
-        }
-        else if (isDead == 1)
-        {
-            addTextBox(
-                x, y, X_WIDTH, Y_WIDTH, //bb
-                50, 50, 50, //Box colour
-                100, 100, 100, //Highlighted Box colour
-                255, 0, 0, //Text colour
-                "DEAD", 
-                FONT,
-                NULL,
-                0,
-                0
-            );
-            x += X_STEP;
-        }
-        else
-        {
-            addTextBox(
-                x, y, X_WIDTH, Y_WIDTH, //bb
-                50, 50, 50, //Box colour
-                100, 100, 100, //Highlighted Box colour
-                255, 255, 255, //Text colour
-                "?", 
-                FONT,
-                NULL,
-                0,
-                0
-            );
-            x += X_STEP;
-        }
-    }
-}
 
 void updateUITable(KnowledgeBase* kb, ProbKnowledgeBase* probKB, TTF_Font *FONT, int night)
 {
@@ -1325,7 +846,7 @@ void finish()
     
     if (contradiction == 0)
     { //Optimise ruleset only if no contradictions were produced
-        printHeading("OPTIMISE RULESET");
+        //printHeading("OPTIMISE RULESET");
         optimiseRuleset(RULE_SET, KNOWLEDGE_BASE);
         copyTo(REVERT_KB, KNOWLEDGE_BASE);
     }
@@ -1333,8 +854,8 @@ void finish()
 
     if (contradiction == 1)
     {
-        printRedHeading("CONTRADICTION FOUND!"); //UI HEADING
-        printf("Rolling back Knowledge base\n");
+        //printRedHeading("CONTRADICTION FOUND!"); //UI HEADING
+        //printf("Rolling back Knowledge base\n");
         //Roll back knowledge base
         copyTo(KNOWLEDGE_BASE, REVERT_KB);
     }
@@ -1346,7 +867,7 @@ void finish()
         WORLD_GENERATION++;
     }
     
-    printf("FINISHED CONFIRM!\n");
+    //printf("FINISHED CONFIRM!\n");
     reRenderCall = true;
 }
 
@@ -1357,6 +878,8 @@ void confirm()
     int playerIDs[KNOWLEDGE_BASE->SET_SIZES[0]];
     int roleID;
     int count;
+    int count2;
+    int count3;
     int roleIDs[NUM_BOTCT_ROLES];
     int mode;
     switch(subMenuOpen)
@@ -1431,6 +954,176 @@ void confirm()
             else if (mode == 4) resurrected(KNOWLEDGE_BASE, count, playerIDs, night);
             break;
         case 7: //Player Ping
+            night = subSubMenuOpen-1;
+            playerID = subSubSubMenuOpen-1;
+            for (int i = 0; i < MAX_BUTTON_OPTIONS; i++)
+            {
+                if (subSubSubSubMenuSelected[i] == 1)
+                {
+                    mode = i;
+                    break;
+                }
+            }
+            count = 0;
+            count2 = 0;
+            count3 = 0;
+            for (int i = 0; i < MAX_BUTTON_OPTIONS; i++)
+            {
+                if (subSubSubSubSubMenuSelected[i] == 1)
+                {
+                    roleIDs[count] = i-1;
+                    count++;
+                }
+            }
+            for (int i = 0; i < MAX_BUTTON_OPTIONS; i++)
+            {
+                if (subSubSubSubSubMenuSelected[i+MAX_BUTTON_OPTIONS] == 1)
+                {
+                    playerIDs[count2] = i-1;
+                    count2++;
+                }
+            }
+            for (int i = 0; i < MAX_BUTTON_OPTIONS; i++)
+            {
+                if (subSubSubSubSubMenuSelected[i+(MAX_BUTTON_OPTIONS*2)] == 1)
+                {
+                    count3 = i-1;
+                    break;
+                }
+            }
+            if (mode == 1)
+            { //washerwoman
+                printf("washerwoman\n");
+                washerWomanPing(playerID, roleIDs[0], playerIDs[0], playerIDs[1], KNOWLEDGE_BASE, RULE_SET);
+            }
+            else if (mode == 2)
+            { //librarian
+                printf("librarian\n");
+                librarianPing(playerID, roleIDs[0], playerIDs[0], playerIDs[1], KNOWLEDGE_BASE, RULE_SET);
+            }
+            else if (mode == 3)
+            { //investigator
+                printf("investigator\n");
+                investigatorPing(playerID, roleIDs[0], playerIDs[0], playerIDs[1], KNOWLEDGE_BASE, RULE_SET);
+            }
+            else if (mode == 4)
+            { //chef
+                printf("chef\n");
+                chefPing(playerID, count3, KNOWLEDGE_BASE, RULE_SET);
+            }
+            else if (mode == 5)
+            { //empath
+                printf("empath\n");
+                empathPing(playerID, count3, night, KNOWLEDGE_BASE, RULE_SET);
+            }
+            else if (mode == 6)
+            { //fortune teller
+                printf("fortune teller\n");
+                fortuneTellerPing(playerID, count3, playerIDs[0], playerIDs[1], night, KNOWLEDGE_BASE, RULE_SET);
+            }
+            else if (mode == 7)
+            { //undertaker
+                printf("undertaker\n");
+                undertakerPing(playerID, roleIDs[0], playerIDs[0], night, KNOWLEDGE_BASE, RULE_SET);
+            }
+            else if (mode == 8)
+            { //monk
+                printf("monk\n");
+                monkPing(playerID, playerIDs[0], night, KNOWLEDGE_BASE, RULE_SET);
+            }
+            else if (mode == 9)
+            { //ravenkeeper
+                printf("ravenkeeper\n");
+                ravenkeeperPing(playerID, roleIDs[0], playerIDs[0], night, KNOWLEDGE_BASE, RULE_SET);
+            }
+            else if (mode == 10)
+            { //clockmaker
+                printf("clockmaker\n");
+            }
+            else if (mode == 11)
+            { //dreamer
+                printf("dreamer\n");
+            }
+            else if (mode == 12)
+            { //snake charmer
+                printf("snake charmer\n");
+            }
+            else if (mode == 13)
+            { //mathematician
+                printf("mathematician\n");
+            }
+            else if (mode == 14)
+            { //flowergirl
+                printf("flowergirl\n");
+            }
+            else if (mode == 15)
+            { //towncrier
+                printf("towncrier\n");
+            }
+            else if (mode == 16)
+            { //oracle
+                printf("oracle\n");
+            }
+            else if (mode == 17)
+            { //savant
+                printf("savant\n");
+            }
+            else if (mode == 18)
+            { //seamstress
+                printf("\n");
+            }
+            else if (mode == 19)
+            { //philosopher
+                printf("\n");
+            }
+            else if (mode == 20)
+            { //artist
+                printf("\n");
+            }
+            else if (mode == 21)
+            { //juggler
+                printf("\n");
+            }
+            else if (mode == 22)
+            { //sage
+                printf("\n");
+            }
+            else if (mode == 23)
+            { //grandmother
+                printf("\n");
+            }
+            else if (mode == 24)
+            { //chambermaid
+                printf("\n");
+            }
+            else if (mode == 25)
+            { //exorcist
+                printf("\n");
+            }
+            else if (mode == 26)
+            { //innkeeper
+                printf("\n");
+            }
+            else if (mode == 27)
+            { //gambler
+                printf("\n");
+            }
+            else if (mode == 28)
+            { //gossip
+                printf("\n");
+            }
+            else if (mode == 29)
+            { //courtier
+                printf("\n");
+            }
+            else if (mode == 30)
+            { //professor
+                printf("\n");
+            }
+            else if (mode == 31)
+            { //minstrel
+                printf("\n");
+            }
             break;
         case 8: //reset Data
             break;
@@ -2832,7 +2525,7 @@ int main() {
     SDL_Init(SDL_INIT_VIDEO);
     TTF_Init();
 
-    SDL_Window *window = SDL_CreateWindow("SDL2", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WIDTH, HEIGHT, 0);
+    SDL_Window *window = SDL_CreateWindow("Blood on the Clocktower Solver V1.0", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WIDTH, HEIGHT, 0);
     SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 
     
@@ -2854,21 +2547,21 @@ int main() {
     while (running) {
         if (reRenderCall) 
         {
-            printf("RE RENDER!\n");
+            //printf("RE RENDER!\n");
             reRenderCall = false;
-            printf("-TABLE!\n");
+            //printf("-TABLE!\n");
             updateUITable(KNOWLEDGE_BASE, WORLD_TALLY, ARIAL_FONT, currentNight);
-            printf("-FIRST MENU!\n");
+            //printf("-FIRST MENU!\n");
             updateFirstMenu(ARIAL_FONT);
-            printf("-SUB MENU!\n");
+            //printf("-SUB MENU!\n");
             updateSubMenu(ARIAL_FONT, KNOWLEDGE_BASE);
-            printf("-SUB SUB MENU!\n");
+            //printf("-SUB SUB MENU!\n");
             updateSubSubMenu(ARIAL_FONT, KNOWLEDGE_BASE);
-            printf("-SUB SUB SUB MENU!\n");
+            //printf("-SUB SUB SUB MENU!\n");
             updateSubSubSubMenu(ARIAL_FONT, KNOWLEDGE_BASE);
-            printf("-SUB SUB SUB SUB MENU!\n");
+            //printf("-SUB SUB SUB SUB MENU!\n");
             updateSubSubSubSubMenu(ARIAL_FONT, KNOWLEDGE_BASE);
-            printf("-CONFIRM MENU!\n");
+            //printf("-CONFIRM MENU!\n");
             updateConfirmButton(ARIAL_FONT, KNOWLEDGE_BASE);
         }
         int mouseX, mouseY;
