@@ -44,3 +44,17 @@
 void solve(KnowledgeBase* kb, RuleSet* rs, const int NUM_PLAYERS, const int NUM_MINIONS, const int NUM_DEMONS, const int BASE_OUTSIDERS);
 
 int inferImplicitFacts(KnowledgeBase* kb, RuleSet* rs, int numRounds, int verbose);
+
+void* getProbApprox(void* void_arg);
+/*
+ * struct to store function args for getProbApprox()
+*/
+struct getProbApproxArgs
+{
+    KnowledgeBase* kb;
+    KnowledgeBase* possibleWorldKB;
+    KnowledgeBase*** possibleWorldRevertKB;
+    ProbKnowledgeBase* determinedInNWorlds;
+    RuleSet* rs;
+    int numIterations;
+};

@@ -62,19 +62,6 @@ int inferImplicitFacts(KnowledgeBase* kb, RuleSet* rs, int numRounds, int verbos
     return 0;
 }
 
-/*
- * struct to store function args for getProbApprox()
-*/
-struct getProbApproxArgs
-{
-    KnowledgeBase* kb;
-    KnowledgeBase* possibleWorldKB;
-    KnowledgeBase*** possibleWorldRevertKB;
-    ProbKnowledgeBase* determinedInNWorlds;
-    RuleSet* rs;
-    int numIterations;
-};
-
 #define MAX_FALIURES 256
 
 static int assignRoleForWorld(KnowledgeBase* possibleWorldKB, KnowledgeBase*** possibleWorldRevertKB, ProbKnowledgeBase* determinedInNWorlds, RuleSet* rs, int avaliable[5][MAX_SET_ELEMENTS], int night, int playerIndex, int *failures, int permute[], int isroleIndexes[NUM_DAYS][NUM_BOTCT_ROLES], int notroleIndexes[NUM_DAYS][NUM_BOTCT_ROLES]);
@@ -241,7 +228,7 @@ static void buildWorld(KnowledgeBase* possibleWorldKB, KnowledgeBase*** possible
  * 
  * @return NULL
 */
-static void* getProbApprox(void* void_arg)
+void* getProbApprox(void* void_arg)
 {
     //Arguments
     struct getProbApproxArgs *args = (struct getProbApproxArgs*) void_arg; //Get arguments by casting
