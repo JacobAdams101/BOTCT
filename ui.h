@@ -133,6 +133,21 @@ void hung(KnowledgeBase* kb, int n, int playerID[], int night);
 void nominationDeath(KnowledgeBase* kb, int n, int playerID[], int night);
 void resurrected(KnowledgeBase* kb, int n, int playerID[], int night);
 
+/**
+ * resetMetaData() - reset the players's entire knowledge to "Unknown"
+ * X(PLAYER) = FALSE and NOT_X(PLAYER) = FALSE FOR ALL X FOR PLAYERS
+ * 
+ * @kb the knowledge base to update
+*/
+void reset(KnowledgeBase* kb, int playerID);
+/**
+ * resetMetaData() - reset the metadata's entire knowledge to "Unknown"
+ * X(METADATA) = FALSE and NOT_X(METADATA) = FALSE FOR ALL X FOR METADATA
+ * 
+ * @kb the knowledge base to update
+*/
+void resetMetaData(KnowledgeBase* kb);
+
 void washerWomanPing(int playerIDinfoFrom, int selectedRole, int playerX, int playerY, KnowledgeBase* kb, RuleSet* rs);
 void librarianPing(int playerIDinfoFrom, int selectedRole, int playerX, int playerY, KnowledgeBase* kb, RuleSet* rs);
 void investigatorPing(int playerIDinfoFrom, int selectedRole, int playerX, int playerY, KnowledgeBase* kb, RuleSet* rs);

@@ -485,6 +485,9 @@ void makeTable(KnowledgeBase* kb, ProbKnowledgeBase* probkb, TTF_Font *FONT, int
                     green = 255;
                     blue = 0;
                 }
+                snprintf(buff, 64, "is_NOT_%s_[NIGHT%d]", ROLE_NAMES[role], night);
+                int isNotRoleCertain = isKnownName(kb, "PLAYERS", element, buff);
+
                 snprintf(buff, 64, "is_%s_[NIGHT%d]", ROLE_NAMES[role], night);
                 int isRole = getProbIntPercentageName(probkb, kb, "PLAYERS", element, buff); 
                 snprintf(buff, 64, "is_NOT_%s_[NIGHT%d]", ROLE_NAMES[role], night);
@@ -494,17 +497,20 @@ void makeTable(KnowledgeBase* kb, ProbKnowledgeBase* probkb, TTF_Font *FONT, int
                 else if (isNotRole == 100) snprintf(buff, 64, "   ");
                 else snprintf(buff, 64, "%02d%%", isRole);
 
-                addTextBox(
-                    x, y, X_WIDTH, Y_WIDTH, //bb
-                    25+(isRole*2), 25+(isRole*2), 25+(isRole*2), //Box colour
-                    250, 250, 250, //Highlighted Box colour
-                    red, green, blue, //Text colour
-                    buff, 
-                    FONT,
-                    NULL,
-                    0,
-                    0
-                );
+                if (isNotRoleCertain == 0)
+                {
+                    addTextBox(
+                        x, y, X_WIDTH, Y_WIDTH, //bb
+                        25+(isRole*2), 25+(isRole*2), 25+(isRole*2), //Box colour
+                        250, 250, 250, //Highlighted Box colour
+                        red, green, blue, //Text colour
+                        buff, 
+                        FONT,
+                        NULL,
+                        0,
+                        0
+                    );
+                }
                 x += X_STEP;
 
             }
@@ -1126,6 +1132,10 @@ void confirm()
             }
             break;
         case 8: //reset Data
+            night = subSubMenuOpen-1;
+            playerID = subSubSubMenuOpen-1;
+            reset(KNOWLEDGE_BASE, playerID);
+            resetMetaData(KNOWLEDGE_BASE);
             break;
         case 9: //Finish
             break;
@@ -1182,14 +1192,14 @@ int canConfirm()
             }
             return SUCCESS;
         case 7: //Player Ping
-            for (int i = 0; i < MAX_BUTTON_OPTIONS; i++)
+            for (int i = 0; i < MAX_BUTTON_OPTIONS*3; i++)
             {
                 if (subSubSubSubSubMenuSelected[i] == 1) break;
-                if (i == MAX_BUTTON_OPTIONS-1) return FAIL;
+                if (i+1 == MAX_BUTTON_OPTIONS*3) return FAIL;
             }
             return SUCCESS;
         case 8: //reset Data
-            break;
+            return subSubSubMenuOpen != 0;
         case 9: //Finish
             break;
         default:
@@ -1273,16 +1283,315 @@ void updateSubSubSubSubMenu(TTF_Font *FONT, KnowledgeBase* kb)
 
     int count = 1;
 
+    int haveRoles = 0;
+    int havePlayers = 0;
+    int haveNumbers = 0;
+    char* roleDescription = "";
+    int mode = 0;
+    for (int i = 0; i < MAX_BUTTON_OPTIONS; i++)
+    {
+        if (subSubSubSubMenuSelected[i] == 1)
+        {
+            mode = i;
+            break;
+        }
+    }
+
     if (subMenuOpen == 7)
     {
+        if (mode == 1)
+        { //washerwoman
+            haveRoles = 1;
+            havePlayers = 2;
+            haveNumbers = 0;
+            roleDescription = "You start knowing that 1 of 2 players is a particular Townsfolk.";
+        }
+        else if (mode == 2)
+        { //librarian
+            haveRoles = 1;
+            havePlayers = 2;
+            haveNumbers = 0;
+            roleDescription = "You start knowing that 1 of 2 players is a particular Outsider. (Or that zero are in play.)";
+        }
+        else if (mode == 3)
+        { //investigator
+            haveRoles = 1;
+            havePlayers = 2;
+            haveNumbers = 0;
+            roleDescription = "You start knowing that 1 of 2 players is a particular Minion.";
+        }
+        else if (mode == 4)
+        { //chef
+            haveRoles = 0;
+            havePlayers = 0;
+            haveNumbers = 4;
+            roleDescription = "You start knowing how many pairs of evil players there are.";
+        }
+        else if (mode == 5)
+        { //empath
+            haveRoles = 0;
+            havePlayers = 0;
+            haveNumbers = 2;
+            roleDescription = "Each night, you learn how many of your 2 alive neighbors are evil.";
+        }
+        else if (mode == 6)
+        { //fortune teller
+            haveRoles = 0;
+            havePlayers = 2;
+            haveNumbers = 1;
+            roleDescription = "Each night, choose 2 players: you learn if either is a Demon. There is a good player that registers as a Demon to you.";
+        }
+        else if (mode == 7)
+        { //undertaker
+            haveRoles = 1;
+            havePlayers = 1;
+            haveNumbers = 0;
+            roleDescription = "Each night, you learn which character died by execution today.";
+        }
+        else if (mode == 8)
+        { //monk
+            haveRoles = 0;
+            havePlayers = 1;
+            haveNumbers = 0;
+            roleDescription = "Each night*, choose a player (not yourself): they are safe from the Demon tonight.";
+        }
+        else if (mode == 9)
+        { //ravenkeeper
+            haveRoles = 1;
+            havePlayers = 1;
+            haveNumbers = 0;
+            roleDescription = "If you die at night, you are woken to choose a player: you learn their character.";
+        }
+        else if (mode == 10)
+        { //clockmaker
+            haveRoles = 0;
+            havePlayers = 0;
+            haveNumbers = ((kb->SET_SIZES[0])/2)+1;
+            roleDescription = "You start knowing how many steps from the Demon to its nearest Minion.";
+        }
+        else if (mode == 11)
+        { //dreamer
+            haveRoles = 2;
+            havePlayers = 1;
+            haveNumbers = 0;
+            roleDescription = "Each night, choose a player (not yourself, or Travellers): you learn 1 good character & 1 evil character, 1 of which is correct.";
+        }
+        else if (mode == 12)
+        { //snake charmer
+            haveRoles = 0;
+            havePlayers = 1;
+            haveNumbers = 1;
+            roleDescription = "Each night, choose an alive player: a chosen Demon swaps characters & alignments with you & is then poisoned.";
+        }
+        else if (mode == 13)
+        { //mathematician
+            haveRoles = 0;
+            havePlayers = 0;
+            haveNumbers = kb->SET_SIZES[0];
+            roleDescription = "Each night, you learn how many players' abilities worked abnormally (since dawn) due to another character's ability.";
+        }
+        else if (mode == 14)
+        { //flowergirl
+            haveRoles = 1;
+            havePlayers = 1;
+            haveNumbers = 1;
+            roleDescription = "Each night*, you learn if the Demon voted today.";
+        }
+        else if (mode == 15)
+        { //towncrier
+            haveRoles = 1;
+            havePlayers = 1;
+            haveNumbers = 1;
+            roleDescription = "Each night*, you learn if a Minion nominated today.";
+        }
+        else if (mode == 16)
+        { //oracle
+            haveRoles = 0;
+            havePlayers = 0;
+            haveNumbers = kb->SET_SIZES[0];
+            roleDescription = "Each night*, you learn how many dead players are evil.";
+        }
+        else if (mode == 17)
+        { //savant
+            haveRoles = 1;
+            havePlayers = 1;
+            haveNumbers = 1;
+            roleDescription = "Each day, you may visit the Storyteller to learn 2 things in private: 1 is true & 1 is false.";
+        }
+        else if (mode == 18)
+        { //seamstress
+            haveRoles = 0;
+            havePlayers = 2;
+            haveNumbers = 1;
+            roleDescription = "Once per game, at night, choose 2 players (not yourself): you learn if they are the same alignment.";
+        }
+        else if (mode == 19)
+        { //philosopher
+            haveRoles = 1;
+            havePlayers = 0;
+            haveNumbers = 0;
+            roleDescription = "Once per game, at night, choose a good character: gain that ability. If this character is in play, they are drunk.";
+        }
+        else if (mode == 20)
+        { //artist
+            haveRoles = 1;
+            havePlayers = 1;
+            haveNumbers = 1;
+            roleDescription = "Once per game, during the day, privately ask the Storyteller any yes/ no question.";
+        }
+        else if (mode == 21)
+        { //juggler
+            haveRoles = 1;
+            havePlayers = 1;
+            haveNumbers = 1;
+            roleDescription = "On your 1st day, publicly guess up to 5 players' characters. That night, you learn how many you got correct.";
+        }
+        else if (mode == 22)
+        { //sage
+            haveRoles = 0;
+            havePlayers = 2;
+            haveNumbers = 0;
+            roleDescription = "If the Demon kills you, you learn that it is 1 of 2 players.";
+        }
+        else if (mode == 23)
+        { //grandmother
+            haveRoles = 1;
+            havePlayers = 1;
+            haveNumbers = 0;
+            roleDescription = "You start knowing a good player & their character. If the Demon kills them, you die too.";
+        }
+        else if (mode == 24)
+        { //chambermaid
+            haveRoles = 0;
+            havePlayers = 2;
+            haveNumbers = 2;
+            roleDescription = "Each night, choose 2 alive players (not yourself): you learn how many woke tonight due to their ability.";
+        }
+        else if (mode == 25)
+        { //exorcist
+            haveRoles = 0;
+            havePlayers = 1;
+            haveNumbers = 0;
+            roleDescription = "Each night*, choose a player (different to last night): the Demon, if chosen, learns who you are & doesn't wake tonight.";
+        }
+        else if (mode == 26)
+        { //innkeeper
+            haveRoles = 0;
+            havePlayers = 2;
+            haveNumbers = 0;
+            roleDescription = "Each night*, choose 2 players: they can't die tonight, but 1 is drunk until dusk.";
+        }
+        else if (mode == 27)
+        { //gambler
+            haveRoles = 1;
+            havePlayers = 1;
+            haveNumbers = 0;
+            roleDescription = "Each night*, choose a player & guess their character: if you guess wrong, you die.";
+        }
+        else if (mode == 28)
+        { //gossip
+            haveRoles = 1;
+            havePlayers = 1;
+            haveNumbers = 1;
+            roleDescription = "Each day, you may make a public statement. Tonight, if it was true, a player dies.";
+        }
+        else if (mode == 29)
+        { //courtier
+            haveRoles = 0;
+            havePlayers = 1;
+            haveNumbers = 0;
+            roleDescription = "Once per game, at night, choose a character: they are drunk for 3 nights & 3 days.";
+        }
+        else if (mode == 30)
+        { //professor
+            haveRoles = 0;
+            havePlayers = 1;
+            haveNumbers = 1;
+            roleDescription = "Once per game, at night*, choose a dead player: if they are a Townsfolk, they are resurrected.";
+        }
+        else if (mode == 31)
+        { //minstrel
+            haveRoles = 1;
+            havePlayers = 1;
+            haveNumbers = 1;
+            roleDescription = "When a Minion dies by execution, all other players (except Travellers) are drunk until dusk tomorrow.";
+        }
+
+        addTextBox(
+            x, y-Y_STEP, X_WIDTH*4, Y_WIDTH, //bb
+            0, 0, 0, //Box colour
+            0, 0, 0, //Highlighted Box colour
+            255, 255, 255, //Text colour
+            roleDescription, 
+            FONT,
+            NULL,
+            0,
+            MY_UI_ZONE
+        );
+
         //printf("DRAWING SUB MENU YAY\n");
-        //Drawing roles
-        for (int role = 0; role < NUM_BOTCT_ROLES; role++)
+        if (haveRoles)
         {
-            if (ROLE_IN_SCRIPT[role])
+            //Drawing roles
+            for (int role = 0; role < NUM_BOTCT_ROLES; role++)
             {
-                getButtonColours(subSubSubSubSubMenuSelected[role+1] == 1, &red, &green, &blue, &selectedRed, &selectedGreen, &selectedBlue);
-                snprintf(buff, STRING_BUFF_SIZE, "Role: %s", ROLE_NAMES[role]);
+                if (ROLE_IN_SCRIPT[role])
+                {
+                    getButtonColours(subSubSubSubSubMenuSelected[role+1] == 1, &red, &green, &blue, &selectedRed, &selectedGreen, &selectedBlue);
+                    snprintf(buff, STRING_BUFF_SIZE, "Role: %s", ROLE_NAMES[role]);
+                    addTextBox(
+                        x, y, X_WIDTH, Y_WIDTH, //bb
+                        red, green, blue, //Box colour
+                        selectedRed, selectedGreen, selectedBlue, //Highlighted Box colour
+                        255, 255, 255, //Text colour
+                        buff, 
+                        FONT,
+                        selectSubSubSubSubSubMenu,
+                        role+1,
+                        MY_UI_ZONE
+                    );
+                    y += Y_STEP;
+
+                    if (y > HEIGHT-Y_STEP-10)
+                    {
+                        y = Y_START;
+                        x += X_STEP;
+                    }
+                }
+            }
+            x += X_STEP;
+        }
+        y = Y_START;
+        if (havePlayers)
+        {
+            //Drawing players
+            for (int player = 0; player < kb->SET_SIZES[0]; player++)
+            {
+                getButtonColours(subSubSubSubSubMenuSelected[MAX_BUTTON_OPTIONS+player+1] == 1, &red, &green, &blue, &selectedRed, &selectedGreen, &selectedBlue);
+                snprintf(buff, STRING_BUFF_SIZE, "Player: %s", kb->ELEMENT_NAMES[0][player]);
+                addTextBox(
+                    x, y, X_WIDTH, Y_WIDTH, //bb
+                    red, green, blue, //Box colour
+                    selectedRed, selectedGreen, selectedBlue, //Highlighted Box colour
+                    255, 255, 255, //Text colour
+                    buff, 
+                    FONT,
+                    toggleSubSubSubSubSubMenu,
+                    MAX_BUTTON_OPTIONS+player+1,
+                    MY_UI_ZONE
+                );
+                y += Y_STEP;
+            }
+            x += X_STEP;
+        }
+        y = Y_START;
+        if (haveNumbers)
+        {
+            //Drawing count
+            for (int count = 0; count <= haveNumbers; count++)
+            {
+                getButtonColours(subSubSubSubSubMenuSelected[(MAX_BUTTON_OPTIONS*2)+count+1] == 1, &red, &green, &blue, &selectedRed, &selectedGreen, &selectedBlue);
+                snprintf(buff, STRING_BUFF_SIZE, "%d", count);
                 addTextBox(
                     x, y, X_WIDTH, Y_WIDTH, //bb
                     red, green, blue, //Box colour
@@ -1291,57 +1600,11 @@ void updateSubSubSubSubMenu(TTF_Font *FONT, KnowledgeBase* kb)
                     buff, 
                     FONT,
                     selectSubSubSubSubSubMenu,
-                    role+1,
+                    (MAX_BUTTON_OPTIONS*2)+count+1,
                     MY_UI_ZONE
                 );
                 y += Y_STEP;
-
-                if (y > HEIGHT-Y_STEP-10)
-                {
-                    y = Y_START;
-                    x += X_STEP;
-                }
             }
-        }
-        y = Y_START;
-        x += X_STEP;
-        //Drawing players
-        for (int player = 0; player < kb->SET_SIZES[0]; player++)
-        {
-            getButtonColours(subSubSubSubSubMenuSelected[MAX_BUTTON_OPTIONS+player+1] == 1, &red, &green, &blue, &selectedRed, &selectedGreen, &selectedBlue);
-            snprintf(buff, STRING_BUFF_SIZE, "Player: %s", kb->ELEMENT_NAMES[0][player]);
-            addTextBox(
-                x, y, X_WIDTH, Y_WIDTH, //bb
-                red, green, blue, //Box colour
-                selectedRed, selectedGreen, selectedBlue, //Highlighted Box colour
-                255, 255, 255, //Text colour
-                buff, 
-                FONT,
-                toggleSubSubSubSubSubMenu,
-                MAX_BUTTON_OPTIONS+player+1,
-                MY_UI_ZONE
-            );
-            y += Y_STEP;
-        }
-        y = Y_START;
-        x += X_STEP;
-        //Drawing count
-        for (int count = 0; count <= 2; count++)
-        {
-            getButtonColours(subSubSubSubSubMenuSelected[(MAX_BUTTON_OPTIONS*2)+count+1] == 1, &red, &green, &blue, &selectedRed, &selectedGreen, &selectedBlue);
-            snprintf(buff, STRING_BUFF_SIZE, "%d", count);
-            addTextBox(
-                x, y, X_WIDTH, Y_WIDTH, //bb
-                red, green, blue, //Box colour
-                selectedRed, selectedGreen, selectedBlue, //Highlighted Box colour
-                255, 255, 255, //Text colour
-                buff, 
-                FONT,
-                selectSubSubSubSubSubMenu,
-                (MAX_BUTTON_OPTIONS*2)+count+1,
-                MY_UI_ZONE
-            );
-            y += Y_STEP;
         }
     }
 
@@ -2223,6 +2486,23 @@ void updateSubSubMenu(TTF_Font *FONT, KnowledgeBase* kb)
             }
             break;
         case 8: //reset Data
+            for (int player = 0; player < kb->SET_SIZES[0]; player++)
+            {
+                getButtonColours(subSubSubMenuOpen == player+1, &red, &green, &blue, &selectedRed, &selectedGreen, &selectedBlue);
+                snprintf(buff, STRING_BUFF_SIZE, "Player: %s", kb->ELEMENT_NAMES[0][player]);
+                addTextBox(
+                    x, y, X_WIDTH, Y_WIDTH, //bb
+                    red, green, blue, //Box colour
+                    selectedRed, selectedGreen, selectedBlue, //Highlighted Box colour
+                    255, 255, 255, //Text colour
+                    buff, 
+                    FONT,
+                    openSubSubSubMenu,
+                    player+1,
+                    MY_UI_ZONE
+                );
+                y += Y_STEP;
+            }
             break;
         case 9: //reset Data
             break;
