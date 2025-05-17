@@ -82,6 +82,8 @@
 TextBox UI_ELEMENTS[MAX_UI_ZONES][MAX_UI_ELEMENTS];
 int COUNT[MAX_UI_ZONES];
 int currentNight = 0;
+int soloWorldPlayer = -1;
+int soloWorldRole = -1;
 bool reRenderCall = false;
 int subMenuOpen = 0;
 int subSubMenuOpen = 0;
@@ -103,14 +105,16 @@ int WORLD_GENERATION = 1;
 RuleSet* RULE_SET = NULL;
 
 
-const int NUM_THREADS = 10;
+const int NUM_THREADS = 12;
 const int NUM_ITERATIONS = 8;
 
 ProbKnowledgeBase* threadTallies[NUM_THREADS];
 KnowledgeBase* possibleWorldKB[NUM_THREADS];
-KnowledgeBase*** possibleWorldTempKB[NUM_THREADS];
+KnowledgeBase**** possibleWorldTempKB[NUM_THREADS];
 struct getProbApproxArgs* threadArgs[NUM_THREADS];
 
+KnowledgeBase* POSSIBLE_WORLDS_FOR_PROB[MAX_SET_ELEMENTS][NUM_BOTCT_ROLES];
+int POSSIBLE_WORLD_GENERATED[MAX_SET_ELEMENTS][NUM_BOTCT_ROLES];
 //Thread object
 pthread_t threads[NUM_THREADS];
 
@@ -251,6 +255,23 @@ void runButtonInBounds()
             }
         }
     }
+}
+
+
+
+void viewSoloWorld(int eventID)
+{
+    soloWorldRole = eventID % NUM_BOTCT_ROLES;
+    eventID /= NUM_BOTCT_ROLES;
+    soloWorldPlayer = eventID;
+    reRenderCall = true;
+}
+
+void viewProbWorld(int eventID)
+{
+    soloWorldPlayer = -1;
+    soloWorldRole = -1;
+    reRenderCall = true;
 }
 
 void makeTable(KnowledgeBase* kb, ProbKnowledgeBase* probkb, TTF_Font *FONT, int night)
@@ -499,12 +520,508 @@ void makeTable(KnowledgeBase* kb, ProbKnowledgeBase* probkb, TTF_Font *FONT, int
 
                 if (isNotRoleCertain == 0)
                 {
+                    if (POSSIBLE_WORLD_GENERATED[element][role] == 1)
+                    {
+                        addTextBox(
+                            x, y, X_WIDTH, Y_WIDTH, //bb
+                            25+(isRole*2), 25+(isRole*2), 25+(isRole*2), //Box colour
+                            250, 250, 250, //Highlighted Box colour
+                            red, green, blue, //Text colour
+                            buff, 
+                            FONT,
+                            viewSoloWorld,
+                            role + (NUM_BOTCT_ROLES * element),
+                            0
+                        );
+                    }
+                    else
+                    {
+                        addTextBox(
+                            x, y, X_WIDTH, Y_WIDTH, //bb
+                            25+(isRole*2), 25+(isRole*2), 25+(isRole*2), //Box colour
+                            25+(isRole*2), 25+(isRole*2), 25+(isRole*2), //Highlighted Box colour
+                            red, green, blue, //Text colour
+                            buff, 
+                            FONT,
+                            NULL,
+                            0,
+                            0
+                        );
+                    }
+                }
+                x += X_STEP;
+
+            }
+        }
+        if (isTownsfolk == 1)
+        {
+            addTextBox(
+                x, y, X_WIDTH, Y_WIDTH, //bb
+                50, 50, 50, //Box colour
+                100, 100, 100, //Highlighted Box colour
+                0, 255, 0, //Text colour
+                "TOWNSFOLK", 
+                FONT,
+                NULL,
+                0,
+                0
+            );
+            x += X_STEP;
+        }
+        else if (isOutsider == 1)
+        {
+            addTextBox(
+                x, y, X_WIDTH, Y_WIDTH, //bb
+                50, 50, 50, //Box colour
+                100, 100, 100, //Highlighted Box colour
+                255, 0, 255, //Text colour
+                "OUTSIDER", 
+                FONT,
+                NULL,
+                0,
+                0
+            );
+            x += X_STEP;
+        }
+        else if (isMinion == 1)
+        {
+            addTextBox(
+                x, y, X_WIDTH, Y_WIDTH, //bb
+                50, 50, 50, //Box colour
+                100, 100, 100, //Highlighted Box colour
+                255, 255, 0, //Text colour
+                "MINION", 
+                FONT,
+                NULL,
+                0,
+                0
+            );
+            x += X_STEP;
+        }
+        else if (isDemon == 1)
+        {
+            addTextBox(
+                x, y, X_WIDTH, Y_WIDTH, //bb
+                50, 50, 50, //Box colour
+                100, 100, 100, //Highlighted Box colour
+                255, 0, 0, //Text colour
+                "DEMON", 
+                FONT,
+                NULL,
+                0,
+                0
+            );
+            x += X_STEP;
+        }
+        else
+        {
+            addTextBox(
+                x, y, X_WIDTH, Y_WIDTH, //bb
+                50, 50, 50, //Box colour
+                100, 100, 100, //Highlighted Box colour
+                255, 255, 255, //Text colour
+                "?", 
+                FONT,
+                NULL,
+                0,
+                0
+            );
+            x += X_STEP;
+        }
+
+        if (isGood == 1)
+        {
+            addTextBox(
+                x, y, X_WIDTH, Y_WIDTH, //bb
+                50, 50, 50, //Box colour
+                100, 100, 100, //Highlighted Box colour
+                0, 255, 0, //Text colour
+                "GOOD", 
+                FONT,
+                NULL,
+                0,
+                0
+            );
+            x += X_STEP;
+        }
+        else if (isEvil == 1)
+        {
+            addTextBox(
+                x, y, X_WIDTH, Y_WIDTH, //bb
+                50, 50, 50, //Box colour
+                100, 100, 100, //Highlighted Box colour
+                255, 0, 0, //Text colour
+                "EVIL", 
+                FONT,
+                NULL,
+                0,
+                0
+            );
+            x += X_STEP;
+        }
+        else
+        {
+            addTextBox(
+                x, y, X_WIDTH, Y_WIDTH, //bb
+                50, 50, 50, //Box colour
+                100, 100, 100, //Highlighted Box colour
+                255, 255, 255, //Text colour
+                "?", 
+                FONT,
+                NULL,
+                0,
+                0
+            );
+            x += X_STEP;
+        }
+        if (isPoisoned == 1)
+        {
+            addTextBox(
+                x, y, X_WIDTH, Y_WIDTH, //bb
+                50, 50, 50, //Box colour
+                100, 100, 100, //Highlighted Box colour
+                255, 0, 0, //Text colour
+                "POISONED", 
+                FONT,
+                NULL,
+                0,
+                0
+            );
+            x += X_STEP;
+        }
+        else if (isNotPoisoned == 1)
+        {
+            addTextBox(
+                x, y, X_WIDTH, Y_WIDTH, //bb
+                50, 50, 50, //Box colour
+                100, 100, 100, //Highlighted Box colour
+                0, 255, 0, //Text colour
+                "HEALTHY", 
+                FONT,
+                NULL,
+                0,
+                0
+            );
+            x += X_STEP;
+        }
+        else
+        {
+            addTextBox(
+                x, y, X_WIDTH, Y_WIDTH, //bb
+                50, 50, 50, //Box colour
+                100, 100, 100, //Highlighted Box colour
+                255, 255, 255, //Text colour
+                "?", 
+                FONT,
+                NULL,
+                0,
+                0
+            );
+            x += X_STEP;
+        }
+        if (isAlive == 1)
+        {
+            addTextBox(
+                x, y, X_WIDTH, Y_WIDTH, //bb
+                50, 50, 50, //Box colour
+                100, 100, 100, //Highlighted Box colour
+                0, 255, 0, //Text colour
+                "ALIVE", 
+                FONT,
+                NULL,
+                0,
+                0
+            );
+            x += X_STEP;
+        }
+        else if (isDead == 1)
+        {
+            addTextBox(
+                x, y, X_WIDTH, Y_WIDTH, //bb
+                50, 50, 50, //Box colour
+                100, 100, 100, //Highlighted Box colour
+                255, 0, 0, //Text colour
+                "DEAD", 
+                FONT,
+                NULL,
+                0,
+                0
+            );
+            x += X_STEP;
+        }
+        else
+        {
+            addTextBox(
+                x, y, X_WIDTH, Y_WIDTH, //bb
+                50, 50, 50, //Box colour
+                100, 100, 100, //Highlighted Box colour
+                255, 255, 255, //Text colour
+                "?", 
+                FONT,
+                NULL,
+                0,
+                0
+            );
+            x += X_STEP;
+        }
+    }
+}
+
+void makeSingleWorldTable(KnowledgeBase* kb, TTF_Font *FONT, int night)
+{
+    char buff[STRING_BUFF_SIZE];
+
+    const int X_WIDTH = 40;
+    const int Y_WIDTH = 15;
+    const int X_STEP = X_WIDTH+5;
+    const int Y_STEP = Y_WIDTH+5;
+
+    const int X_START = 50;
+
+    int y = 50;
+    int x = X_START;
+
+    snprintf(buff, STRING_BUFF_SIZE, "ROLE TABLE [NIGHT%d]", night);
+
+    //printf("buff: %s", buff);
+
+    addTextBox(
+        x, y, X_WIDTH*5, Y_WIDTH, //bb
+        0, 0, 0, //Box colour
+        0, 0, 0, //Highlighted Box colour
+        255, 255, 255, //Text colour
+        buff, 
+        FONT,
+        NULL,
+        0,
+        0
+    );
+    x += X_STEP*5;
+    addTextBox(
+        x, y, X_WIDTH*2, Y_WIDTH, //bb
+        50, 50, 50, //Box colour
+                100, 100, 100, //Highlighted Box colour
+        255, 255, 255, //Text colour
+        "PREV NIGHT", 
+        FONT,
+        event_PrevNight,
+        0,
+        0
+    );
+    x += X_STEP*2;
+    addTextBox(
+        x, y, X_WIDTH*2, Y_WIDTH, //bb
+        50, 50, 50, //Box colour
+        100, 100, 100, //Highlighted Box colour
+        255, 255, 255, //Text colour
+        "NEXT NIGHT", 
+        FONT,
+        event_NextNight,
+        0,
+        0
+    );
+    x += X_STEP*2;
+    addTextBox(
+        x, y, X_WIDTH*2, Y_WIDTH, //bb
+        50, 50, 50, //Box colour
+        100, 100, 100, //Highlighted Box colour
+        255, 255, 255, //Text colour
+        "BACK TO PROB", 
+        FONT,
+        viewProbWorld,
+        0,
+        0
+    );
+    x = X_START;
+    y += Y_STEP;
+
+
+    for (int role = 0; role < NUM_BOTCT_ROLES; role++)
+    {
+        //Only print roles in the script
+        if (ROLE_IN_SCRIPT[role] == 1)
+        {
+            int red;
+            int green;
+            int blue;
+            if (strcmp(ROLE_CLASSES[role], "DEMON") == 0)
+            {
+                red = 255;
+                green = 0;
+                blue = 0;
+            }
+            else if (strcmp(ROLE_CLASSES[role], "MINION") == 0)
+            {
+                red = 255;
+                green = 255;
+                blue = 0;
+            }
+            else if (strcmp(ROLE_CLASSES[role], "OUTSIDER") == 0)
+            {
+                red = 255;
+                green = 0;
+                blue = 255;
+            }
+            else if (strcmp(ROLE_CLASSES[role], "TOWNSFOLK") == 0)
+            {
+                red = 0;
+                green = 255;
+                blue = 0;
+            }
+            snprintf(buff, STRING_BUFF_SIZE, "%.*s", 3, ROLE_NAMES[role]);
+            addTextBox(
+                x, y, X_WIDTH, Y_WIDTH, //bb
+                50, 50, 50, //Box colour
+                100, 100, 100, //Highlighted Box colour
+                red, green, blue, //Text colour
+                buff, 
+                FONT,
+                NULL,
+                0,
+                0
+            );
+
+            x += X_STEP;
+        }
+    }
+
+    
+    addTextBox(
+        x, y, X_WIDTH, Y_WIDTH, //bb
+        50, 50, 50, //Box colour
+        100, 100, 100, //Highlighted Box colour
+        255, 255, 255, //Text colour
+        "CLASS", 
+        FONT,
+        NULL,
+        0,
+        0
+    );
+    x += X_STEP;
+    addTextBox(
+        x, y, X_WIDTH, Y_WIDTH, //bb
+        50, 50, 50, //Box colour
+        100, 100, 100, //Highlighted Box colour
+        255, 255, 255, //Text colour
+        "TEAM", 
+        FONT,
+        NULL,
+        0,
+        0
+    );
+    x += X_STEP;
+    addTextBox(
+        x, y, X_WIDTH, Y_WIDTH, //bb
+        50, 50, 50, //Box colour
+        100, 100, 100, //Highlighted Box colour
+        255, 255, 255, //Text colour
+        "POISONED", 
+        FONT,
+        NULL,
+        0,
+        0
+    );
+    x += X_STEP;
+    addTextBox(
+        x, y, X_WIDTH, Y_WIDTH, //bb
+        50, 50, 50, //Box colour
+        100, 100, 100, //Highlighted Box colour
+        255, 255, 255, //Text colour
+        "ALIVE", 
+        FONT,
+        NULL,
+        0,
+        0
+    );
+    x += X_STEP;
+
+    int set = 0;
+    for (int element = 0; element < kb->SET_SIZES[set]; element++)
+    {
+        y += Y_STEP;
+        x = X_START - X_STEP;
+        snprintf(buff, STRING_BUFF_SIZE, "%s", kb->ELEMENT_NAMES[0][element]);
+        addTextBox(
+            x, y, X_WIDTH, Y_WIDTH, //bb
+            0, 0, 0, //Box colour
+            0, 0, 0, //Highlighted Box colour
+            255, 255, 255, //Text colour
+            buff, 
+            FONT,
+            NULL,
+            0,
+            0
+        );
+        
+        x += X_STEP;
+        snprintf(buff, 64, "is_TOWNSFOLK_[NIGHT%d]", night);
+        int isTownsfolk = isKnownName(kb, "PLAYERS", element, buff); 
+        snprintf(buff, 64, "is_OUTSIDER_[NIGHT%d]", night);
+        int isOutsider = isKnownName(kb, "PLAYERS", element, buff); 
+        snprintf(buff, 64, "is_MINION_[NIGHT%d]", night);
+        int isMinion = isKnownName(kb, "PLAYERS", element, buff); 
+        snprintf(buff, 64, "is_DEMON_[NIGHT%d]", night);
+        int isDemon = isKnownName(kb, "PLAYERS", element, buff); 
+
+        snprintf(buff, 64, "is_GOOD_[NIGHT%d]", night);
+        int isGood = isKnownName(kb, "PLAYERS", element, buff); 
+        snprintf(buff, 64, "is_EVIL_[NIGHT%d]", night);
+        int isEvil = isKnownName(kb, "PLAYERS", element, buff); 
+
+        snprintf(buff, 64, "is_POISONED_[NIGHT%d]", night);
+        int isPoisoned = isKnownName(kb, "PLAYERS", element, buff); 
+        snprintf(buff, 64, "is_NOT_POISONED_[NIGHT%d]", night);
+        int isNotPoisoned = isKnownName(kb, "PLAYERS", element, buff); 
+
+        snprintf(buff, 64, "is_ALIVE_[NIGHT%d]", night);
+        int isAlive = isKnownName(kb, "PLAYERS", element, buff); 
+        snprintf(buff, 64, "is_DEAD_[NIGHT%d]", night);
+        int isDead = isKnownName(kb, "PLAYERS", element, buff); 
+
+        //printTrucatedStr(kb->ELEMENT_NAMES[0][element], 9);
+        for (int role = 0; role < NUM_BOTCT_ROLES; role++)
+        {
+            //Only print roles in the script
+            if (ROLE_IN_SCRIPT[role] == 1)
+            {
+                int red;
+                int green;
+                int blue;
+                if (strcmp(ROLE_CLASSES[role], "DEMON") == 0)
+                {
+                    red = 255;
+                    green = 0;
+                    blue = 0;
+                }
+                else if (strcmp(ROLE_CLASSES[role], "MINION") == 0)
+                {
+                    red = 255;
+                    green = 255;
+                    blue = 0;
+                }
+                else if (strcmp(ROLE_CLASSES[role], "OUTSIDER") == 0)
+                {
+                    red = 255;
+                    green = 0;
+                    blue = 255;
+                }
+                else if (strcmp(ROLE_CLASSES[role], "TOWNSFOLK") == 0)
+                {
+                    red = 0;
+                    green = 255;
+                    blue = 0;
+                }
+                snprintf(buff, 64, "is_%s_[NIGHT%d]", ROLE_NAMES[role], night);
+                int isRole = isKnownName(kb, "PLAYERS", element, buff);
+
+                if (isRole)
+                {
                     addTextBox(
                         x, y, X_WIDTH, Y_WIDTH, //bb
-                        25+(isRole*2), 25+(isRole*2), 25+(isRole*2), //Box colour
+                        50, 50, 150, //Box colour
                         250, 250, 250, //Highlighted Box colour
                         red, green, blue, //Text colour
-                        buff, 
+                        " * ", 
                         FONT,
                         NULL,
                         0,
@@ -734,7 +1251,14 @@ void updateUITable(KnowledgeBase* kb, ProbKnowledgeBase* probKB, TTF_Font *FONT,
 {
     currentNight = night;
     resetScreen(0);
-    makeTable(kb, probKB, FONT, night);
+    if (soloWorldPlayer == -1 || soloWorldRole == -1)
+    {
+        makeTable(kb, probKB, FONT, night);
+    }
+    else
+    {
+        makeSingleWorldTable(POSSIBLE_WORLDS_FOR_PROB[soloWorldPlayer][soloWorldRole], FONT, night);
+    }
 }
 
 void getButtonColours(bool selected, int* r, int* g, int* b, int* sr, int* sg, int* sb)
@@ -871,6 +1395,14 @@ void finish()
         //Compute total tally
         resetProbKnowledgeBase(WORLD_TALLY);
         WORLD_GENERATION++;
+
+        for (int i = 0; i < MAX_SET_ELEMENTS; i++)
+        {
+            for (int j = 0; j < NUM_BOTCT_ROLES; j++)
+            {
+                POSSIBLE_WORLD_GENERATED[i][j] = 0;
+            }
+        }
     }
     
     //printf("FINISHED CONFIRM!\n");
@@ -1137,7 +1669,19 @@ void confirm()
             reset(KNOWLEDGE_BASE, playerID);
             resetMetaData(KNOWLEDGE_BASE);
             break;
-        case 9: //Finish
+        case 9: //kill player
+            night = subSubMenuOpen-1;
+            playerID = subSubSubMenuOpen-1;
+            count = 0;
+            for (int i = 0; i < KNOWLEDGE_BASE->SET_SIZES[0]+1; i++)
+            {
+                if (subSubSubSubMenuSelected[i] == 1)
+                {
+                    playerIDs[count] = i-1;
+                    count++;
+                }
+            }
+            killedPlayer(KNOWLEDGE_BASE, playerID, playerIDs[0], night);
             break;
         default:
             break;
@@ -1200,8 +1744,13 @@ int canConfirm()
             return SUCCESS;
         case 8: //reset Data
             return subSubSubMenuOpen != 0;
-        case 9: //Finish
-            break;
+        case 9: //Kill player
+            for (int i = 0; i < MAX_BUTTON_OPTIONS; i++)
+            {
+                if (subSubSubSubMenuSelected[i] == 1) break;
+                if (i == MAX_BUTTON_OPTIONS-1) return FAIL;
+            }
+            return SUCCESS;
         default:
             break;
 
@@ -2266,8 +2815,26 @@ void updateSubSubSubMenu(TTF_Font *FONT, KnowledgeBase* kb)
             count++;
             break;
         case 8: //reset Data
+            //NOTHING TO DO HERE
             break;
-        case 9: //Finish
+        case 9: //Kill player
+            for (int player = 0; player < kb->SET_SIZES[0]; player++)
+            {
+                getButtonColours(subSubSubSubMenuSelected[player+1] == 1, &red, &green, &blue, &selectedRed, &selectedGreen, &selectedBlue);
+                snprintf(buff, STRING_BUFF_SIZE, "Player: %s", kb->ELEMENT_NAMES[0][player]);
+                addTextBox(
+                    x, y, X_WIDTH, Y_WIDTH, //bb
+                    red, green, blue, //Box colour
+                    selectedRed, selectedGreen, selectedBlue, //Highlighted Box colour
+                    255, 255, 255, //Text colour
+                    buff, 
+                    FONT,
+                    selectSubSubSubSubMenu,
+                    player+1,
+                    MY_UI_ZONE
+                );
+                y += Y_STEP;
+            }
             break;
         default:
             break;
@@ -2504,7 +3071,24 @@ void updateSubSubMenu(TTF_Font *FONT, KnowledgeBase* kb)
                 y += Y_STEP;
             }
             break;
-        case 9: //reset Data
+        case 9: //kill player
+            for (int player = 0; player < kb->SET_SIZES[0]; player++)
+            {
+                getButtonColours(subSubSubMenuOpen == player+1, &red, &green, &blue, &selectedRed, &selectedGreen, &selectedBlue);
+                snprintf(buff, STRING_BUFF_SIZE, "Player: %s", kb->ELEMENT_NAMES[0][player]);
+                addTextBox(
+                    x, y, X_WIDTH, Y_WIDTH, //bb
+                    red, green, blue, //Box colour
+                    selectedRed, selectedGreen, selectedBlue, //Highlighted Box colour
+                    255, 255, 255, //Text colour
+                    buff, 
+                    FONT,
+                    openSubSubSubMenu,
+                    player+1,
+                    MY_UI_ZONE
+                );
+                y += Y_STEP;
+            }
             break;
         default:
             break;
@@ -2692,21 +3276,21 @@ void updateFirstMenu(TTF_Font *FONT)
         MY_UI_ZONE
     );
     y += Y_STEP;
-    /*
+    
     getButtonColours(subMenuOpen == 9, &red, &green, &blue, &selectedRed, &selectedGreen, &selectedBlue);
     addTextBox(
         x, y, X_WIDTH, Y_WIDTH, //bb
         red, green, blue, //Box colour
         selectedRed, selectedGreen, selectedBlue, //Highlighted Box colour
         255, 255, 255, //Text colour
-        "FINISH", 
+        "KILL PLAYER", 
         FONT,
-        finish,
-        0,
+        openSubMenu,
+        9,
         MY_UI_ZONE
     );
     y += Y_STEP;
-    */
+    
 }
 
 
@@ -2747,7 +3331,7 @@ int main() {
     {
         possibleWorldKB[i] = initKB(NUM_PLAYERS);
         threadTallies[i] = initProbKB();
-        possibleWorldTempKB[i] = (KnowledgeBase***)malloc(NUM_DAYS * sizeof(KnowledgeBase***));
+        possibleWorldTempKB[i] = (KnowledgeBase****)malloc(NUM_DAYS * sizeof(KnowledgeBase****));
         //Create arguments in strctures to pass into new thread
         threadArgs[i] = (struct getProbApproxArgs*) malloc(sizeof(struct getProbApproxArgs));
         if (possibleWorldTempKB[i] == NULL)
@@ -2757,23 +3341,44 @@ int main() {
         }
         for (int j = 0; j < NUM_DAYS; j++)
         {
-            possibleWorldTempKB[i][j] = (KnowledgeBase**)malloc(MAX_SET_ELEMENTS * sizeof(KnowledgeBase**));
+            possibleWorldTempKB[i][j] = (KnowledgeBase***)malloc(MAX_SET_ELEMENTS * sizeof(KnowledgeBase***));
             if (possibleWorldTempKB[i][j] == NULL)
             {
                 printf("MALLOC FAILED!\n");
                 return 1;
             }
+            
             for (int k = 0; k < MAX_SET_ELEMENTS; k++)
             {
                 //possibleWorldTempKB[i][j][k] = (KnowledgeBase*)malloc(NUM_DAYS * sizeof(KnowledgeBase*));
                 
-                possibleWorldTempKB[i][j][k] = initKB(NUM_PLAYERS);
+                possibleWorldTempKB[i][j][k] = (KnowledgeBase**)malloc(3 * sizeof(KnowledgeBase**));
                 if (possibleWorldTempKB[i][j][k] == NULL)
                 {
                     printf("MALLOC FAILED!\n");
                     return 1;
                 }
+                for (int l = 0; l < 3; l++)
+                {
+                    possibleWorldTempKB[i][j][k][l] = initKB(NUM_PLAYERS);
+                    if (possibleWorldTempKB[i][j][k][l] == NULL)
+                    {
+                        printf("MALLOC FAILED!\n");
+                        return 1;
+                    }
+                }
             }
+        }
+    }
+
+    //Init zone to store data
+    for (int i = 0; i < MAX_SET_ELEMENTS; i++)
+    {
+        for (int j = 0; j < NUM_BOTCT_ROLES; j++)
+        {
+            POSSIBLE_WORLDS_FOR_PROB[i][j] = initKB(NUM_PLAYERS);
+            copyTo(POSSIBLE_WORLDS_FOR_PROB[i][j], KNOWLEDGE_BASE);
+            POSSIBLE_WORLD_GENERATED[i][j] = 0;
         }
     }
 
@@ -2785,6 +3390,8 @@ int main() {
         threadArgs[i]->possibleWorldRevertKB = possibleWorldTempKB[i]; //Working block of memory
         threadArgs[i]->determinedInNWorlds = threadTallies[i]; //The output tallies
         threadArgs[i]->worldTally = WORLD_TALLY;
+        threadArgs[i]->POSSIBLE_WORLDS_FOR_PROB=&POSSIBLE_WORLDS_FOR_PROB;
+        threadArgs[i]->POSSIBLE_WORLD_GENERATED=&POSSIBLE_WORLD_GENERATED;
         threadArgs[i]->worldGeneration = &WORLD_GENERATION;
         threadArgs[i]->reRenderCall = &reRenderCall;
         threadArgs[i]->rs = RULE_SET;
@@ -2830,7 +3437,9 @@ int main() {
             //printf("RE RENDER!\n");
             reRenderCall = false;
             //printf("-TABLE!\n");
+            
             updateUITable(KNOWLEDGE_BASE, WORLD_TALLY, ARIAL_FONT, currentNight);
+
             //printf("-FIRST MENU!\n");
             updateFirstMenu(ARIAL_FONT);
             //printf("-SUB MENU!\n");

@@ -129,6 +129,27 @@ static void writeRoleFunc(char *funcName[NUM_SETS][FUNCTION_RESULT_SIZE*INT_LENG
 }
 
 /**
+ * writeActionFunc() - write the name of a role function (and it's negation) into funcName
+ * Also append a night identifier in the form _[NIGHT%d]
+ *
+ * @funcName - array to write name to
+ * @set - the setID for the function
+ * @index - the indicies for different sets to write into
+ * @playerID
+ * @night - the night of the function
+ * @maxLen - max len of strings
+*/
+static void writeActionFunc(char *funcName[NUM_SETS][FUNCTION_RESULT_SIZE*INT_LENGTH], int set, int index[], char *actionStr, int playerID, int night, int maxLen)
+{
+    char str[maxLen]; // Declare a character array to hold the string 
+    char strNeg[maxLen]; // Declare a character array to hold the string 
+    int SIZE = maxLen*sizeof(char);
+    snprintf(str, SIZE, "%s_%d", actionStr, playerID);
+    snprintf(strNeg, SIZE, "NOT_%s_%d", actionStr, playerID);
+    writeFuncNight(funcName, set, index, str, strNeg, night, maxLen);
+}
+
+/**
  * writeDeathFunc() - write the name of a death function (and it's negation) into funcName
  * Also append a night identifier in the form _[NIGHT%d]
  *
@@ -221,6 +242,14 @@ KnowledgeBase* initKB(const int NUM_PLAYERS)
         writeFuncNight(kb->FUNCTION_NAME, 0, index, "RESURRECTED", "NOT_RESURRECTED", night, 64);
         //Role changed
         writeFuncNight(kb->FUNCTION_NAME, 0, index, "is_ROLE_CHANGED", "is_NOT_ROLE_CHANGED", night, 64);
+        //Killed Player
+        for (int playerID = 0; playerID < NUM_PLAYERS; playerID++)
+        {
+            writeActionFunc(kb->FUNCTION_NAME, 0, index, "KILLED", playerID, night, 64);
+            writeActionFunc(kb->FUNCTION_NAME, 0, index, "POISONED", playerID, night, 64);
+        }
+
+
     }
 
     //REDHERRING
@@ -259,6 +288,15 @@ KnowledgeBase* initKB(const int NUM_PLAYERS)
     writeFunc(kb->FUNCTION_NAME, 2, index, "SENTINEL_in_PLAY", "NOT_SENTINEL_in_PLAY", 64);
     writeFunc(kb->FUNCTION_NAME, 2, index, "SPIRIT_OF_IVORY_in_PLAY", "NOT_SPIRIT_OF_IVORY_in_PLAY", 64);
     writeFunc(kb->FUNCTION_NAME, 2, index, "DJINN_in_PLAY", "NOT_DJINN_in_PLAY", 64);
+
+    for (int i = 0; i < 3; i++)
+    {
+        if (index[i] > FUNCTION_RESULT_SIZE*INT_LENGTH)
+        {
+            printf("KNOWLEDGE BASE TOO SMALL!");
+            exit(1);
+        }
+    }
 
     return kb; //Return initilized knowledge base
 }

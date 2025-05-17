@@ -433,6 +433,19 @@ void redHerring(KnowledgeBase* kb, int playerID)
     addKnowledgeName(kb, "PLAYERS", playerID, "is_REDHERRING");
 }
 
+/**
+ * killed() - assume that playerID killed playerX
+ * 
+ * @kb the knowledge base to update
+ * @NUM_DAYS the max number of days the game can go on for
+*/
+void killedPlayer(KnowledgeBase* kb, int playerID, int playerX, int night)
+{
+    char buff[STRING_BUFF_SIZE]; // Declare a character array to hold the string 
+
+    snprintf(buff, STRING_BUFF_SIZE, "KILLED_%d_[NIGHT%d]", playerX, night);
+    addKnowledgeName(kb, "PLAYERS", playerID, buff);
+}
 
 /**
  * diedInNight() - assume that a player died in the night

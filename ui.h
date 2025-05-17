@@ -128,6 +128,7 @@ void noptions(KnowledgeBase* kb, int playerID, int n, int roleIDs[], int night);
 void poisoned(KnowledgeBase* kb, int playerID, int night);
 void notPoisoned(KnowledgeBase* kb, int playerID, int night);
 void redHerring(KnowledgeBase* kb, int playerID);
+void killedPlayer(KnowledgeBase* kb, int playerID, int playerX, int night);
 void diedInNight(KnowledgeBase* kb, int n, int playerID[], int night);
 void hung(KnowledgeBase* kb, int n, int playerID[], int night);
 void nominationDeath(KnowledgeBase* kb, int n, int playerID[], int night);
