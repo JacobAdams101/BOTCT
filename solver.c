@@ -77,6 +77,7 @@ static int assignPoisonForWorld(
     int permute[], 
     int isroleIndexes[NUM_DAYS][NUM_BOTCT_ROLES], int notroleIndexes[NUM_DAYS][NUM_BOTCT_ROLES], 
     int poisonedIndexes[NUM_DAYS][MAX_SET_ELEMENTS], int notPoisonedIndexes[NUM_DAYS][MAX_SET_ELEMENTS], 
+    int isPoisonedIndexes[NUM_DAYS], int isNotPoisonedIndexes[NUM_DAYS],
     int killedIndexes[NUM_DAYS][MAX_SET_ELEMENTS], int notKilledIndexes[NUM_DAYS][MAX_SET_ELEMENTS]
 );
 
@@ -89,7 +90,8 @@ static int assignKillForWorld(
     int *failures, 
     int permute[], 
     int isroleIndexes[NUM_DAYS][NUM_BOTCT_ROLES], int notroleIndexes[NUM_DAYS][NUM_BOTCT_ROLES], 
-    int poisonedIndexes[NUM_DAYS][MAX_SET_ELEMENTS], int notPoisonedIndexes[NUM_DAYS][MAX_SET_ELEMENTS], 
+    int poisonedIndexes[NUM_DAYS][MAX_SET_ELEMENTS], int notPoisonedIndexes[NUM_DAYS][MAX_SET_ELEMENTS],
+    int isPoisonedIndexes[NUM_DAYS], int isNotPoisonedIndexes[NUM_DAYS], 
     int killedIndexes[NUM_DAYS][MAX_SET_ELEMENTS], int notKilledIndexes[NUM_DAYS][MAX_SET_ELEMENTS]
 );
 
@@ -103,6 +105,7 @@ static int assignRoleForWorld(
     int permute[], 
     int isroleIndexes[NUM_DAYS][NUM_BOTCT_ROLES], int notroleIndexes[NUM_DAYS][NUM_BOTCT_ROLES], 
     int poisonedIndexes[NUM_DAYS][MAX_SET_ELEMENTS], int notPoisonedIndexes[NUM_DAYS][MAX_SET_ELEMENTS], 
+    int isPoisonedIndexes[NUM_DAYS], int isNotPoisonedIndexes[NUM_DAYS],
     int killedIndexes[NUM_DAYS][MAX_SET_ELEMENTS], int notKilledIndexes[NUM_DAYS][MAX_SET_ELEMENTS]
 );
 
@@ -115,7 +118,8 @@ static int assignPoisonForWorld(
     int *failures, 
     int permute[], 
     int isroleIndexes[NUM_DAYS][NUM_BOTCT_ROLES], int notroleIndexes[NUM_DAYS][NUM_BOTCT_ROLES], 
-    int poisonedIndexes[NUM_DAYS][MAX_SET_ELEMENTS], int notPoisonedIndexes[NUM_DAYS][MAX_SET_ELEMENTS], 
+    int poisonedIndexes[NUM_DAYS][MAX_SET_ELEMENTS], int notPoisonedIndexes[NUM_DAYS][MAX_SET_ELEMENTS],
+    int isPoisonedIndexes[NUM_DAYS], int isNotPoisonedIndexes[NUM_DAYS],
     int killedIndexes[NUM_DAYS][MAX_SET_ELEMENTS], int notKilledIndexes[NUM_DAYS][MAX_SET_ELEMENTS]
 )
 {
@@ -150,17 +154,35 @@ static int assignPoisonForWorld(
         {
             addKnowledge(possibleWorldKB, 0, player, poisonedIndexes[night][playerToActionID-1]);
         }
+
         if (playerIndex+1 >= possibleWorldKB->SET_SIZES[0])
         {
-            for (int playerID = 0; playerID < possibleWorldKB->SET_SIZES[0]; playerID++)
+            for (int poisonedPlayerID = 0; poisonedPlayerID < possibleWorldKB->SET_SIZES[0]; poisonedPlayerID++)
             {
-                int poisonedPlayers = isKnown(possibleWorldKB, 0, player, poisonedIndexes[night][playerID]);
-                if (poisonedPlayers == 0)
+                int playerPoisoned = 0;
+                for (int playerID = 0; playerID < possibleWorldKB->SET_SIZES[0]; playerID++)
                 {
-                    addKnowledge(possibleWorldKB, 0, player, notPoisonedIndexes[night][playerID]);
+                    int poisonedPlayers = isKnown(possibleWorldKB, 0, playerID, poisonedIndexes[night][poisonedPlayerID]);
+                    char buff[64];
+                    snprintf(buff, 64, "POISONED_%d_[NIGHT%d]", poisonedPlayerID, night);
+                    int check = isKnownName(possibleWorldKB, "PLAYERS", playerID, buff);
+
+                    if (poisonedPlayers == 0)
+                    {
+                        addKnowledge(possibleWorldKB, 0, playerID, notPoisonedIndexes[night][poisonedPlayerID]);
+                    }
+                    else
+                    {
+                        playerPoisoned = 1;
+                    }
+                }
+                if (playerPoisoned == 0)
+                { //Add code to say the player isn't poisoned
+                    addKnowledge(possibleWorldKB, 0, poisonedPlayerID, isNotPoisonedIndexes[night]);
                 }
             }
         }
+            
 
         //Infer knowledge (to see if a contradiction arises)
         if (inferImplicitFacts(possibleWorldKB, rs, NUM_SOLVE_STEPS, 0))
@@ -199,6 +221,7 @@ static int assignPoisonForWorld(
                 permute, 
                 isroleIndexes, notroleIndexes, 
                 poisonedIndexes, notPoisonedIndexes,
+                isPoisonedIndexes, isNotPoisonedIndexes,
                 killedIndexes, notKilledIndexes
             );
             if (result == 1) return 1;
@@ -223,7 +246,8 @@ static int assignKillForWorld(
     int *failures, 
     int permute[], 
     int isroleIndexes[NUM_DAYS][NUM_BOTCT_ROLES], int notroleIndexes[NUM_DAYS][NUM_BOTCT_ROLES], 
-    int poisonedIndexes[NUM_DAYS][MAX_SET_ELEMENTS], int notPoisonedIndexes[NUM_DAYS][MAX_SET_ELEMENTS], 
+    int poisonedIndexes[NUM_DAYS][MAX_SET_ELEMENTS], int notPoisonedIndexes[NUM_DAYS][MAX_SET_ELEMENTS],
+    int isPoisonedIndexes[NUM_DAYS], int isNotPoisonedIndexes[NUM_DAYS], 
     int killedIndexes[NUM_DAYS][MAX_SET_ELEMENTS], int notKilledIndexes[NUM_DAYS][MAX_SET_ELEMENTS]
 )
 {
@@ -258,6 +282,17 @@ static int assignKillForWorld(
         {
             addKnowledge(possibleWorldKB, 0, player, killedIndexes[night][playerToActionID-1]);
         }
+        /*
+        for (int playerID = 0; playerID < possibleWorldKB->SET_SIZES[0]; playerID++)
+        {
+            int killedPlayers = isKnown(possibleWorldKB, 0, player, killedIndexes[night][playerID]);
+            if (killedPlayers == 0)
+            {
+                addKnowledge(possibleWorldKB, 0, player, notKilledIndexes[night][playerID]);
+            }
+        }
+            */
+            
 
         //Infer knowledge (to see if a contradiction arises)
         if (inferImplicitFacts(possibleWorldKB, rs, NUM_SOLVE_STEPS, 0))
@@ -298,6 +333,7 @@ static int assignKillForWorld(
                 permute, 
                 isroleIndexes, notroleIndexes, 
                 poisonedIndexes, notPoisonedIndexes,
+                isPoisonedIndexes, isNotPoisonedIndexes,
                 killedIndexes, notKilledIndexes
             );
             if (result == 1) return 1;
@@ -322,10 +358,12 @@ static int assignRoleForWorld(
     int *failures, 
     int permute[], 
     int isroleIndexes[NUM_DAYS][NUM_BOTCT_ROLES], int notroleIndexes[NUM_DAYS][NUM_BOTCT_ROLES], 
-    int poisonedIndexes[NUM_DAYS][MAX_SET_ELEMENTS], int notPoisonedIndexes[NUM_DAYS][MAX_SET_ELEMENTS], 
+    int poisonedIndexes[NUM_DAYS][MAX_SET_ELEMENTS], int notPoisonedIndexes[NUM_DAYS][MAX_SET_ELEMENTS],
+    int isPoisonedIndexes[NUM_DAYS], int isNotPoisonedIndexes[NUM_DAYS], 
     int killedIndexes[NUM_DAYS][MAX_SET_ELEMENTS], int notKilledIndexes[NUM_DAYS][MAX_SET_ELEMENTS]
 )
 {
+    //printf("TEST player %d, night %d\n", playerIndex, night);
     //Choose player from random permutation to remove certain biases in allocation
     int player = permute[playerIndex];
 
@@ -390,6 +428,7 @@ static int assignRoleForWorld(
                 permute, 
                 isroleIndexes, notroleIndexes, 
                 poisonedIndexes, notPoisonedIndexes,
+                isPoisonedIndexes, isNotPoisonedIndexes,
                 killedIndexes, notKilledIndexes
             );
             if (result == 1) return 1;
@@ -421,6 +460,7 @@ static void buildWorld(
     RuleSet* rs, 
     int isroleIndexes[NUM_DAYS][NUM_BOTCT_ROLES], int notroleIndexes[NUM_DAYS][NUM_BOTCT_ROLES], 
     int poisonedIndexes[NUM_DAYS][MAX_SET_ELEMENTS], int notPoisonedIndexes[NUM_DAYS][MAX_SET_ELEMENTS],
+    int isPoisonedIndexes[NUM_DAYS], int isNotPoisonedIndexes[NUM_DAYS],
     int killedIndexes[NUM_DAYS][MAX_SET_ELEMENTS], int notKilledIndexes[NUM_DAYS][MAX_SET_ELEMENTS]
 )
 {
@@ -456,11 +496,12 @@ static void buildWorld(
         determinedInNWorlds, 
         rs, 
         avaliable, 
-        0, 0, 
+        0, 0, //night, player index 
         &faliures, 
         permute, 
         isroleIndexes, notroleIndexes, 
         poisonedIndexes, notPoisonedIndexes,
+        isPoisonedIndexes, isNotPoisonedIndexes,
         killedIndexes, notKilledIndexes
     );
     if (result == -1) 
@@ -534,6 +575,8 @@ void* getProbApproxContinuous(void* void_arg)
     int notroleIndexes[NUM_DAYS][NUM_BOTCT_ROLES];
     int poisonedIndexes[NUM_DAYS][MAX_SET_ELEMENTS];
     int notPoisonedIndexes[NUM_DAYS][MAX_SET_ELEMENTS];
+    int isPoisonedIndexes[NUM_DAYS];
+    int isNotPoisonedIndexes[NUM_DAYS];
     int killedIndexes[NUM_DAYS][MAX_SET_ELEMENTS];
     int notKilledIndexes[NUM_DAYS][MAX_SET_ELEMENTS];
     for (int night = 0; night < NUM_DAYS; night++)
@@ -541,20 +584,33 @@ void* getProbApproxContinuous(void* void_arg)
         for (int role = 0; role < NUM_BOTCT_ROLES; role++)
         {
             snprintf(buff, STRING_BUFF_SIZE, "is_%s_[NIGHT%d]", ROLE_NAMES[role], night);
+            
             isroleIndexes[night][role] = getSetFunctionIDWithName(kb, 0, buff, 1);
             snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s_[NIGHT%d]", ROLE_NAMES[role], night);
+            
             notroleIndexes[night][role] = getSetFunctionIDWithName(kb, 0, buff, 1);
         }
+
+        snprintf(buff, STRING_BUFF_SIZE, "is_POISONED_[NIGHT%d]", night);
         
-        for (int playerID; playerID < kb->SET_SIZES[0]; playerID++)
+        isPoisonedIndexes[night] = getSetFunctionIDWithName(kb, 0, buff, 1);
+        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_POISONED_[NIGHT%d]", night);
+        
+        isNotPoisonedIndexes[night] = getSetFunctionIDWithName(kb, 0, buff, 1);
+        
+        for (int playerID = 0; playerID < kb->SET_SIZES[0]; playerID++)
         {
             snprintf(buff, STRING_BUFF_SIZE, "KILLED_%d_[NIGHT%d]", playerID, night);
+            
             killedIndexes[night][playerID] = getSetFunctionIDWithName(kb, 0, buff, 1);
             snprintf(buff, STRING_BUFF_SIZE, "NOT_KILLED_%d_[NIGHT%d]", playerID, night);
+            
             notKilledIndexes[night][playerID] = getSetFunctionIDWithName(kb, 0, buff, 1);
             snprintf(buff, STRING_BUFF_SIZE, "POISONED_%d_[NIGHT%d]", playerID, night);
+            
             poisonedIndexes[night][playerID] = getSetFunctionIDWithName(kb, 0, buff, 1);
             snprintf(buff, STRING_BUFF_SIZE, "NOT_POISONED_%d_[NIGHT%d]", playerID, night);
+            
             notPoisonedIndexes[night][playerID] = getSetFunctionIDWithName(kb, 0, buff, 1);
         }
     }
@@ -569,7 +625,16 @@ void* getProbApproxContinuous(void* void_arg)
         {
             if (myGeneration != *worldGeneration) break;
             copyTo(possibleWorldKB, kb);
-            buildWorld(possibleWorldKB, possibleWorldRevertKB, determinedInNWorlds, POSSIBLE_WORLDS_FOR_PROB, POSSIBLE_WORLD_GENERATED, rs, isroleIndexes, notroleIndexes, poisonedIndexes, notPoisonedIndexes, killedIndexes, notKilledIndexes);
+            buildWorld(
+                possibleWorldKB, possibleWorldRevertKB, 
+                determinedInNWorlds, 
+                POSSIBLE_WORLDS_FOR_PROB, POSSIBLE_WORLD_GENERATED, 
+                rs, 
+                isroleIndexes, notroleIndexes, 
+                poisonedIndexes, notPoisonedIndexes, 
+                isPoisonedIndexes, isNotPoisonedIndexes,
+                killedIndexes, notKilledIndexes
+            );
         }
 
         if (myGeneration == *worldGeneration) 

@@ -2607,7 +2607,7 @@ void buildRules(RuleSet* rs, KnowledgeBase* kb, const int NUM_PLAYERS, const int
     //RED HERRING RULES
     redHerringRules(rs, kb, NUM_PLAYERS, NUM_MINIONS, NUM_DEMONS, BASE_OUTSIDERS);
     //POISON RULES
-    poisonRules(rs, kb, NUM_PLAYERS, NUM_MINIONS, NUM_DEMONS, BASE_OUTSIDERS);
+    //poisonRules(rs, kb, NUM_PLAYERS, NUM_MINIONS, NUM_DEMONS, BASE_OUTSIDERS);
 
     //ROLE CONTINUITY ARGUMENTS
     roleContinuityArguments(rs, kb, NUM_PLAYERS, NUM_MINIONS, NUM_DEMONS, BASE_OUTSIDERS);

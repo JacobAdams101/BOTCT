@@ -1478,6 +1478,7 @@ void confirm()
         case 6: //Num deaths / Ressurections
             night = subSubMenuOpen-1;
             mode = subSubSubMenuOpen;
+            count = 0;
             for (int i = 0; i < KNOWLEDGE_BASE->SET_SIZES[0]+1; i++)
             {
                 if (subSubSubSubMenuSelected[i] == 1)
