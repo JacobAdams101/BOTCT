@@ -1291,6 +1291,29 @@ static void roleContinuityArguments(RuleSet* rs, KnowledgeBase* kb, const int NU
                         addConditionToTempRuleName(rs,kb, 1, "METADATA", buff);
                         pushTempRule(rs);
                         
+                        //<PLAYER>is_IMP AND <PLAYER>_NOT_KILLED_<PLAYER> AND <PLAYER2>=> <PLAYER2>is_NOT_IMP[Night x]
+                        for (int playerID = 0; playerID < NUM_PLAYERS; playerID++)
+                        {
+                            setTempRuleParams(rs, 3,1);
+                            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s_[NIGHT%d]", ROLE_NAMES[role], nextNight);
+                            setTempRuleResultName(rs, kb, 2, "PLAYERS", buff);
+                            snprintf(buff, STRING_BUFF_SIZE, "is_%s_[NIGHT%d]", ROLE_NAMES[role], startNight);
+                            addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff, playerID);
+                            snprintf(buff, STRING_BUFF_SIZE, "NOT_KILLED_%d_[NIGHT%d]", playerID, startNight);
+                            addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff, playerID);
+                            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_SCARLET_WOMAN_[NIGHT%d]", startNight);
+                            addConditionToTempRuleName(rs,kb, 2, "PLAYERS", buff);
+                            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_SNAKE_CHARMER_in_PLAY_[NIGHT%d]", startNight);
+                            addConditionToTempRuleName(rs,kb, 1, "METADATA", buff);
+                            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_BARBER_in_PLAY_[NIGHT%d]", startNight);
+                            addConditionToTempRuleName(rs,kb, 1, "METADATA", buff);
+                            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_PIT_HAG_in_PLAY_[NIGHT%d]", startNight);
+                            addConditionToTempRuleName(rs,kb, 1, "METADATA", buff);
+                            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_SUMMONER_in_PLAY_[NIGHT%d]", startNight);
+                            addConditionToTempRuleName(rs,kb, 1, "METADATA", buff);
+                            pushTempRule(rs);
+                        }
+                        
                         
                     }
                     else if (strcmp(ROLE_NAMES[role], "SNAKE_CHARMER") == 0)

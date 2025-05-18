@@ -127,6 +127,13 @@ void roleNotInGame(KnowledgeBase* kb, int roleID, int night);
 void noptions(KnowledgeBase* kb, int playerID, int n, int roleIDs[], int night);
 void poisoned(KnowledgeBase* kb, int playerID, int night);
 void notPoisoned(KnowledgeBase* kb, int playerID, int night);
+/**
+ * hasPoisoned() - assume that a player has been poisoned by someone
+ * 
+ * @kb the knowledge base to update
+ * @NUM_DAYS the max number of days the game can go on for
+*/
+void hasPoisoned(KnowledgeBase* kb, int playerID, int poisonedID, int night);
 void redHerring(KnowledgeBase* kb, int playerID);
 void killedPlayer(KnowledgeBase* kb, int playerID, int playerX, int night);
 void diedInNight(KnowledgeBase* kb, int n, int playerID[], int night);

@@ -81,6 +81,8 @@
  ***************************************************/
 TextBox UI_ELEMENTS[MAX_UI_ZONES][MAX_UI_ELEMENTS];
 int COUNT[MAX_UI_ZONES];
+int UI_LINES[MAX_UI_ZONES][MAX_UI_ELEMENTS][4];
+int LINE_COUNT[MAX_UI_ZONES];
 int currentNight = 0;
 int soloWorldPlayer = -1;
 int soloWorldRole = -1;
@@ -173,6 +175,16 @@ void drawUIElements(SDL_Renderer *renderer)
             renderTextBox(renderer, tb);
         }
     }
+    for (int uiZone = 0; uiZone < MAX_UI_ZONES; uiZone++)
+    {
+        for (int uiElement = 0; uiElement < LINE_COUNT[uiZone]; uiElement++)
+        {
+            // Set draw color to white for the line
+            SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+            // Draw a line from (100, 100) to (700, 500)
+            SDL_RenderDrawLine(renderer, UI_LINES[uiZone][uiElement][0], UI_LINES[uiZone][uiElement][1], UI_LINES[uiZone][uiElement][2], UI_LINES[uiZone][uiElement][3]);
+        }
+    }
     SDL_RenderPresent(renderer);
     
 }
@@ -180,6 +192,20 @@ void drawUIElements(SDL_Renderer *renderer)
 void resetScreen(int uiZone)
 {
     COUNT[uiZone] = 0;
+    LINE_COUNT[uiZone] = 0;
+}
+
+int addLine(
+    int x, int y, int x2, int y2, 
+    int uiZone
+)
+{
+    if (LINE_COUNT[uiZone] >= MAX_UI_ELEMENTS) return -1;
+    UI_LINES[uiZone][LINE_COUNT[uiZone]][0] = x;
+    UI_LINES[uiZone][LINE_COUNT[uiZone]][1] = y;
+    UI_LINES[uiZone][LINE_COUNT[uiZone]][2] = x2;
+    UI_LINES[uiZone][LINE_COUNT[uiZone]][3] = y2;
+    LINE_COUNT[uiZone]++;
 }
 
 int addTextBox(
@@ -435,6 +461,7 @@ void makeTable(KnowledgeBase* kb, ProbKnowledgeBase* probkb, TTF_Font *FONT, int
     {
         y += Y_STEP;
         x = X_START - X_STEP;
+        
         snprintf(buff, STRING_BUFF_SIZE, "%s", kb->ELEMENT_NAMES[0][element]);
         addTextBox(
             x, y, X_WIDTH, Y_WIDTH, //bb
@@ -673,6 +700,15 @@ void makeTable(KnowledgeBase* kb, ProbKnowledgeBase* probkb, TTF_Font *FONT, int
                 0
             );
             x += X_STEP;
+        }
+        for (int poisonedPlayer = 0; poisonedPlayer < kb->SET_SIZES[set]; poisonedPlayer++)
+        {
+            snprintf(buff, 64, "POISONED_%d_[NIGHT%d]", poisonedPlayer, night);
+            int didPoison = isKnownName(kb, "PLAYERS", element, buff); 
+            if (didPoison)
+            {
+                addLine(X_START - X_STEP+20, y+(Y_STEP/2), x+20, 50+(Y_STEP*(poisonedPlayer+2))+(Y_STEP/2), 0);
+            }
         }
         if (isPoisoned == 1)
         {
@@ -1152,6 +1188,15 @@ void makeSingleWorldTable(KnowledgeBase* kb, TTF_Font *FONT, int night)
                 0
             );
             x += X_STEP;
+        }
+        for (int poisonedPlayer = 0; poisonedPlayer < kb->SET_SIZES[set]; poisonedPlayer++)
+        {
+            snprintf(buff, 64, "POISONED_%d_[NIGHT%d]", poisonedPlayer, night);
+            int didPoison = isKnownName(kb, "PLAYERS", element, buff); 
+            if (didPoison)
+            {
+                addLine(X_START - X_STEP+20, y+(Y_STEP/2), x+20, 50+(Y_STEP*(poisonedPlayer+2))+(Y_STEP/2), 0);
+            }
         }
         if (isPoisoned == 1)
         {
@@ -1684,6 +1729,20 @@ void confirm()
             }
             killedPlayer(KNOWLEDGE_BASE, playerID, playerIDs[0], night);
             break;
+        case 10: //poison player
+            night = subSubMenuOpen-1;
+            playerID = subSubSubMenuOpen-1;
+            count = 0;
+            for (int i = 0; i < KNOWLEDGE_BASE->SET_SIZES[0]+1; i++)
+            {
+                if (subSubSubSubMenuSelected[i] == 1)
+                {
+                    playerIDs[count] = i-1;
+                    count++;
+                }
+            }
+            hasPoisoned(KNOWLEDGE_BASE, playerID, playerIDs[0], night);
+            break;
         default:
             break;
 
@@ -1746,6 +1805,13 @@ int canConfirm()
         case 8: //reset Data
             return subSubSubMenuOpen != 0;
         case 9: //Kill player
+            for (int i = 0; i < MAX_BUTTON_OPTIONS; i++)
+            {
+                if (subSubSubSubMenuSelected[i] == 1) break;
+                if (i == MAX_BUTTON_OPTIONS-1) return FAIL;
+            }
+            return SUCCESS;
+        case 10: //Poison player
             for (int i = 0; i < MAX_BUTTON_OPTIONS; i++)
             {
                 if (subSubSubSubMenuSelected[i] == 1) break;
@@ -2837,6 +2903,25 @@ void updateSubSubSubMenu(TTF_Font *FONT, KnowledgeBase* kb)
                 y += Y_STEP;
             }
             break;
+        case 10: //Poison player
+            for (int player = 0; player < kb->SET_SIZES[0]; player++)
+            {
+                getButtonColours(subSubSubSubMenuSelected[player+1] == 1, &red, &green, &blue, &selectedRed, &selectedGreen, &selectedBlue);
+                snprintf(buff, STRING_BUFF_SIZE, "Player: %s", kb->ELEMENT_NAMES[0][player]);
+                addTextBox(
+                    x, y, X_WIDTH, Y_WIDTH, //bb
+                    red, green, blue, //Box colour
+                    selectedRed, selectedGreen, selectedBlue, //Highlighted Box colour
+                    255, 255, 255, //Text colour
+                    buff, 
+                    FONT,
+                    selectSubSubSubSubMenu,
+                    player+1,
+                    MY_UI_ZONE
+                );
+                y += Y_STEP;
+            }
+            break;
         default:
             break;
 
@@ -3091,6 +3176,25 @@ void updateSubSubMenu(TTF_Font *FONT, KnowledgeBase* kb)
                 y += Y_STEP;
             }
             break;
+        case 10: //poison player
+            for (int player = 0; player < kb->SET_SIZES[0]; player++)
+            {
+                getButtonColours(subSubSubMenuOpen == player+1, &red, &green, &blue, &selectedRed, &selectedGreen, &selectedBlue);
+                snprintf(buff, STRING_BUFF_SIZE, "Player: %s", kb->ELEMENT_NAMES[0][player]);
+                addTextBox(
+                    x, y, X_WIDTH, Y_WIDTH, //bb
+                    red, green, blue, //Box colour
+                    selectedRed, selectedGreen, selectedBlue, //Highlighted Box colour
+                    255, 255, 255, //Text colour
+                    buff, 
+                    FONT,
+                    openSubSubSubMenu,
+                    player+1,
+                    MY_UI_ZONE
+                );
+                y += Y_STEP;
+            }
+            break;
         default:
             break;
 
@@ -3288,6 +3392,20 @@ void updateFirstMenu(TTF_Font *FONT)
         FONT,
         openSubMenu,
         9,
+        MY_UI_ZONE
+    );
+    y += Y_STEP;
+
+    getButtonColours(subMenuOpen == 10, &red, &green, &blue, &selectedRed, &selectedGreen, &selectedBlue);
+    addTextBox(
+        x, y, X_WIDTH, Y_WIDTH, //bb
+        red, green, blue, //Box colour
+        selectedRed, selectedGreen, selectedBlue, //Highlighted Box colour
+        255, 255, 255, //Text colour
+        "POISON PLAYER", 
+        FONT,
+        openSubMenu,
+        10,
         MY_UI_ZONE
     );
     y += Y_STEP;

@@ -421,6 +421,20 @@ void notPoisoned(KnowledgeBase* kb, int playerID, int night)
     addKnowledgeName(kb, "PLAYERS", playerID, buff);
 }
 
+/**
+ * hasPoisoned() - assume that a player has been poisoned by someone
+ * 
+ * @kb the knowledge base to update
+ * @NUM_DAYS the max number of days the game can go on for
+*/
+void hasPoisoned(KnowledgeBase* kb, int playerID, int poisonedID, int night)
+{
+    char buff[STRING_BUFF_SIZE]; // Declare a character array to hold the string 
+
+    snprintf(buff, STRING_BUFF_SIZE, "POISONED_%d_[NIGHT%d]", poisonedID, night);
+    addKnowledgeName(kb, "PLAYERS", playerID, buff);
+}
+
 
 /**
  * redHerring() - assume that a player is a red herring
