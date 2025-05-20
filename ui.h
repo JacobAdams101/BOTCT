@@ -127,11 +127,34 @@ void roleNotInGame(KnowledgeBase* kb, int roleID, int night);
 void noptions(KnowledgeBase* kb, int playerID, int n, int roleIDs[], int night);
 void poisoned(KnowledgeBase* kb, int playerID, int night);
 void notPoisoned(KnowledgeBase* kb, int playerID, int night);
+/**
+ * hasPoisoned() - assume that a player has been poisoned by someone
+ * 
+ * @kb the knowledge base to update
+ * @NUM_DAYS the max number of days the game can go on for
+*/
+void hasPoisoned(KnowledgeBase* kb, int playerID, int poisonedID, int night);
 void redHerring(KnowledgeBase* kb, int playerID);
+void killedPlayer(KnowledgeBase* kb, int playerID, int playerX, int night);
 void diedInNight(KnowledgeBase* kb, int n, int playerID[], int night);
 void hung(KnowledgeBase* kb, int n, int playerID[], int night);
 void nominationDeath(KnowledgeBase* kb, int n, int playerID[], int night);
 void resurrected(KnowledgeBase* kb, int n, int playerID[], int night);
+
+/**
+ * resetMetaData() - reset the players's entire knowledge to "Unknown"
+ * X(PLAYER) = FALSE and NOT_X(PLAYER) = FALSE FOR ALL X FOR PLAYERS
+ * 
+ * @kb the knowledge base to update
+*/
+void reset(KnowledgeBase* kb, int playerID);
+/**
+ * resetMetaData() - reset the metadata's entire knowledge to "Unknown"
+ * X(METADATA) = FALSE and NOT_X(METADATA) = FALSE FOR ALL X FOR METADATA
+ * 
+ * @kb the knowledge base to update
+*/
+void resetMetaData(KnowledgeBase* kb);
 
 void washerWomanPing(int playerIDinfoFrom, int selectedRole, int playerX, int playerY, KnowledgeBase* kb, RuleSet* rs);
 void librarianPing(int playerIDinfoFrom, int selectedRole, int playerX, int playerY, KnowledgeBase* kb, RuleSet* rs);

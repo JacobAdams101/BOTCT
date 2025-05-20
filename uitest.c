@@ -81,7 +81,11 @@
  ***************************************************/
 TextBox UI_ELEMENTS[MAX_UI_ZONES][MAX_UI_ELEMENTS];
 int COUNT[MAX_UI_ZONES];
+int UI_LINES[MAX_UI_ZONES][MAX_UI_ELEMENTS][7];
+int LINE_COUNT[MAX_UI_ZONES];
 int currentNight = 0;
+int soloWorldPlayer = -1;
+int soloWorldRole = -1;
 bool reRenderCall = false;
 int subMenuOpen = 0;
 int subSubMenuOpen = 0;
@@ -103,14 +107,16 @@ int WORLD_GENERATION = 1;
 RuleSet* RULE_SET = NULL;
 
 
-const int NUM_THREADS = 10;
+const int NUM_THREADS = 12;
 const int NUM_ITERATIONS = 8;
 
 ProbKnowledgeBase* threadTallies[NUM_THREADS];
 KnowledgeBase* possibleWorldKB[NUM_THREADS];
-KnowledgeBase*** possibleWorldTempKB[NUM_THREADS];
+KnowledgeBase**** possibleWorldTempKB[NUM_THREADS];
 struct getProbApproxArgs* threadArgs[NUM_THREADS];
 
+KnowledgeBase* POSSIBLE_WORLDS_FOR_PROB[MAX_SET_ELEMENTS][NUM_BOTCT_ROLES];
+int POSSIBLE_WORLD_GENERATED[MAX_SET_ELEMENTS][NUM_BOTCT_ROLES];
 //Thread object
 pthread_t threads[NUM_THREADS];
 
@@ -169,6 +175,16 @@ void drawUIElements(SDL_Renderer *renderer)
             renderTextBox(renderer, tb);
         }
     }
+    for (int uiZone = 0; uiZone < MAX_UI_ZONES; uiZone++)
+    {
+        for (int uiElement = 0; uiElement < LINE_COUNT[uiZone]; uiElement++)
+        {
+            // Set draw color to white for the line
+            SDL_SetRenderDrawColor(renderer, UI_LINES[uiZone][uiElement][4], UI_LINES[uiZone][uiElement][5], UI_LINES[uiZone][uiElement][6], 255);
+            // Draw a line from (100, 100) to (700, 500)
+            SDL_RenderDrawLine(renderer, UI_LINES[uiZone][uiElement][0], UI_LINES[uiZone][uiElement][1], UI_LINES[uiZone][uiElement][2], UI_LINES[uiZone][uiElement][3]);
+        }
+    }
     SDL_RenderPresent(renderer);
     
 }
@@ -176,6 +192,25 @@ void drawUIElements(SDL_Renderer *renderer)
 void resetScreen(int uiZone)
 {
     COUNT[uiZone] = 0;
+    LINE_COUNT[uiZone] = 0;
+}
+
+int addLine(
+    int x, int y, int x2, int y2, 
+    int r, int g, int b,
+    int uiZone
+)
+{
+    if (LINE_COUNT[uiZone] >= MAX_UI_ELEMENTS) return -1;
+    UI_LINES[uiZone][LINE_COUNT[uiZone]][0] = x;
+    UI_LINES[uiZone][LINE_COUNT[uiZone]][1] = y;
+    UI_LINES[uiZone][LINE_COUNT[uiZone]][2] = x2;
+    UI_LINES[uiZone][LINE_COUNT[uiZone]][3] = y2;
+    UI_LINES[uiZone][LINE_COUNT[uiZone]][4] = r;
+    UI_LINES[uiZone][LINE_COUNT[uiZone]][5] = g;
+    UI_LINES[uiZone][LINE_COUNT[uiZone]][6] = b;
+    LINE_COUNT[uiZone]++;
+    return 1;
 }
 
 int addTextBox(
@@ -253,6 +288,23 @@ void runButtonInBounds()
     }
 }
 
+
+
+void viewSoloWorld(int eventID)
+{
+    soloWorldRole = eventID % NUM_BOTCT_ROLES;
+    eventID /= NUM_BOTCT_ROLES;
+    soloWorldPlayer = eventID;
+    reRenderCall = true;
+}
+
+void viewProbWorld(int eventID)
+{
+    soloWorldPlayer = -1;
+    soloWorldRole = -1;
+    reRenderCall = true;
+}
+
 void makeTable(KnowledgeBase* kb, ProbKnowledgeBase* probkb, TTF_Font *FONT, int night)
 {
     char buff[STRING_BUFF_SIZE];
@@ -303,6 +355,530 @@ void makeTable(KnowledgeBase* kb, ProbKnowledgeBase* probkb, TTF_Font *FONT, int
         "NEXT NIGHT", 
         FONT,
         event_NextNight,
+        0,
+        0
+    );
+    x = X_START;
+    y += Y_STEP;
+
+
+    for (int role = 0; role < NUM_BOTCT_ROLES; role++)
+    {
+        //Only print roles in the script
+        if (ROLE_IN_SCRIPT[role] == 1)
+        {
+            int red;
+            int green;
+            int blue;
+            if (strcmp(ROLE_CLASSES[role], "DEMON") == 0)
+            {
+                red = 255;
+                green = 0;
+                blue = 0;
+            }
+            else if (strcmp(ROLE_CLASSES[role], "MINION") == 0)
+            {
+                red = 255;
+                green = 255;
+                blue = 0;
+            }
+            else if (strcmp(ROLE_CLASSES[role], "OUTSIDER") == 0)
+            {
+                red = 255;
+                green = 0;
+                blue = 255;
+            }
+            else if (strcmp(ROLE_CLASSES[role], "TOWNSFOLK") == 0)
+            {
+                red = 0;
+                green = 255;
+                blue = 0;
+            }
+            snprintf(buff, STRING_BUFF_SIZE, "%.*s", 3, ROLE_NAMES[role]);
+            addTextBox(
+                x, y, X_WIDTH, Y_WIDTH, //bb
+                50, 50, 50, //Box colour
+                100, 100, 100, //Highlighted Box colour
+                red, green, blue, //Text colour
+                buff, 
+                FONT,
+                NULL,
+                0,
+                0
+            );
+
+            x += X_STEP;
+        }
+    }
+
+    
+    addTextBox(
+        x, y, X_WIDTH, Y_WIDTH, //bb
+        50, 50, 50, //Box colour
+        100, 100, 100, //Highlighted Box colour
+        255, 255, 255, //Text colour
+        "CLASS", 
+        FONT,
+        NULL,
+        0,
+        0
+    );
+    x += X_STEP;
+    addTextBox(
+        x, y, X_WIDTH, Y_WIDTH, //bb
+        50, 50, 50, //Box colour
+        100, 100, 100, //Highlighted Box colour
+        255, 255, 255, //Text colour
+        "TEAM", 
+        FONT,
+        NULL,
+        0,
+        0
+    );
+    x += X_STEP;
+    addTextBox(
+        x, y, X_WIDTH, Y_WIDTH, //bb
+        50, 50, 50, //Box colour
+        100, 100, 100, //Highlighted Box colour
+        255, 255, 255, //Text colour
+        "POISONED", 
+        FONT,
+        NULL,
+        0,
+        0
+    );
+    x += X_STEP;
+    addTextBox(
+        x, y, X_WIDTH, Y_WIDTH, //bb
+        50, 50, 50, //Box colour
+        100, 100, 100, //Highlighted Box colour
+        255, 255, 255, //Text colour
+        "ALIVE", 
+        FONT,
+        NULL,
+        0,
+        0
+    );
+    x += X_STEP;
+
+    int set = 0;
+    for (int element = 0; element < kb->SET_SIZES[set]; element++)
+    {
+        y += Y_STEP;
+        x = X_START - X_STEP;
+        
+        snprintf(buff, STRING_BUFF_SIZE, "%s", kb->ELEMENT_NAMES[0][element]);
+        addTextBox(
+            x, y, X_WIDTH, Y_WIDTH, //bb
+            0, 0, 0, //Box colour
+            0, 0, 0, //Highlighted Box colour
+            255, 255, 255, //Text colour
+            buff, 
+            FONT,
+            NULL,
+            0,
+            0
+        );
+        
+        x += X_STEP;
+        snprintf(buff, 64, "is_TOWNSFOLK_[NIGHT%d]", night);
+        int isTownsfolk = isKnownName(kb, "PLAYERS", element, buff); 
+        snprintf(buff, 64, "is_OUTSIDER_[NIGHT%d]", night);
+        int isOutsider = isKnownName(kb, "PLAYERS", element, buff); 
+        snprintf(buff, 64, "is_MINION_[NIGHT%d]", night);
+        int isMinion = isKnownName(kb, "PLAYERS", element, buff); 
+        snprintf(buff, 64, "is_DEMON_[NIGHT%d]", night);
+        int isDemon = isKnownName(kb, "PLAYERS", element, buff); 
+
+        snprintf(buff, 64, "is_GOOD_[NIGHT%d]", night);
+        int isGood = isKnownName(kb, "PLAYERS", element, buff); 
+        snprintf(buff, 64, "is_EVIL_[NIGHT%d]", night);
+        int isEvil = isKnownName(kb, "PLAYERS", element, buff); 
+
+        snprintf(buff, 64, "is_POISONED_[NIGHT%d]", night);
+        int isPoisoned = isKnownName(kb, "PLAYERS", element, buff); 
+        snprintf(buff, 64, "is_NOT_POISONED_[NIGHT%d]", night);
+        int isNotPoisoned = isKnownName(kb, "PLAYERS", element, buff); 
+
+        snprintf(buff, 64, "is_ALIVE_[NIGHT%d]", night);
+        int isAlive = isKnownName(kb, "PLAYERS", element, buff); 
+        snprintf(buff, 64, "is_DEAD_[NIGHT%d]", night);
+        int isDead = isKnownName(kb, "PLAYERS", element, buff); 
+
+        //printTrucatedStr(kb->ELEMENT_NAMES[0][element], 9);
+        for (int role = 0; role < NUM_BOTCT_ROLES; role++)
+        {
+            //Only print roles in the script
+            if (ROLE_IN_SCRIPT[role] == 1)
+            {
+                int red;
+                int green;
+                int blue;
+                if (strcmp(ROLE_CLASSES[role], "DEMON") == 0)
+                {
+                    red = 255;
+                    green = 0;
+                    blue = 0;
+                }
+                else if (strcmp(ROLE_CLASSES[role], "MINION") == 0)
+                {
+                    red = 255;
+                    green = 255;
+                    blue = 0;
+                }
+                else if (strcmp(ROLE_CLASSES[role], "OUTSIDER") == 0)
+                {
+                    red = 255;
+                    green = 0;
+                    blue = 255;
+                }
+                else if (strcmp(ROLE_CLASSES[role], "TOWNSFOLK") == 0)
+                {
+                    red = 0;
+                    green = 255;
+                    blue = 0;
+                }
+                snprintf(buff, 64, "is_NOT_%s_[NIGHT%d]", ROLE_NAMES[role], night);
+                int isNotRoleCertain = isKnownName(kb, "PLAYERS", element, buff);
+
+                snprintf(buff, 64, "is_%s_[NIGHT%d]", ROLE_NAMES[role], night);
+                int isRole = getProbIntPercentageName(probkb, kb, "PLAYERS", element, buff); 
+                snprintf(buff, 64, "is_NOT_%s_[NIGHT%d]", ROLE_NAMES[role], night);
+                int isNotRole = getProbIntPercentageName(probkb, kb, "PLAYERS", element, buff);
+                
+                if (isRole == 100) snprintf(buff, 64, " * ");
+                else if (isNotRole == 100) snprintf(buff, 64, "   ");
+                else snprintf(buff, 64, "%02d%%", isRole);
+
+                if (isNotRoleCertain == 0)
+                {
+                    if (POSSIBLE_WORLD_GENERATED[element][role] == 1)
+                    {
+                        addTextBox(
+                            x, y, X_WIDTH, Y_WIDTH, //bb
+                            25+(isRole*2), 25+(isRole*2), 25+(isRole*2), //Box colour
+                            250, 250, 250, //Highlighted Box colour
+                            red, green, blue, //Text colour
+                            buff, 
+                            FONT,
+                            viewSoloWorld,
+                            role + (NUM_BOTCT_ROLES * element),
+                            0
+                        );
+                    }
+                    else
+                    {
+                        addTextBox(
+                            x, y, X_WIDTH, Y_WIDTH, //bb
+                            25+(isRole*2), 25+(isRole*2), 25+(isRole*2), //Box colour
+                            25+(isRole*2), 25+(isRole*2), 25+(isRole*2), //Highlighted Box colour
+                            red, green, blue, //Text colour
+                            buff, 
+                            FONT,
+                            NULL,
+                            0,
+                            0
+                        );
+                    }
+                }
+                x += X_STEP;
+
+            }
+        }
+        if (isTownsfolk == 1)
+        {
+            addTextBox(
+                x, y, X_WIDTH, Y_WIDTH, //bb
+                50, 50, 50, //Box colour
+                100, 100, 100, //Highlighted Box colour
+                0, 255, 0, //Text colour
+                "TOWNSFOLK", 
+                FONT,
+                NULL,
+                0,
+                0
+            );
+            x += X_STEP;
+        }
+        else if (isOutsider == 1)
+        {
+            addTextBox(
+                x, y, X_WIDTH, Y_WIDTH, //bb
+                50, 50, 50, //Box colour
+                100, 100, 100, //Highlighted Box colour
+                255, 0, 255, //Text colour
+                "OUTSIDER", 
+                FONT,
+                NULL,
+                0,
+                0
+            );
+            x += X_STEP;
+        }
+        else if (isMinion == 1)
+        {
+            addTextBox(
+                x, y, X_WIDTH, Y_WIDTH, //bb
+                50, 50, 50, //Box colour
+                100, 100, 100, //Highlighted Box colour
+                255, 255, 0, //Text colour
+                "MINION", 
+                FONT,
+                NULL,
+                0,
+                0
+            );
+            x += X_STEP;
+        }
+        else if (isDemon == 1)
+        {
+            addTextBox(
+                x, y, X_WIDTH, Y_WIDTH, //bb
+                50, 50, 50, //Box colour
+                100, 100, 100, //Highlighted Box colour
+                255, 0, 0, //Text colour
+                "DEMON", 
+                FONT,
+                NULL,
+                0,
+                0
+            );
+            x += X_STEP;
+        }
+        else
+        {
+            addTextBox(
+                x, y, X_WIDTH, Y_WIDTH, //bb
+                50, 50, 50, //Box colour
+                100, 100, 100, //Highlighted Box colour
+                255, 255, 255, //Text colour
+                "?", 
+                FONT,
+                NULL,
+                0,
+                0
+            );
+            x += X_STEP;
+        }
+
+        if (isGood == 1)
+        {
+            addTextBox(
+                x, y, X_WIDTH, Y_WIDTH, //bb
+                50, 50, 50, //Box colour
+                100, 100, 100, //Highlighted Box colour
+                0, 255, 0, //Text colour
+                "GOOD", 
+                FONT,
+                NULL,
+                0,
+                0
+            );
+            x += X_STEP;
+        }
+        else if (isEvil == 1)
+        {
+            addTextBox(
+                x, y, X_WIDTH, Y_WIDTH, //bb
+                50, 50, 50, //Box colour
+                100, 100, 100, //Highlighted Box colour
+                255, 0, 0, //Text colour
+                "EVIL", 
+                FONT,
+                NULL,
+                0,
+                0
+            );
+            x += X_STEP;
+        }
+        else
+        {
+            addTextBox(
+                x, y, X_WIDTH, Y_WIDTH, //bb
+                50, 50, 50, //Box colour
+                100, 100, 100, //Highlighted Box colour
+                255, 255, 255, //Text colour
+                "?", 
+                FONT,
+                NULL,
+                0,
+                0
+            );
+            x += X_STEP;
+        }
+        for (int poisonedPlayer = 0; poisonedPlayer < kb->SET_SIZES[set]; poisonedPlayer++)
+        {
+            snprintf(buff, 64, "POISONED_%d_[NIGHT%d]", poisonedPlayer, night);
+            int didPoison = isKnownName(kb, "PLAYERS", element, buff); 
+            if (didPoison)
+            {
+                addLine(X_START - X_STEP+20, y+(Y_STEP/2), x+20, 50+(Y_STEP*(poisonedPlayer+2))+(Y_STEP/2), 0, 255, 0, 0);
+            }
+        }
+        for (int killedPlayer = 0; killedPlayer < kb->SET_SIZES[set]; killedPlayer++)
+        {
+            snprintf(buff, 64, "KILLED_%d_[NIGHT%d]", killedPlayer, night);
+            int didPoison = isKnownName(kb, "PLAYERS", element, buff); 
+            if (didPoison)
+            {
+                addLine(X_START - X_STEP+20, y+(Y_STEP/2), x+20, 50+(Y_STEP*(killedPlayer+2))+(Y_STEP/2), 255, 0, 0, 0);
+            }
+        }
+        if (isPoisoned == 1)
+        {
+            addTextBox(
+                x, y, X_WIDTH, Y_WIDTH, //bb
+                50, 50, 50, //Box colour
+                100, 100, 100, //Highlighted Box colour
+                255, 0, 0, //Text colour
+                "POISONED", 
+                FONT,
+                NULL,
+                0,
+                0
+            );
+            x += X_STEP;
+        }
+        else if (isNotPoisoned == 1)
+        {
+            addTextBox(
+                x, y, X_WIDTH, Y_WIDTH, //bb
+                50, 50, 50, //Box colour
+                100, 100, 100, //Highlighted Box colour
+                0, 255, 0, //Text colour
+                "HEALTHY", 
+                FONT,
+                NULL,
+                0,
+                0
+            );
+            x += X_STEP;
+        }
+        else
+        {
+            addTextBox(
+                x, y, X_WIDTH, Y_WIDTH, //bb
+                50, 50, 50, //Box colour
+                100, 100, 100, //Highlighted Box colour
+                255, 255, 255, //Text colour
+                "?", 
+                FONT,
+                NULL,
+                0,
+                0
+            );
+            x += X_STEP;
+        }
+        if (isAlive == 1)
+        {
+            addTextBox(
+                x, y, X_WIDTH, Y_WIDTH, //bb
+                50, 50, 50, //Box colour
+                100, 100, 100, //Highlighted Box colour
+                0, 255, 0, //Text colour
+                "ALIVE", 
+                FONT,
+                NULL,
+                0,
+                0
+            );
+            x += X_STEP;
+        }
+        else if (isDead == 1)
+        {
+            addTextBox(
+                x, y, X_WIDTH, Y_WIDTH, //bb
+                50, 50, 50, //Box colour
+                100, 100, 100, //Highlighted Box colour
+                255, 0, 0, //Text colour
+                "DEAD", 
+                FONT,
+                NULL,
+                0,
+                0
+            );
+            x += X_STEP;
+        }
+        else
+        {
+            addTextBox(
+                x, y, X_WIDTH, Y_WIDTH, //bb
+                50, 50, 50, //Box colour
+                100, 100, 100, //Highlighted Box colour
+                255, 255, 255, //Text colour
+                "?", 
+                FONT,
+                NULL,
+                0,
+                0
+            );
+            x += X_STEP;
+        }
+    }
+}
+
+void makeSingleWorldTable(KnowledgeBase* kb, TTF_Font *FONT, int night)
+{
+    char buff[STRING_BUFF_SIZE];
+
+    const int X_WIDTH = 40;
+    const int Y_WIDTH = 15;
+    const int X_STEP = X_WIDTH+5;
+    const int Y_STEP = Y_WIDTH+5;
+
+    const int X_START = 50;
+
+    int y = 50;
+    int x = X_START;
+
+    snprintf(buff, STRING_BUFF_SIZE, "ROLE TABLE [NIGHT%d]", night);
+
+    //printf("buff: %s", buff);
+
+    addTextBox(
+        x, y, X_WIDTH*5, Y_WIDTH, //bb
+        0, 0, 0, //Box colour
+        0, 0, 0, //Highlighted Box colour
+        255, 255, 255, //Text colour
+        buff, 
+        FONT,
+        NULL,
+        0,
+        0
+    );
+    x += X_STEP*5;
+    addTextBox(
+        x, y, X_WIDTH*2, Y_WIDTH, //bb
+        50, 50, 50, //Box colour
+                100, 100, 100, //Highlighted Box colour
+        255, 255, 255, //Text colour
+        "PREV NIGHT", 
+        FONT,
+        event_PrevNight,
+        0,
+        0
+    );
+    x += X_STEP*2;
+    addTextBox(
+        x, y, X_WIDTH*2, Y_WIDTH, //bb
+        50, 50, 50, //Box colour
+        100, 100, 100, //Highlighted Box colour
+        255, 255, 255, //Text colour
+        "NEXT NIGHT", 
+        FONT,
+        event_NextNight,
+        0,
+        0
+    );
+    x += X_STEP*2;
+    addTextBox(
+        x, y, X_WIDTH*2, Y_WIDTH, //bb
+        50, 50, 50, //Box colour
+        100, 100, 100, //Highlighted Box colour
+        255, 255, 255, //Text colour
+        "BACK TO PROB", 
+        FONT,
+        viewProbWorld,
         0,
         0
     );
@@ -486,25 +1062,22 @@ void makeTable(KnowledgeBase* kb, ProbKnowledgeBase* probkb, TTF_Font *FONT, int
                     blue = 0;
                 }
                 snprintf(buff, 64, "is_%s_[NIGHT%d]", ROLE_NAMES[role], night);
-                int isRole = getProbIntPercentageName(probkb, kb, "PLAYERS", element, buff); 
-                snprintf(buff, 64, "is_NOT_%s_[NIGHT%d]", ROLE_NAMES[role], night);
-                int isNotRole = getProbIntPercentageName(probkb, kb, "PLAYERS", element, buff);
-                
-                if (isRole == 100) snprintf(buff, 64, " * ");
-                else if (isNotRole == 100) snprintf(buff, 64, "   ");
-                else snprintf(buff, 64, "%02d%%", isRole);
+                int isRole = isKnownName(kb, "PLAYERS", element, buff);
 
-                addTextBox(
-                    x, y, X_WIDTH, Y_WIDTH, //bb
-                    25+(isRole*2), 25+(isRole*2), 25+(isRole*2), //Box colour
-                    250, 250, 250, //Highlighted Box colour
-                    red, green, blue, //Text colour
-                    buff, 
-                    FONT,
-                    NULL,
-                    0,
-                    0
-                );
+                if (isRole)
+                {
+                    addTextBox(
+                        x, y, X_WIDTH, Y_WIDTH, //bb
+                        50, 50, 150, //Box colour
+                        250, 250, 250, //Highlighted Box colour
+                        red, green, blue, //Text colour
+                        " * ", 
+                        FONT,
+                        NULL,
+                        0,
+                        0
+                    );
+                }
                 x += X_STEP;
 
             }
@@ -630,6 +1203,24 @@ void makeTable(KnowledgeBase* kb, ProbKnowledgeBase* probkb, TTF_Font *FONT, int
             );
             x += X_STEP;
         }
+        for (int poisonedPlayer = 0; poisonedPlayer < kb->SET_SIZES[set]; poisonedPlayer++)
+        {
+            snprintf(buff, 64, "POISONED_%d_[NIGHT%d]", poisonedPlayer, night);
+            int didPoison = isKnownName(kb, "PLAYERS", element, buff); 
+            if (didPoison)
+            {
+                addLine(X_START - X_STEP+20, y+(Y_STEP/2), x+20, 50+(Y_STEP*(poisonedPlayer+2))+(Y_STEP/2), 0, 255, 0, 0);
+            }
+        }
+        for (int killedPlayer = 0; killedPlayer < kb->SET_SIZES[set]; killedPlayer++)
+        {
+            snprintf(buff, 64, "KILLED_%d_[NIGHT%d]", killedPlayer, night);
+            int didPoison = isKnownName(kb, "PLAYERS", element, buff); 
+            if (didPoison)
+            {
+                addLine(X_START - X_STEP+20, y+(Y_STEP/2), x+20, 50+(Y_STEP*(killedPlayer+2))+(Y_STEP/2), 255, 0, 0, 0);
+            }
+        }
         if (isPoisoned == 1)
         {
             addTextBox(
@@ -728,7 +1319,14 @@ void updateUITable(KnowledgeBase* kb, ProbKnowledgeBase* probKB, TTF_Font *FONT,
 {
     currentNight = night;
     resetScreen(0);
-    makeTable(kb, probKB, FONT, night);
+    if (soloWorldPlayer == -1 || soloWorldRole == -1)
+    {
+        makeTable(kb, probKB, FONT, night);
+    }
+    else
+    {
+        makeSingleWorldTable(POSSIBLE_WORLDS_FOR_PROB[soloWorldPlayer][soloWorldRole], FONT, night);
+    }
 }
 
 void getButtonColours(bool selected, int* r, int* g, int* b, int* sr, int* sg, int* sb)
@@ -865,6 +1463,14 @@ void finish()
         //Compute total tally
         resetProbKnowledgeBase(WORLD_TALLY);
         WORLD_GENERATION++;
+
+        for (int i = 0; i < MAX_SET_ELEMENTS; i++)
+        {
+            for (int j = 0; j < NUM_BOTCT_ROLES; j++)
+            {
+                POSSIBLE_WORLD_GENERATED[i][j] = 0;
+            }
+        }
     }
     
     //printf("FINISHED CONFIRM!\n");
@@ -940,6 +1546,7 @@ void confirm()
         case 6: //Num deaths / Ressurections
             night = subSubMenuOpen-1;
             mode = subSubSubMenuOpen;
+            count = 0;
             for (int i = 0; i < KNOWLEDGE_BASE->SET_SIZES[0]+1; i++)
             {
                 if (subSubSubSubMenuSelected[i] == 1)
@@ -1126,8 +1733,38 @@ void confirm()
             }
             break;
         case 8: //reset Data
+            night = subSubMenuOpen-1;
+            playerID = subSubSubMenuOpen-1;
+            reset(KNOWLEDGE_BASE, playerID);
+            resetMetaData(KNOWLEDGE_BASE);
             break;
-        case 9: //Finish
+        case 9: //kill player
+            night = subSubMenuOpen-1;
+            playerID = subSubSubMenuOpen-1;
+            count = 0;
+            for (int i = 0; i < KNOWLEDGE_BASE->SET_SIZES[0]+1; i++)
+            {
+                if (subSubSubSubMenuSelected[i] == 1)
+                {
+                    playerIDs[count] = i-1;
+                    count++;
+                }
+            }
+            killedPlayer(KNOWLEDGE_BASE, playerID, playerIDs[0], night);
+            break;
+        case 10: //poison player
+            night = subSubMenuOpen-1;
+            playerID = subSubSubMenuOpen-1;
+            count = 0;
+            for (int i = 0; i < KNOWLEDGE_BASE->SET_SIZES[0]+1; i++)
+            {
+                if (subSubSubSubMenuSelected[i] == 1)
+                {
+                    playerIDs[count] = i-1;
+                    count++;
+                }
+            }
+            hasPoisoned(KNOWLEDGE_BASE, playerID, playerIDs[0], night);
             break;
         default:
             break;
@@ -1182,16 +1819,28 @@ int canConfirm()
             }
             return SUCCESS;
         case 7: //Player Ping
-            for (int i = 0; i < MAX_BUTTON_OPTIONS; i++)
+            for (int i = 0; i < MAX_BUTTON_OPTIONS*3; i++)
             {
                 if (subSubSubSubSubMenuSelected[i] == 1) break;
-                if (i == MAX_BUTTON_OPTIONS-1) return FAIL;
+                if (i+1 == MAX_BUTTON_OPTIONS*3) return FAIL;
             }
             return SUCCESS;
         case 8: //reset Data
-            break;
-        case 9: //Finish
-            break;
+            return subSubSubMenuOpen != 0;
+        case 9: //Kill player
+            for (int i = 0; i < MAX_BUTTON_OPTIONS; i++)
+            {
+                if (subSubSubSubMenuSelected[i] == 1) break;
+                if (i == MAX_BUTTON_OPTIONS-1) return FAIL;
+            }
+            return SUCCESS;
+        case 10: //Poison player
+            for (int i = 0; i < MAX_BUTTON_OPTIONS; i++)
+            {
+                if (subSubSubSubMenuSelected[i] == 1) break;
+                if (i == MAX_BUTTON_OPTIONS-1) return FAIL;
+            }
+            return SUCCESS;
         default:
             break;
 
@@ -1273,16 +1922,315 @@ void updateSubSubSubSubMenu(TTF_Font *FONT, KnowledgeBase* kb)
 
     int count = 1;
 
+    int haveRoles = 0;
+    int havePlayers = 0;
+    int haveNumbers = 0;
+    char* roleDescription = "";
+    int mode = 0;
+    for (int i = 0; i < MAX_BUTTON_OPTIONS; i++)
+    {
+        if (subSubSubSubMenuSelected[i] == 1)
+        {
+            mode = i;
+            break;
+        }
+    }
+
     if (subMenuOpen == 7)
     {
+        if (mode == 1)
+        { //washerwoman
+            haveRoles = 1;
+            havePlayers = 2;
+            haveNumbers = 0;
+            roleDescription = "You start knowing that 1 of 2 players is a particular Townsfolk.";
+        }
+        else if (mode == 2)
+        { //librarian
+            haveRoles = 1;
+            havePlayers = 2;
+            haveNumbers = 0;
+            roleDescription = "You start knowing that 1 of 2 players is a particular Outsider. (Or that zero are in play.)";
+        }
+        else if (mode == 3)
+        { //investigator
+            haveRoles = 1;
+            havePlayers = 2;
+            haveNumbers = 0;
+            roleDescription = "You start knowing that 1 of 2 players is a particular Minion.";
+        }
+        else if (mode == 4)
+        { //chef
+            haveRoles = 0;
+            havePlayers = 0;
+            haveNumbers = 4;
+            roleDescription = "You start knowing how many pairs of evil players there are.";
+        }
+        else if (mode == 5)
+        { //empath
+            haveRoles = 0;
+            havePlayers = 0;
+            haveNumbers = 2;
+            roleDescription = "Each night, you learn how many of your 2 alive neighbors are evil.";
+        }
+        else if (mode == 6)
+        { //fortune teller
+            haveRoles = 0;
+            havePlayers = 2;
+            haveNumbers = 1;
+            roleDescription = "Each night, choose 2 players: you learn if either is a Demon. There is a good player that registers as a Demon to you.";
+        }
+        else if (mode == 7)
+        { //undertaker
+            haveRoles = 1;
+            havePlayers = 1;
+            haveNumbers = 0;
+            roleDescription = "Each night, you learn which character died by execution today.";
+        }
+        else if (mode == 8)
+        { //monk
+            haveRoles = 0;
+            havePlayers = 1;
+            haveNumbers = 0;
+            roleDescription = "Each night*, choose a player (not yourself): they are safe from the Demon tonight.";
+        }
+        else if (mode == 9)
+        { //ravenkeeper
+            haveRoles = 1;
+            havePlayers = 1;
+            haveNumbers = 0;
+            roleDescription = "If you die at night, you are woken to choose a player: you learn their character.";
+        }
+        else if (mode == 10)
+        { //clockmaker
+            haveRoles = 0;
+            havePlayers = 0;
+            haveNumbers = ((kb->SET_SIZES[0])/2)+1;
+            roleDescription = "You start knowing how many steps from the Demon to its nearest Minion.";
+        }
+        else if (mode == 11)
+        { //dreamer
+            haveRoles = 2;
+            havePlayers = 1;
+            haveNumbers = 0;
+            roleDescription = "Each night, choose a player (not yourself, or Travellers): you learn 1 good character & 1 evil character, 1 of which is correct.";
+        }
+        else if (mode == 12)
+        { //snake charmer
+            haveRoles = 0;
+            havePlayers = 1;
+            haveNumbers = 1;
+            roleDescription = "Each night, choose an alive player: a chosen Demon swaps characters & alignments with you & is then poisoned.";
+        }
+        else if (mode == 13)
+        { //mathematician
+            haveRoles = 0;
+            havePlayers = 0;
+            haveNumbers = kb->SET_SIZES[0];
+            roleDescription = "Each night, you learn how many players' abilities worked abnormally (since dawn) due to another character's ability.";
+        }
+        else if (mode == 14)
+        { //flowergirl
+            haveRoles = 1;
+            havePlayers = 1;
+            haveNumbers = 1;
+            roleDescription = "Each night*, you learn if the Demon voted today.";
+        }
+        else if (mode == 15)
+        { //towncrier
+            haveRoles = 1;
+            havePlayers = 1;
+            haveNumbers = 1;
+            roleDescription = "Each night*, you learn if a Minion nominated today.";
+        }
+        else if (mode == 16)
+        { //oracle
+            haveRoles = 0;
+            havePlayers = 0;
+            haveNumbers = kb->SET_SIZES[0];
+            roleDescription = "Each night*, you learn how many dead players are evil.";
+        }
+        else if (mode == 17)
+        { //savant
+            haveRoles = 1;
+            havePlayers = 1;
+            haveNumbers = 1;
+            roleDescription = "Each day, you may visit the Storyteller to learn 2 things in private: 1 is true & 1 is false.";
+        }
+        else if (mode == 18)
+        { //seamstress
+            haveRoles = 0;
+            havePlayers = 2;
+            haveNumbers = 1;
+            roleDescription = "Once per game, at night, choose 2 players (not yourself): you learn if they are the same alignment.";
+        }
+        else if (mode == 19)
+        { //philosopher
+            haveRoles = 1;
+            havePlayers = 0;
+            haveNumbers = 0;
+            roleDescription = "Once per game, at night, choose a good character: gain that ability. If this character is in play, they are drunk.";
+        }
+        else if (mode == 20)
+        { //artist
+            haveRoles = 1;
+            havePlayers = 1;
+            haveNumbers = 1;
+            roleDescription = "Once per game, during the day, privately ask the Storyteller any yes/ no question.";
+        }
+        else if (mode == 21)
+        { //juggler
+            haveRoles = 1;
+            havePlayers = 1;
+            haveNumbers = 1;
+            roleDescription = "On your 1st day, publicly guess up to 5 players' characters. That night, you learn how many you got correct.";
+        }
+        else if (mode == 22)
+        { //sage
+            haveRoles = 0;
+            havePlayers = 2;
+            haveNumbers = 0;
+            roleDescription = "If the Demon kills you, you learn that it is 1 of 2 players.";
+        }
+        else if (mode == 23)
+        { //grandmother
+            haveRoles = 1;
+            havePlayers = 1;
+            haveNumbers = 0;
+            roleDescription = "You start knowing a good player & their character. If the Demon kills them, you die too.";
+        }
+        else if (mode == 24)
+        { //chambermaid
+            haveRoles = 0;
+            havePlayers = 2;
+            haveNumbers = 2;
+            roleDescription = "Each night, choose 2 alive players (not yourself): you learn how many woke tonight due to their ability.";
+        }
+        else if (mode == 25)
+        { //exorcist
+            haveRoles = 0;
+            havePlayers = 1;
+            haveNumbers = 0;
+            roleDescription = "Each night*, choose a player (different to last night): the Demon, if chosen, learns who you are & doesn't wake tonight.";
+        }
+        else if (mode == 26)
+        { //innkeeper
+            haveRoles = 0;
+            havePlayers = 2;
+            haveNumbers = 0;
+            roleDescription = "Each night*, choose 2 players: they can't die tonight, but 1 is drunk until dusk.";
+        }
+        else if (mode == 27)
+        { //gambler
+            haveRoles = 1;
+            havePlayers = 1;
+            haveNumbers = 0;
+            roleDescription = "Each night*, choose a player & guess their character: if you guess wrong, you die.";
+        }
+        else if (mode == 28)
+        { //gossip
+            haveRoles = 1;
+            havePlayers = 1;
+            haveNumbers = 1;
+            roleDescription = "Each day, you may make a public statement. Tonight, if it was true, a player dies.";
+        }
+        else if (mode == 29)
+        { //courtier
+            haveRoles = 0;
+            havePlayers = 1;
+            haveNumbers = 0;
+            roleDescription = "Once per game, at night, choose a character: they are drunk for 3 nights & 3 days.";
+        }
+        else if (mode == 30)
+        { //professor
+            haveRoles = 0;
+            havePlayers = 1;
+            haveNumbers = 1;
+            roleDescription = "Once per game, at night*, choose a dead player: if they are a Townsfolk, they are resurrected.";
+        }
+        else if (mode == 31)
+        { //minstrel
+            haveRoles = 1;
+            havePlayers = 1;
+            haveNumbers = 1;
+            roleDescription = "When a Minion dies by execution, all other players (except Travellers) are drunk until dusk tomorrow.";
+        }
+
+        addTextBox(
+            x, y-Y_STEP, X_WIDTH*4, Y_WIDTH, //bb
+            0, 0, 0, //Box colour
+            0, 0, 0, //Highlighted Box colour
+            255, 255, 255, //Text colour
+            roleDescription, 
+            FONT,
+            NULL,
+            0,
+            MY_UI_ZONE
+        );
+
         //printf("DRAWING SUB MENU YAY\n");
-        //Drawing roles
-        for (int role = 0; role < NUM_BOTCT_ROLES; role++)
+        if (haveRoles)
         {
-            if (ROLE_IN_SCRIPT[role])
+            //Drawing roles
+            for (int role = 0; role < NUM_BOTCT_ROLES; role++)
             {
-                getButtonColours(subSubSubSubSubMenuSelected[role+1] == 1, &red, &green, &blue, &selectedRed, &selectedGreen, &selectedBlue);
-                snprintf(buff, STRING_BUFF_SIZE, "Role: %s", ROLE_NAMES[role]);
+                if (ROLE_IN_SCRIPT[role])
+                {
+                    getButtonColours(subSubSubSubSubMenuSelected[role+1] == 1, &red, &green, &blue, &selectedRed, &selectedGreen, &selectedBlue);
+                    snprintf(buff, STRING_BUFF_SIZE, "Role: %s", ROLE_NAMES[role]);
+                    addTextBox(
+                        x, y, X_WIDTH, Y_WIDTH, //bb
+                        red, green, blue, //Box colour
+                        selectedRed, selectedGreen, selectedBlue, //Highlighted Box colour
+                        255, 255, 255, //Text colour
+                        buff, 
+                        FONT,
+                        selectSubSubSubSubSubMenu,
+                        role+1,
+                        MY_UI_ZONE
+                    );
+                    y += Y_STEP;
+
+                    if (y > HEIGHT-Y_STEP-10)
+                    {
+                        y = Y_START;
+                        x += X_STEP;
+                    }
+                }
+            }
+            x += X_STEP;
+        }
+        y = Y_START;
+        if (havePlayers)
+        {
+            //Drawing players
+            for (int player = 0; player < kb->SET_SIZES[0]; player++)
+            {
+                getButtonColours(subSubSubSubSubMenuSelected[MAX_BUTTON_OPTIONS+player+1] == 1, &red, &green, &blue, &selectedRed, &selectedGreen, &selectedBlue);
+                snprintf(buff, STRING_BUFF_SIZE, "Player: %s", kb->ELEMENT_NAMES[0][player]);
+                addTextBox(
+                    x, y, X_WIDTH, Y_WIDTH, //bb
+                    red, green, blue, //Box colour
+                    selectedRed, selectedGreen, selectedBlue, //Highlighted Box colour
+                    255, 255, 255, //Text colour
+                    buff, 
+                    FONT,
+                    toggleSubSubSubSubSubMenu,
+                    MAX_BUTTON_OPTIONS+player+1,
+                    MY_UI_ZONE
+                );
+                y += Y_STEP;
+            }
+            x += X_STEP;
+        }
+        y = Y_START;
+        if (haveNumbers)
+        {
+            //Drawing count
+            for (int count = 0; count <= haveNumbers; count++)
+            {
+                getButtonColours(subSubSubSubSubMenuSelected[(MAX_BUTTON_OPTIONS*2)+count+1] == 1, &red, &green, &blue, &selectedRed, &selectedGreen, &selectedBlue);
+                snprintf(buff, STRING_BUFF_SIZE, "%d", count);
                 addTextBox(
                     x, y, X_WIDTH, Y_WIDTH, //bb
                     red, green, blue, //Box colour
@@ -1291,57 +2239,11 @@ void updateSubSubSubSubMenu(TTF_Font *FONT, KnowledgeBase* kb)
                     buff, 
                     FONT,
                     selectSubSubSubSubSubMenu,
-                    role+1,
+                    (MAX_BUTTON_OPTIONS*2)+count+1,
                     MY_UI_ZONE
                 );
                 y += Y_STEP;
-
-                if (y > HEIGHT-Y_STEP-10)
-                {
-                    y = Y_START;
-                    x += X_STEP;
-                }
             }
-        }
-        y = Y_START;
-        x += X_STEP;
-        //Drawing players
-        for (int player = 0; player < kb->SET_SIZES[0]; player++)
-        {
-            getButtonColours(subSubSubSubSubMenuSelected[MAX_BUTTON_OPTIONS+player+1] == 1, &red, &green, &blue, &selectedRed, &selectedGreen, &selectedBlue);
-            snprintf(buff, STRING_BUFF_SIZE, "Player: %s", kb->ELEMENT_NAMES[0][player]);
-            addTextBox(
-                x, y, X_WIDTH, Y_WIDTH, //bb
-                red, green, blue, //Box colour
-                selectedRed, selectedGreen, selectedBlue, //Highlighted Box colour
-                255, 255, 255, //Text colour
-                buff, 
-                FONT,
-                toggleSubSubSubSubSubMenu,
-                MAX_BUTTON_OPTIONS+player+1,
-                MY_UI_ZONE
-            );
-            y += Y_STEP;
-        }
-        y = Y_START;
-        x += X_STEP;
-        //Drawing count
-        for (int count = 0; count <= 2; count++)
-        {
-            getButtonColours(subSubSubSubSubMenuSelected[(MAX_BUTTON_OPTIONS*2)+count+1] == 1, &red, &green, &blue, &selectedRed, &selectedGreen, &selectedBlue);
-            snprintf(buff, STRING_BUFF_SIZE, "%d", count);
-            addTextBox(
-                x, y, X_WIDTH, Y_WIDTH, //bb
-                red, green, blue, //Box colour
-                selectedRed, selectedGreen, selectedBlue, //Highlighted Box colour
-                255, 255, 255, //Text colour
-                buff, 
-                FONT,
-                selectSubSubSubSubSubMenu,
-                (MAX_BUTTON_OPTIONS*2)+count+1,
-                MY_UI_ZONE
-            );
-            y += Y_STEP;
         }
     }
 
@@ -2003,8 +2905,45 @@ void updateSubSubSubMenu(TTF_Font *FONT, KnowledgeBase* kb)
             count++;
             break;
         case 8: //reset Data
+            //NOTHING TO DO HERE
             break;
-        case 9: //Finish
+        case 9: //Kill player
+            for (int player = 0; player < kb->SET_SIZES[0]; player++)
+            {
+                getButtonColours(subSubSubSubMenuSelected[player+1] == 1, &red, &green, &blue, &selectedRed, &selectedGreen, &selectedBlue);
+                snprintf(buff, STRING_BUFF_SIZE, "Player: %s", kb->ELEMENT_NAMES[0][player]);
+                addTextBox(
+                    x, y, X_WIDTH, Y_WIDTH, //bb
+                    red, green, blue, //Box colour
+                    selectedRed, selectedGreen, selectedBlue, //Highlighted Box colour
+                    255, 255, 255, //Text colour
+                    buff, 
+                    FONT,
+                    selectSubSubSubSubMenu,
+                    player+1,
+                    MY_UI_ZONE
+                );
+                y += Y_STEP;
+            }
+            break;
+        case 10: //Poison player
+            for (int player = 0; player < kb->SET_SIZES[0]; player++)
+            {
+                getButtonColours(subSubSubSubMenuSelected[player+1] == 1, &red, &green, &blue, &selectedRed, &selectedGreen, &selectedBlue);
+                snprintf(buff, STRING_BUFF_SIZE, "Player: %s", kb->ELEMENT_NAMES[0][player]);
+                addTextBox(
+                    x, y, X_WIDTH, Y_WIDTH, //bb
+                    red, green, blue, //Box colour
+                    selectedRed, selectedGreen, selectedBlue, //Highlighted Box colour
+                    255, 255, 255, //Text colour
+                    buff, 
+                    FONT,
+                    selectSubSubSubSubMenu,
+                    player+1,
+                    MY_UI_ZONE
+                );
+                y += Y_STEP;
+            }
             break;
         default:
             break;
@@ -2223,8 +3162,61 @@ void updateSubSubMenu(TTF_Font *FONT, KnowledgeBase* kb)
             }
             break;
         case 8: //reset Data
+            for (int player = 0; player < kb->SET_SIZES[0]; player++)
+            {
+                getButtonColours(subSubSubMenuOpen == player+1, &red, &green, &blue, &selectedRed, &selectedGreen, &selectedBlue);
+                snprintf(buff, STRING_BUFF_SIZE, "Player: %s", kb->ELEMENT_NAMES[0][player]);
+                addTextBox(
+                    x, y, X_WIDTH, Y_WIDTH, //bb
+                    red, green, blue, //Box colour
+                    selectedRed, selectedGreen, selectedBlue, //Highlighted Box colour
+                    255, 255, 255, //Text colour
+                    buff, 
+                    FONT,
+                    openSubSubSubMenu,
+                    player+1,
+                    MY_UI_ZONE
+                );
+                y += Y_STEP;
+            }
             break;
-        case 9: //reset Data
+        case 9: //kill player
+            for (int player = 0; player < kb->SET_SIZES[0]; player++)
+            {
+                getButtonColours(subSubSubMenuOpen == player+1, &red, &green, &blue, &selectedRed, &selectedGreen, &selectedBlue);
+                snprintf(buff, STRING_BUFF_SIZE, "Player: %s", kb->ELEMENT_NAMES[0][player]);
+                addTextBox(
+                    x, y, X_WIDTH, Y_WIDTH, //bb
+                    red, green, blue, //Box colour
+                    selectedRed, selectedGreen, selectedBlue, //Highlighted Box colour
+                    255, 255, 255, //Text colour
+                    buff, 
+                    FONT,
+                    openSubSubSubMenu,
+                    player+1,
+                    MY_UI_ZONE
+                );
+                y += Y_STEP;
+            }
+            break;
+        case 10: //poison player
+            for (int player = 0; player < kb->SET_SIZES[0]; player++)
+            {
+                getButtonColours(subSubSubMenuOpen == player+1, &red, &green, &blue, &selectedRed, &selectedGreen, &selectedBlue);
+                snprintf(buff, STRING_BUFF_SIZE, "Player: %s", kb->ELEMENT_NAMES[0][player]);
+                addTextBox(
+                    x, y, X_WIDTH, Y_WIDTH, //bb
+                    red, green, blue, //Box colour
+                    selectedRed, selectedGreen, selectedBlue, //Highlighted Box colour
+                    255, 255, 255, //Text colour
+                    buff, 
+                    FONT,
+                    openSubSubSubMenu,
+                    player+1,
+                    MY_UI_ZONE
+                );
+                y += Y_STEP;
+            }
             break;
         default:
             break;
@@ -2412,21 +3404,35 @@ void updateFirstMenu(TTF_Font *FONT)
         MY_UI_ZONE
     );
     y += Y_STEP;
-    /*
+    
     getButtonColours(subMenuOpen == 9, &red, &green, &blue, &selectedRed, &selectedGreen, &selectedBlue);
     addTextBox(
         x, y, X_WIDTH, Y_WIDTH, //bb
         red, green, blue, //Box colour
         selectedRed, selectedGreen, selectedBlue, //Highlighted Box colour
         255, 255, 255, //Text colour
-        "FINISH", 
+        "KILL PLAYER", 
         FONT,
-        finish,
-        0,
+        openSubMenu,
+        9,
         MY_UI_ZONE
     );
     y += Y_STEP;
-    */
+
+    getButtonColours(subMenuOpen == 10, &red, &green, &blue, &selectedRed, &selectedGreen, &selectedBlue);
+    addTextBox(
+        x, y, X_WIDTH, Y_WIDTH, //bb
+        red, green, blue, //Box colour
+        selectedRed, selectedGreen, selectedBlue, //Highlighted Box colour
+        255, 255, 255, //Text colour
+        "POISON PLAYER", 
+        FONT,
+        openSubMenu,
+        10,
+        MY_UI_ZONE
+    );
+    y += Y_STEP;
+    
 }
 
 
@@ -2467,7 +3473,7 @@ int main() {
     {
         possibleWorldKB[i] = initKB(NUM_PLAYERS);
         threadTallies[i] = initProbKB();
-        possibleWorldTempKB[i] = (KnowledgeBase***)malloc(NUM_DAYS * sizeof(KnowledgeBase***));
+        possibleWorldTempKB[i] = (KnowledgeBase****)malloc(NUM_DAYS * sizeof(KnowledgeBase****));
         //Create arguments in strctures to pass into new thread
         threadArgs[i] = (struct getProbApproxArgs*) malloc(sizeof(struct getProbApproxArgs));
         if (possibleWorldTempKB[i] == NULL)
@@ -2477,23 +3483,44 @@ int main() {
         }
         for (int j = 0; j < NUM_DAYS; j++)
         {
-            possibleWorldTempKB[i][j] = (KnowledgeBase**)malloc(MAX_SET_ELEMENTS * sizeof(KnowledgeBase**));
+            possibleWorldTempKB[i][j] = (KnowledgeBase***)malloc(MAX_SET_ELEMENTS * sizeof(KnowledgeBase***));
             if (possibleWorldTempKB[i][j] == NULL)
             {
                 printf("MALLOC FAILED!\n");
                 return 1;
             }
+            
             for (int k = 0; k < MAX_SET_ELEMENTS; k++)
             {
                 //possibleWorldTempKB[i][j][k] = (KnowledgeBase*)malloc(NUM_DAYS * sizeof(KnowledgeBase*));
                 
-                possibleWorldTempKB[i][j][k] = initKB(NUM_PLAYERS);
+                possibleWorldTempKB[i][j][k] = (KnowledgeBase**)malloc(3 * sizeof(KnowledgeBase**));
                 if (possibleWorldTempKB[i][j][k] == NULL)
                 {
                     printf("MALLOC FAILED!\n");
                     return 1;
                 }
+                for (int l = 0; l < 3; l++)
+                {
+                    possibleWorldTempKB[i][j][k][l] = initKB(NUM_PLAYERS);
+                    if (possibleWorldTempKB[i][j][k][l] == NULL)
+                    {
+                        printf("MALLOC FAILED!\n");
+                        return 1;
+                    }
+                }
             }
+        }
+    }
+
+    //Init zone to store data
+    for (int i = 0; i < MAX_SET_ELEMENTS; i++)
+    {
+        for (int j = 0; j < NUM_BOTCT_ROLES; j++)
+        {
+            POSSIBLE_WORLDS_FOR_PROB[i][j] = initKB(NUM_PLAYERS);
+            copyTo(POSSIBLE_WORLDS_FOR_PROB[i][j], KNOWLEDGE_BASE);
+            POSSIBLE_WORLD_GENERATED[i][j] = 0;
         }
     }
 
@@ -2505,6 +3532,8 @@ int main() {
         threadArgs[i]->possibleWorldRevertKB = possibleWorldTempKB[i]; //Working block of memory
         threadArgs[i]->determinedInNWorlds = threadTallies[i]; //The output tallies
         threadArgs[i]->worldTally = WORLD_TALLY;
+        threadArgs[i]->POSSIBLE_WORLDS_FOR_PROB=&POSSIBLE_WORLDS_FOR_PROB;
+        threadArgs[i]->POSSIBLE_WORLD_GENERATED=&POSSIBLE_WORLD_GENERATED;
         threadArgs[i]->worldGeneration = &WORLD_GENERATION;
         threadArgs[i]->reRenderCall = &reRenderCall;
         threadArgs[i]->rs = RULE_SET;
@@ -2550,7 +3579,9 @@ int main() {
             //printf("RE RENDER!\n");
             reRenderCall = false;
             //printf("-TABLE!\n");
+            
             updateUITable(KNOWLEDGE_BASE, WORLD_TALLY, ARIAL_FONT, currentNight);
+
             //printf("-FIRST MENU!\n");
             updateFirstMenu(ARIAL_FONT);
             //printf("-SUB MENU!\n");

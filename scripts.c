@@ -258,6 +258,11 @@ void initScript(RuleSet** rs, KnowledgeBase** kb, const int SCRIPT, const int NU
     for (int player = 0; player < NUM_PLAYERS; player++)
     {
         addKnowledgeName(*kb, "PLAYERS", player, "is_NOT_ROLE_CHANGED_[NIGHT0]");
+        addKnowledgeName(*kb, "PLAYERS", player, "NOT_SLEEP_DEATH_[NIGHT0]");
+        addKnowledgeName(*kb, "PLAYERS", player, "NOT_HANGING_DEATH_[NIGHT0]");
+        addKnowledgeName(*kb, "PLAYERS", player, "NOT_NOMINATION_DEATH_[NIGHT0]");
+        addKnowledgeName(*kb, "PLAYERS", player, "NOT_RESURRECTED_[NIGHT0]");
+        addKnowledgeName(*kb, "PLAYERS", player, "is_ALIVE_[NIGHT0]");
     }
 
     buildRules(*rs, *kb, NUM_PLAYERS, NUM_MINIONS, NUM_DEMONS, BASE_OUTSIDERS);
@@ -1286,6 +1291,29 @@ static void roleContinuityArguments(RuleSet* rs, KnowledgeBase* kb, const int NU
                         addConditionToTempRuleName(rs,kb, 1, "METADATA", buff);
                         pushTempRule(rs);
                         
+                        //<PLAYER>is_IMP AND <PLAYER>_NOT_KILLED_<PLAYER> AND <PLAYER2>=> <PLAYER2>is_NOT_IMP[Night x]
+                        for (int playerID = 0; playerID < NUM_PLAYERS; playerID++)
+                        {
+                            setTempRuleParams(rs, 3,1);
+                            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_%s_[NIGHT%d]", ROLE_NAMES[role], nextNight);
+                            setTempRuleResultName(rs, kb, 2, "PLAYERS", buff);
+                            snprintf(buff, STRING_BUFF_SIZE, "is_%s_[NIGHT%d]", ROLE_NAMES[role], startNight);
+                            addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff, playerID);
+                            snprintf(buff, STRING_BUFF_SIZE, "NOT_KILLED_%d_[NIGHT%d]", playerID, startNight);
+                            addFixedConditionToTempRuleName(rs,kb, 0, "PLAYERS", buff, playerID);
+                            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_SCARLET_WOMAN_[NIGHT%d]", startNight);
+                            addConditionToTempRuleName(rs,kb, 2, "PLAYERS", buff);
+                            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_SNAKE_CHARMER_in_PLAY_[NIGHT%d]", startNight);
+                            addConditionToTempRuleName(rs,kb, 1, "METADATA", buff);
+                            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_BARBER_in_PLAY_[NIGHT%d]", startNight);
+                            addConditionToTempRuleName(rs,kb, 1, "METADATA", buff);
+                            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_PIT_HAG_in_PLAY_[NIGHT%d]", startNight);
+                            addConditionToTempRuleName(rs,kb, 1, "METADATA", buff);
+                            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_SUMMONER_in_PLAY_[NIGHT%d]", startNight);
+                            addConditionToTempRuleName(rs,kb, 1, "METADATA", buff);
+                            pushTempRule(rs);
+                        }
+                        
                         
                     }
                     else if (strcmp(ROLE_NAMES[role], "SNAKE_CHARMER") == 0)
@@ -1963,13 +1991,619 @@ static void deathRules(RuleSet* rs, KnowledgeBase* kb, const int NUM_PLAYERS, co
             addConditionToTempRuleName(rs, kb, 0, "PLAYERS", buff);
             pushTempRule(rs);
         }
-        
-        
-
     }
-
 }
+/**
+ * poisoningRules() - add rules to the game
+ * 
+ * @rs the ruleset object to write to
+ * @kb the knoweledge base to write to
+ * @NUM_PLAYERS the number of players playing
+ * @NUM_MINIONS the number of base minions in the script
+ * @NUM_DEMONS the number of base, starting demons in the script
+ * @BASE_OUTSIDERS the number of base starting outsiders in the script
+ * @NUM_DAYS the maximium number of days the game can run for
+*/
+static void poisoningRules(RuleSet* rs, KnowledgeBase* kb, const int NUM_PLAYERS, const int NUM_MINIONS, const int NUM_DEMONS, const int BASE_OUTSIDERS)
+{
+    //Temporary string buffer for writing names into
+    char buff[STRING_BUFF_SIZE];
+    // ===========================================
+    //  Poisoning rules
+    // ===========================================
+    printf("Make: Poisoning rules...\n");
+    /*
+     * IDEA: 
+     * 
+    */
 
+    //If a player died: the player is dead
+    for (int night = 0; night < NUM_DAYS; night++)
+    {
+
+        setTempRuleParams(rs, 1,0);
+        for (int notPoisonedPlayerID = 0; notPoisonedPlayerID < NUM_PLAYERS; notPoisonedPlayerID++)
+        {
+            snprintf(buff, STRING_BUFF_SIZE, "NOT_POISONED_%d_[NIGHT%d]", notPoisonedPlayerID, night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+        }
+
+        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_SAILOR_[NIGHT%d]", night);
+        addConditionToTempRuleName(rs, kb, 0, "PLAYERS", buff);
+        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_INNKEEPER_[NIGHT%d]", night);
+        addConditionToTempRuleName(rs, kb, 0, "PLAYERS", buff);
+        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_COURTIER_[NIGHT%d]", night);
+        addConditionToTempRuleName(rs, kb, 0, "PLAYERS", buff);
+        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_MINSTREL_[NIGHT%d]", night);
+        addConditionToTempRuleName(rs, kb, 0, "PLAYERS", buff);
+        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_GOON_[NIGHT%d]", night);
+        addConditionToTempRuleName(rs, kb, 0, "PLAYERS", buff);
+        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_LUNATIC_[NIGHT%d]", night);
+        addConditionToTempRuleName(rs, kb, 0, "PLAYERS", buff);
+        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_PUKKA_[NIGHT%d]", night);
+        addConditionToTempRuleName(rs, kb, 0, "PLAYERS", buff);
+
+        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_SNAKE_CHARMER_[NIGHT%d]", night);
+        addConditionToTempRuleName(rs, kb, 0, "PLAYERS", buff);
+        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_PHILOSOPHER_[NIGHT%d]", night);
+        addConditionToTempRuleName(rs, kb, 0, "PLAYERS", buff);
+        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_SWEETHEART_[NIGHT%d]", night);
+        addConditionToTempRuleName(rs, kb, 0, "PLAYERS", buff);
+        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_NO_DASHII_[NIGHT%d]", night);
+        addConditionToTempRuleName(rs, kb, 0, "PLAYERS", buff);
+        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_VORTOX_[NIGHT%d]", night);
+        addConditionToTempRuleName(rs, kb, 0, "PLAYERS", buff);
+        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_POISONER_[NIGHT%d]", night);
+        addConditionToTempRuleName(rs, kb, 0, "PLAYERS", buff);
+        pushTempRule(rs);
+
+        //Rules to enforce maximum killings per role
+        for (int killedPlayerID = 0; killedPlayerID < NUM_PLAYERS; killedPlayerID++)
+        {
+            /*
+            IMP
+            */
+            // <PLAYER>KILLED_<PLAYER_X>_NIGHT<i> AND <PLAYER>is_IMP_NIGHT<i> =>  <PLAYER>NOT_KILLED_<PLAYER_Y>_NIGHT<i>
+            setTempRuleParams(rs, 1,0);
+            for (int notKilledPlayerID = 0; notKilledPlayerID < NUM_PLAYERS; notKilledPlayerID++)
+            {
+                if (notKilledPlayerID != killedPlayerID)
+                {
+                    snprintf(buff, STRING_BUFF_SIZE, "NOT_POISONED_%d_[NIGHT%d]", notKilledPlayerID, night);
+                    setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+                }
+            }
+            snprintf(buff, STRING_BUFF_SIZE, "POISONED_%d_[NIGHT%d]", killedPlayerID, night);
+            addConditionToTempRuleName(rs, kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_POISONER_[NIGHT%d]", night);
+            addConditionToTempRuleName(rs, kb, 0, "PLAYERS", buff);
+            pushTempRule(rs);
+            
+            /*
+            NOTE: need to add more complex demons to this list
+            */
+
+        }
+    
+        for (int playerID = 0; playerID < NUM_PLAYERS; playerID++)
+        {
+            
+            // <PLAYER>POISONED_<PLAYER_X>_NIGHT<i> => <PLAYER_X>is_POISONED__NIGHT<i> 
+            setTempRuleParams(rs, 2,0);
+            snprintf(buff, STRING_BUFF_SIZE, "is_POISONED_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, -1000-playerID, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "POISONED_%d_[NIGHT%d]", playerID, night);
+            addConditionToTempRuleName(rs, kb, 0, "PLAYERS", buff);
+            pushTempRule(rs);
+
+            // <PLAYER_X>NOT_SLEEP_DEATH_NIGHT<i> => <PLAYER>NOT_KILLED_<PLAYER_X>_NIGHT_<i>
+            setTempRuleParams(rs, 2,0);
+            snprintf(buff, STRING_BUFF_SIZE, "NOT_POISONED_%d_[NIGHT%d]", playerID, night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_POISONED_[NIGHT%d]", night);
+            addFixedConditionToTempRuleName(rs, kb, 1, "PLAYERS", buff, playerID);
+            pushTempRule(rs);
+
+            // <PLAYER>POISONED_<PLAYER_X>_NIGHT<i> => <PLAYER>NOT_<ROLE THAT DOESN'T POISON>
+            setTempRuleParams(rs, 1,0);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_IMP_[NIGHT%d]", night);
+            setTempRuleResultName(rs, kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_FANG_GU_[NIGHT%d]", night);
+            setTempRuleResultName(rs, kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_VIGORMORTIS_[NIGHT%d]", night);
+            setTempRuleResultName(rs, kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_NO_DASHII_[NIGHT%d]", night);
+            setTempRuleResultName(rs, kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_ZOMBUUL_[NIGHT%d]", night);
+            setTempRuleResultName(rs, kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_OJO_[NIGHT%d]", night);
+            setTempRuleResultName(rs, kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_LLEECH_[NIGHT%d]", night);
+            setTempRuleResultName(rs, kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_ASSASSIN_[NIGHT%d]", night);
+            setTempRuleResultName(rs, kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_SLAYER_[NIGHT%d]", night);
+            setTempRuleResultName(rs, kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_BARON_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_SCARLET_WOMAN_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_SPY_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_EVIL_TWIN_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_WITCH_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_CERENOVUS_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_PIT_HAG_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_DEVILS_ADVOCATE_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_MASTERMIND_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_WASHERWOMAN_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_LIBRARIAN_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_INVESTIGATOR_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_CHEF_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_EMPATH_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_FORTUNE_TELLER_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_UNDERTAKER_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_MONK_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_RAVENKEEPER_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_VIRGIN_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_SOLDIER_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_MAYOR_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_CLOCKMAKER_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_DREAMER_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_MATHEMATICIAN_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_FLOWERGIRL_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_TOWN_CRIER_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_ORACLE_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_SAVANT_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_SEAMSTRESS_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_ARTIST_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_JUGGLER_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_SAGE_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_GRANDMOTHER_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_CHAMBERMAID_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_EXORCIST_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_GAMBLER_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_GOSSIP_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_PROFESSOR_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_TEA_LADY_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_PACIFIST_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_FOOL_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_BOUNTY_HUNTER_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_ACROBAT_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_POPPY_GROWER_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_VILLAGE_IDIOT_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_BUTLER_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_RECLUSE_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_DRUNK_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_SAINT_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_MUTANT_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_SWEETHEART_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_BARBER_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_KLUTZ_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_TINKER_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_MOONCHILD_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_GOON_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_LUNATIC_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_POLITICIAN_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+
+            snprintf(buff, STRING_BUFF_SIZE, "POISONED_%d_[NIGHT%d]", playerID, night);
+            addConditionToTempRuleName(rs, kb, 0, "PLAYERS", buff);
+            pushTempRule(rs);
+        }
+    }
+}
+/**
+ * killingRules() - add rules to the game
+ * 
+ * @rs the ruleset object to write to
+ * @kb the knoweledge base to write to
+ * @NUM_PLAYERS the number of players playing
+ * @NUM_MINIONS the number of base minions in the script
+ * @NUM_DEMONS the number of base, starting demons in the script
+ * @BASE_OUTSIDERS the number of base starting outsiders in the script
+ * @NUM_DAYS the maximium number of days the game can run for
+*/
+static void killingRules(RuleSet* rs, KnowledgeBase* kb, const int NUM_PLAYERS, const int NUM_MINIONS, const int NUM_DEMONS, const int BASE_OUTSIDERS)
+{
+    //Temporary string buffer for writing names into
+    char buff[STRING_BUFF_SIZE];
+    // ===========================================
+    //  Death rules
+    // ===========================================
+    printf("Make: Killing rules...\n");
+    /*
+     * IDEA: 
+     * 
+    */
+
+    //If a player died: the player is dead
+    for (int night = 0; night < NUM_DAYS; night++)
+    {
+
+        setTempRuleParams(rs, 1,0);
+        for (int notKilledPlayerID = 0; notKilledPlayerID < NUM_PLAYERS; notKilledPlayerID++)
+        {
+            snprintf(buff, STRING_BUFF_SIZE, "NOT_KILLED_%d_[NIGHT%d]", notKilledPlayerID, night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+        }
+
+        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_IMP_[NIGHT%d]", night);
+        addConditionToTempRuleName(rs, kb, 0, "PLAYERS", buff);
+        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_FANG_GU_[NIGHT%d]", night);
+        addConditionToTempRuleName(rs, kb, 0, "PLAYERS", buff);
+        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_VIGORMORTIS_[NIGHT%d]", night);
+        addConditionToTempRuleName(rs, kb, 0, "PLAYERS", buff);
+        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_NO_DASHII_[NIGHT%d]", night);
+        addConditionToTempRuleName(rs, kb, 0, "PLAYERS", buff);
+        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_VORTOX_[NIGHT%d]", night);
+        addConditionToTempRuleName(rs, kb, 0, "PLAYERS", buff);
+        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_ZOMBUUL_[NIGHT%d]", night);
+        addConditionToTempRuleName(rs, kb, 0, "PLAYERS", buff);
+        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_PUKKA_[NIGHT%d]", night);
+        addConditionToTempRuleName(rs, kb, 0, "PLAYERS", buff);
+        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_SHABALOTH_[NIGHT%d]", night);
+        addConditionToTempRuleName(rs, kb, 0, "PLAYERS", buff);
+        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_PO._[NIGHT%d]", night);
+        addConditionToTempRuleName(rs, kb, 0, "PLAYERS", buff);
+        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_OJO_[NIGHT%d]", night);
+        addConditionToTempRuleName(rs, kb, 0, "PLAYERS", buff);
+        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_LLEECH_[NIGHT%d]", night);
+        addConditionToTempRuleName(rs, kb, 0, "PLAYERS", buff);
+        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_ASSASSIN_[NIGHT%d]", night);
+        addConditionToTempRuleName(rs, kb, 0, "PLAYERS", buff);
+        snprintf(buff, STRING_BUFF_SIZE, "is_NOT_SLAYER_[NIGHT%d]", night);
+        addConditionToTempRuleName(rs, kb, 0, "PLAYERS", buff);
+        pushTempRule(rs);
+
+        //Rules to enforce maximum killings per role
+        for (int killedPlayerID = 0; killedPlayerID < NUM_PLAYERS; killedPlayerID++)
+        {
+            /*
+            IMP
+            */
+            // <PLAYER>KILLED_<PLAYER_X>_NIGHT<i> AND <PLAYER>is_IMP_NIGHT<i> =>  <PLAYER>NOT_KILLED_<PLAYER_Y>_NIGHT<i>
+            setTempRuleParams(rs, 1,0);
+            for (int notKilledPlayerID = 0; notKilledPlayerID < NUM_PLAYERS; notKilledPlayerID++)
+            {
+                if (notKilledPlayerID != killedPlayerID)
+                {
+                    snprintf(buff, STRING_BUFF_SIZE, "NOT_KILLED_%d_[NIGHT%d]", notKilledPlayerID, night);
+                    setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+                }
+            }
+            snprintf(buff, STRING_BUFF_SIZE, "KILLED_%d_[NIGHT%d]", killedPlayerID, night);
+            addConditionToTempRuleName(rs, kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_IMP_[NIGHT%d]", night);
+            addConditionToTempRuleName(rs, kb, 0, "PLAYERS", buff);
+            pushTempRule(rs);
+            /*
+            ASSASSIN
+            NOTE: this actually can only be triggered once per game
+            */
+            // <PLAYER>KILLED_<PLAYER_X>_NIGHT<i> AND <PLAYER>is_IMP_NIGHT<i> =>  <PLAYER>NOT_KILLED_<PLAYER_Y>_NIGHT<i>
+            setTempRuleParams(rs, 1,0);
+            for (int notKilledPlayerID = 0; notKilledPlayerID < NUM_PLAYERS; notKilledPlayerID++)
+            {
+                if (notKilledPlayerID != killedPlayerID)
+                {
+                    snprintf(buff, STRING_BUFF_SIZE, "NOT_KILLED_%d_[NIGHT%d]", notKilledPlayerID, night);
+                    setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+                }
+            }
+            snprintf(buff, STRING_BUFF_SIZE, "KILLED_%d_[NIGHT%d]", killedPlayerID, night);
+            addConditionToTempRuleName(rs, kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_ASSASSIN_[NIGHT%d]", night);
+            addConditionToTempRuleName(rs, kb, 0, "PLAYERS", buff);
+            pushTempRule(rs);
+            /*
+            FANG_GU
+            */
+            // <PLAYER>KILLED_<PLAYER_X>_NIGHT<i> AND <PLAYER>is_IMP_NIGHT<i> =>  <PLAYER>NOT_KILLED_<PLAYER_Y>_NIGHT<i>
+            setTempRuleParams(rs, 1,0);
+            for (int notKilledPlayerID = 0; notKilledPlayerID < NUM_PLAYERS; notKilledPlayerID++)
+            {
+                if (notKilledPlayerID != killedPlayerID)
+                {
+                    snprintf(buff, STRING_BUFF_SIZE, "NOT_KILLED_%d_[NIGHT%d]", notKilledPlayerID, night);
+                    setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+                }
+            }
+            snprintf(buff, STRING_BUFF_SIZE, "KILLED_%d_[NIGHT%d]", killedPlayerID, night);
+            addConditionToTempRuleName(rs, kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_FANG_GU_[NIGHT%d]", night);
+            addConditionToTempRuleName(rs, kb, 0, "PLAYERS", buff);
+            pushTempRule(rs);
+            /*
+            VIGORMORTIS
+            */
+            // <PLAYER>KILLED_<PLAYER_X>_NIGHT<i> AND <PLAYER>is_IMP_NIGHT<i> =>  <PLAYER>NOT_KILLED_<PLAYER_Y>_NIGHT<i>
+            setTempRuleParams(rs, 1,0);
+            for (int notKilledPlayerID = 0; notKilledPlayerID < NUM_PLAYERS; notKilledPlayerID++)
+            {
+                if (notKilledPlayerID != killedPlayerID)
+                {
+                    snprintf(buff, STRING_BUFF_SIZE, "NOT_KILLED_%d_[NIGHT%d]", notKilledPlayerID, night);
+                    setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+                }
+            }
+            snprintf(buff, STRING_BUFF_SIZE, "KILLED_%d_[NIGHT%d]", killedPlayerID, night);
+            addConditionToTempRuleName(rs, kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_VIGORMORTIS_[NIGHT%d]", night);
+            addConditionToTempRuleName(rs, kb, 0, "PLAYERS", buff);
+            pushTempRule(rs);
+            /*
+            NO_DASHII
+            */
+            // <PLAYER>KILLED_<PLAYER_X>_NIGHT<i> AND <PLAYER>is_IMP_NIGHT<i> =>  <PLAYER>NOT_KILLED_<PLAYER_Y>_NIGHT<i>
+            setTempRuleParams(rs, 1,0);
+            for (int notKilledPlayerID = 0; notKilledPlayerID < NUM_PLAYERS; notKilledPlayerID++)
+            {
+                if (notKilledPlayerID != killedPlayerID)
+                {
+                    snprintf(buff, STRING_BUFF_SIZE, "NOT_KILLED_%d_[NIGHT%d]", notKilledPlayerID, night);
+                    setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+                }
+            }
+            snprintf(buff, STRING_BUFF_SIZE, "KILLED_%d_[NIGHT%d]", killedPlayerID, night);
+            addConditionToTempRuleName(rs, kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NO_DASHII_[NIGHT%d]", night);
+            addConditionToTempRuleName(rs, kb, 0, "PLAYERS", buff);
+            pushTempRule(rs);
+            /*
+            VORTOX
+            */
+            // <PLAYER>KILLED_<PLAYER_X>_NIGHT<i> AND <PLAYER>is_IMP_NIGHT<i> =>  <PLAYER>NOT_KILLED_<PLAYER_Y>_NIGHT<i>
+            setTempRuleParams(rs, 1,0);
+            for (int notKilledPlayerID = 0; notKilledPlayerID < NUM_PLAYERS; notKilledPlayerID++)
+            {
+                if (notKilledPlayerID != killedPlayerID)
+                {
+                    snprintf(buff, STRING_BUFF_SIZE, "NOT_KILLED_%d_[NIGHT%d]", notKilledPlayerID, night);
+                    setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+                }
+            }
+            snprintf(buff, STRING_BUFF_SIZE, "KILLED_%d_[NIGHT%d]", killedPlayerID, night);
+            addConditionToTempRuleName(rs, kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_VORTOX_[NIGHT%d]", night);
+            addConditionToTempRuleName(rs, kb, 0, "PLAYERS", buff);
+            pushTempRule(rs);
+            /*
+            ZOMBUUL
+            */
+            // <PLAYER>KILLED_<PLAYER_X>_NIGHT<i> AND <PLAYER>is_IMP_NIGHT<i> =>  <PLAYER>NOT_KILLED_<PLAYER_Y>_NIGHT<i>
+            setTempRuleParams(rs, 1,0);
+            for (int notKilledPlayerID = 0; notKilledPlayerID < NUM_PLAYERS; notKilledPlayerID++)
+            {
+                if (notKilledPlayerID != killedPlayerID)
+                {
+                    snprintf(buff, STRING_BUFF_SIZE, "NOT_KILLED_%d_[NIGHT%d]", notKilledPlayerID, night);
+                    setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+                }
+            }
+            snprintf(buff, STRING_BUFF_SIZE, "KILLED_%d_[NIGHT%d]", killedPlayerID, night);
+            addConditionToTempRuleName(rs, kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_ZOMBUUL_[NIGHT%d]", night);
+            addConditionToTempRuleName(rs, kb, 0, "PLAYERS", buff);
+            pushTempRule(rs);
+            /*
+            NOTE: need to add more complex demons to this list
+            */
+
+        }
+    
+        for (int playerID = 0; playerID < NUM_PLAYERS; playerID++)
+        {
+            
+            // <PLAYER>KILLED_<PLAYER_X>_NIGHT<i> => <PLAYER_X>SLEEP_DEATH_NIGHT<i> 
+            setTempRuleParams(rs, 2,0);
+            snprintf(buff, STRING_BUFF_SIZE, "SLEEP_DEATH_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, -1000-playerID, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "KILLED_%d_[NIGHT%d]", playerID, night);
+            addConditionToTempRuleName(rs, kb, 0, "PLAYERS", buff);
+            pushTempRule(rs);
+
+            // <PLAYER_X>NOT_SLEEP_DEATH_NIGHT<i> => <PLAYER>NOT_KILLED_<PLAYER_X>_NIGHT_<i>
+            setTempRuleParams(rs, 2,0);
+            snprintf(buff, STRING_BUFF_SIZE, "NOT_KILLED_%d_[NIGHT%d]", playerID, night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "NOT_SLEEP_DEATH_[NIGHT%d]", night);
+            addFixedConditionToTempRuleName(rs, kb, 1, "PLAYERS", buff, playerID);
+            pushTempRule(rs);
+
+            // <PLAYER>KILLED_<PLAYER_X>_NIGHT<i> => <PLAYER>NOT_<ROLE THAT DOESN'T KILL>
+            setTempRuleParams(rs, 1,0);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_BARON_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_SCARLET_WOMAN_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_SPY_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_POISONER_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_EVIL_TWIN_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_WITCH_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_CERENOVUS_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_PIT_HAG_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_DEVILS_ADVOCATE_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_MASTERMIND_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_WASHERWOMAN_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_LIBRARIAN_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_INVESTIGATOR_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_CHEF_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_EMPATH_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_FORTUNE_TELLER_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_UNDERTAKER_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_MONK_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_RAVENKEEPER_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_VIRGIN_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_SOLDIER_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_MAYOR_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_CLOCKMAKER_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_DREAMER_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_SNAKE_CHARMER_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_MATHEMATICIAN_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_FLOWERGIRL_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_TOWN_CRIER_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_ORACLE_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_SAVANT_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_SEAMSTRESS_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_PHILOSOPHER_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_ARTIST_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_JUGGLER_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_SAGE_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_GRANDMOTHER_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_SAILOR_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_CHAMBERMAID_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_EXORCIST_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_INNKEEPER_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_GAMBLER_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_GOSSIP_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_COURTIER_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_PROFESSOR_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_MINSTREL_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_TEA_LADY_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_PACIFIST_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_FOOL_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_BOUNTY_HUNTER_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_ACROBAT_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_POPPY_GROWER_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_VILLAGE_IDIOT_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_BUTLER_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_RECLUSE_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_DRUNK_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_SAINT_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_MUTANT_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_SWEETHEART_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_BARBER_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_KLUTZ_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_TINKER_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_MOONCHILD_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_GOON_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_LUNATIC_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+            snprintf(buff, STRING_BUFF_SIZE, "is_NOT_POLITICIAN_[NIGHT%d]", night);
+            setTempRuleResultName(rs,kb, 0, "PLAYERS", buff);
+
+            snprintf(buff, STRING_BUFF_SIZE, "KILLED_%d_[NIGHT%d]", playerID, night);
+            addConditionToTempRuleName(rs, kb, 0, "PLAYERS", buff);
+            pushTempRule(rs);
+        }
+    }
+}
 /**
  * buildRules() - add all the rules to the game
  * 
@@ -1996,7 +2630,7 @@ void buildRules(RuleSet* rs, KnowledgeBase* kb, const int NUM_PLAYERS, const int
     //RED HERRING RULES
     redHerringRules(rs, kb, NUM_PLAYERS, NUM_MINIONS, NUM_DEMONS, BASE_OUTSIDERS);
     //POISON RULES
-    poisonRules(rs, kb, NUM_PLAYERS, NUM_MINIONS, NUM_DEMONS, BASE_OUTSIDERS);
+    //poisonRules(rs, kb, NUM_PLAYERS, NUM_MINIONS, NUM_DEMONS, BASE_OUTSIDERS);
 
     //ROLE CONTINUITY ARGUMENTS
     roleContinuityArguments(rs, kb, NUM_PLAYERS, NUM_MINIONS, NUM_DEMONS, BASE_OUTSIDERS);
@@ -2006,5 +2640,9 @@ void buildRules(RuleSet* rs, KnowledgeBase* kb, const int NUM_PLAYERS, const int
 
     //DEATH RULES
     deathRules(rs, kb, NUM_PLAYERS, NUM_MINIONS, NUM_DEMONS, BASE_OUTSIDERS);
+    //POISONING RULES
+    poisoningRules(rs, kb, NUM_PLAYERS, NUM_MINIONS, NUM_DEMONS, BASE_OUTSIDERS);
+    //KILLING RULES
+    killingRules(rs, kb, NUM_PLAYERS, NUM_MINIONS, NUM_DEMONS, BASE_OUTSIDERS);
     
 }
