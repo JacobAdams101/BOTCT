@@ -3437,7 +3437,7 @@ void updateFirstMenu(TTF_Font *FONT)
 
 
 
-//gcc -I/opt/homebrew/include uitest.c knowledge.c rules.c scripts.c solver.c ui.c util.c  -D_THREAD_SAFE -L/opt/homebrew/lib -lSDL2 -lSDL2_ttf
+//gcc -I/opt/homebrew/include uitest.c knowledge.c rules.c scripts.c solver.c ui.c util.c  -D_THREAD_SAFE -L/opt/homebrew/lib -lSDL2 -lSDL2_ttf -O3
 int main() {
     initRand();
 

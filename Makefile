@@ -1,30 +1,16 @@
-# Compiler
+# Makefile
+
 CC = gcc
+CFLAGS = -O3 -D_THREAD_SAFE -I/opt/homebrew/include
+LDFLAGS = -L/opt/homebrew/lib -lSDL2 -lSDL2_ttf
+SRC = uitest.c knowledge.c rules.c scripts.c solver.c ui.c util.c
+OBJ = $(SRC:.c=.o)
+TARGET = uitest
 
-# Compiler Flags with SDL2 support
-CFLAGS = -Wall -Ofast `sdl2-config --cflags`
-LDFLAGS = -D_THREAD_SAFE `sdl2-config --libs` -lSDL2_ttf
-
-# Find all .c files in the current directory
-SRCS = $(wildcard *.c)
-
-# Convert .c files into corresponding .o files
-OBJS = $(SRCS:.c=.o)
-
-# Output executable name
-TARGET = program
-
-# Default rule
 all: $(TARGET)
 
-# Link object files into the executable
-$(TARGET): $(OBJS)
-	$(CC) $(OBJS) -o $(TARGET) $(LDFLAGS)
+$(TARGET): $(OBJ)
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
-# Compile .c files into .o files
-%.o: %.c
-	$(CC) $(CFLAGS) -c $< -o $@
-
-# Clean up compiled files
 clean:
-	rm -f $(OBJS) $(TARGET)
+	rm -f $(OBJ) $(TARGET)
