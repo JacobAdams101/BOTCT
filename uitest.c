@@ -81,7 +81,7 @@
  ***************************************************/
 TextBox UI_ELEMENTS[MAX_UI_ZONES][MAX_UI_ELEMENTS];
 int COUNT[MAX_UI_ZONES];
-int UI_LINES[MAX_UI_ZONES][MAX_UI_ELEMENTS][4];
+int UI_LINES[MAX_UI_ZONES][MAX_UI_ELEMENTS][7];
 int LINE_COUNT[MAX_UI_ZONES];
 int currentNight = 0;
 int soloWorldPlayer = -1;
@@ -180,7 +180,7 @@ void drawUIElements(SDL_Renderer *renderer)
         for (int uiElement = 0; uiElement < LINE_COUNT[uiZone]; uiElement++)
         {
             // Set draw color to white for the line
-            SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+            SDL_SetRenderDrawColor(renderer, UI_LINES[uiZone][uiElement][4], UI_LINES[uiZone][uiElement][5], UI_LINES[uiZone][uiElement][6], 255);
             // Draw a line from (100, 100) to (700, 500)
             SDL_RenderDrawLine(renderer, UI_LINES[uiZone][uiElement][0], UI_LINES[uiZone][uiElement][1], UI_LINES[uiZone][uiElement][2], UI_LINES[uiZone][uiElement][3]);
         }
@@ -197,6 +197,7 @@ void resetScreen(int uiZone)
 
 int addLine(
     int x, int y, int x2, int y2, 
+    int r, int g, int b,
     int uiZone
 )
 {
@@ -205,7 +206,11 @@ int addLine(
     UI_LINES[uiZone][LINE_COUNT[uiZone]][1] = y;
     UI_LINES[uiZone][LINE_COUNT[uiZone]][2] = x2;
     UI_LINES[uiZone][LINE_COUNT[uiZone]][3] = y2;
+    UI_LINES[uiZone][LINE_COUNT[uiZone]][4] = r;
+    UI_LINES[uiZone][LINE_COUNT[uiZone]][5] = g;
+    UI_LINES[uiZone][LINE_COUNT[uiZone]][6] = b;
     LINE_COUNT[uiZone]++;
+    return 1;
 }
 
 int addTextBox(
@@ -707,7 +712,16 @@ void makeTable(KnowledgeBase* kb, ProbKnowledgeBase* probkb, TTF_Font *FONT, int
             int didPoison = isKnownName(kb, "PLAYERS", element, buff); 
             if (didPoison)
             {
-                addLine(X_START - X_STEP+20, y+(Y_STEP/2), x+20, 50+(Y_STEP*(poisonedPlayer+2))+(Y_STEP/2), 0);
+                addLine(X_START - X_STEP+20, y+(Y_STEP/2), x+20, 50+(Y_STEP*(poisonedPlayer+2))+(Y_STEP/2), 0, 255, 0, 0);
+            }
+        }
+        for (int killedPlayer = 0; killedPlayer < kb->SET_SIZES[set]; killedPlayer++)
+        {
+            snprintf(buff, 64, "KILLED_%d_[NIGHT%d]", killedPlayer, night);
+            int didPoison = isKnownName(kb, "PLAYERS", element, buff); 
+            if (didPoison)
+            {
+                addLine(X_START - X_STEP+20, y+(Y_STEP/2), x+20, 50+(Y_STEP*(killedPlayer+2))+(Y_STEP/2), 255, 0, 0, 0);
             }
         }
         if (isPoisoned == 1)
@@ -1195,7 +1209,16 @@ void makeSingleWorldTable(KnowledgeBase* kb, TTF_Font *FONT, int night)
             int didPoison = isKnownName(kb, "PLAYERS", element, buff); 
             if (didPoison)
             {
-                addLine(X_START - X_STEP+20, y+(Y_STEP/2), x+20, 50+(Y_STEP*(poisonedPlayer+2))+(Y_STEP/2), 0);
+                addLine(X_START - X_STEP+20, y+(Y_STEP/2), x+20, 50+(Y_STEP*(poisonedPlayer+2))+(Y_STEP/2), 0, 255, 0, 0);
+            }
+        }
+        for (int killedPlayer = 0; killedPlayer < kb->SET_SIZES[set]; killedPlayer++)
+        {
+            snprintf(buff, 64, "KILLED_%d_[NIGHT%d]", killedPlayer, night);
+            int didPoison = isKnownName(kb, "PLAYERS", element, buff); 
+            if (didPoison)
+            {
+                addLine(X_START - X_STEP+20, y+(Y_STEP/2), x+20, 50+(Y_STEP*(killedPlayer+2))+(Y_STEP/2), 255, 0, 0, 0);
             }
         }
         if (isPoisoned == 1)

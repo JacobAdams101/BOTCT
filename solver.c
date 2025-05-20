@@ -163,10 +163,6 @@ static int assignPoisonForWorld(
                 for (int playerID = 0; playerID < possibleWorldKB->SET_SIZES[0]; playerID++)
                 {
                     int poisonedPlayers = isKnown(possibleWorldKB, 0, playerID, poisonedIndexes[night][poisonedPlayerID]);
-                    char buff[64];
-                    snprintf(buff, 64, "POISONED_%d_[NIGHT%d]", poisonedPlayerID, night);
-                    int check = isKnownName(possibleWorldKB, "PLAYERS", playerID, buff);
-
                     if (poisonedPlayers == 0)
                     {
                         addKnowledge(possibleWorldKB, 0, playerID, notPoisonedIndexes[night][poisonedPlayerID]);
@@ -282,16 +278,30 @@ static int assignKillForWorld(
         {
             addKnowledge(possibleWorldKB, 0, player, killedIndexes[night][playerToActionID-1]);
         }
-        /*
-        for (int playerID = 0; playerID < possibleWorldKB->SET_SIZES[0]; playerID++)
+        if (playerIndex+1 >= possibleWorldKB->SET_SIZES[0])
         {
-            int killedPlayers = isKnown(possibleWorldKB, 0, player, killedIndexes[night][playerID]);
-            if (killedPlayers == 0)
+            for (int killedPlayerID = 0; killedPlayerID < possibleWorldKB->SET_SIZES[0]; killedPlayerID++)
             {
-                addKnowledge(possibleWorldKB, 0, player, notKilledIndexes[night][playerID]);
+                int playerKilled = 0;
+                for (int playerID = 0; playerID < possibleWorldKB->SET_SIZES[0]; playerID++)
+                {
+                    int killedPlayers = isKnown(possibleWorldKB, 0, playerID, killedIndexes[night][killedPlayerID]);
+                    if (killedPlayers == 0)
+                    {
+                        addKnowledge(possibleWorldKB, 0, playerID, notKilledIndexes[night][killedPlayerID]);
+                    }
+                    else
+                    {
+                        playerKilled = 1;
+                    }
+                }
+                if (playerKilled == 0)
+                { //Add code to say the player isn't killed
+                    //NOTE: killing is difficult as the player may die in other ways
+                    //addKnowledge(possibleWorldKB, 0, killedPlayerID, isNotPoisonedIndexes[night]);
+                }
             }
         }
-            */
             
 
         //Infer knowledge (to see if a contradiction arises)
