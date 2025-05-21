@@ -632,7 +632,7 @@ int hasExplicitContradiction(KnowledgeBase* kb)
     
     //Declare bitstring masks to store find TRUE FALSE statements in resulting bitstrings
     const long ODD_MASK = 6148914691236517205;
-    const long EVEN_MASK = -6148914691236517206;
+    //const long EVEN_MASK = -6148914691236517206; //Can remove due to note
 
     for (int set = 0; set < NUM_SETS; set++)
     {
@@ -641,22 +641,23 @@ int hasExplicitContradiction(KnowledgeBase* kb)
             for (int index = 0; index < FUNCTION_RESULT_SIZE; index++)
             {
                 long bitString = kb->KNOWLEDGE_BASE[set][element][index];
+                
+                //NOTE: thanks to J Hearn I can remove the even mask
+                //YAY!
+
+                //FT   FT FT
+
+                //0F   0F 0F
+                //AND
+                //FT   FT FT
+                //0F&T... 
+
+                
                 long oddBitString = bitString & ODD_MASK; //All true statements
-                long evenBitString = bitString & EVEN_MASK; //All false statements
+                //long evenBitString = bitString & EVEN_MASK; //All false statements
                 //Finding contradictions using magic bitstrings
-                if ((oddBitString << 1) & evenBitString) return 1; //If true and false
+                if ((oddBitString << 1) & bitString) return 1; //If true and false
             }
-            //Deprecated code replaced by opaque voodoo bit magic ;)
-            /*
-            for (int function = 0; function < FUNCTION_RESULT_SIZE*INT_LENGTH; function += 2)
-            {
-                //Using the fact that for any statement A stored at an even index i NOT(A) is stored at the odd index i+1 
-                if ((isKnown(kb, set, element, function) == 1) && (isKnown(kb, set, element, function+1) == 1))
-                { //If A AND NOT(A) -> we have a contradiction
-                    return 1; 
-                }
-            }
-            */
         }
     }
     return 0;

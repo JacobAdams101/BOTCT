@@ -1440,7 +1440,7 @@ void selectSubSubSubSubSubMenu(int eventID)
 
 void finish()
 {
-    int contradiction = inferImplicitFacts(KNOWLEDGE_BASE, RULE_SET, NUM_SOLVE_STEPS, 1);
+    int contradiction = inferImplicitFacts(KNOWLEDGE_BASE, RULE_SET, NUM_SOLVE_STEPS, 0);
     
     if (contradiction == 0)
     { //Optimise ruleset only if no contradictions were produced
