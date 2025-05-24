@@ -809,9 +809,10 @@ int getProbIntPercentage(ProbKnowledgeBase* tally, int set, int element, int fun
 
     //Floating point rounding correction
     if (percentage > 100.0 - EPSILON) return 100;
+    //if (percentage > 0 && percentage < 1 + EPSILON) return 1;
     if (percentage < EPSILON) return 0;
 
-    return (int) percentage; //Cast to int
+    return (int) percentage; //Cast to ints
 }
 
 /**

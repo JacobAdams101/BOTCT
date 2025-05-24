@@ -24,6 +24,8 @@
 
 #pragma once
 
+#include <pthread.h>
+
 #define INT_LENGTH 64
 #define STRING_BUFF_SIZE 256
 
@@ -31,7 +33,7 @@
 #define MAX_SET_ELEMENTS 16
 #define FUNCTION_RESULT_SIZE 32
 
-#define MAX_CACHED_WORLDS 2048
+#define MAX_CACHED_WORLDS 4096
 
 #define MAX_VARS_IN_RULE 16
 #define MAX_NUM_RULES 65536

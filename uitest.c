@@ -127,6 +127,10 @@ int POSSIBLE_WORLD_GENERATED[MAX_SET_ELEMENTS][NUM_BOTCT_ROLES][NUM_DAYS];
 //Thread object
 pthread_t threads[NUM_THREADS];
 
+pthread_mutex_t problock; // Mutex to protect shared data
+pthread_mutex_t exampleworldlock; // Mutex to protect shared data
+pthread_mutex_t cacheworldlock;
+
 /***************************************************
  * UI CODE
  ***************************************************/
@@ -579,7 +583,7 @@ void makeTable(KnowledgeBase* kb, ProbKnowledgeBase* probkb, TTF_Font *FONT, int
                 int isNotRole = getProbIntPercentageName(probkb, kb, "PLAYERS", element, buff);
                 
                 if (isRole == 100) snprintf(buff, 64, " * ");
-                else if (isNotRole == 100) snprintf(buff, 64, "   ");
+                else if (isNotRole == 100) snprintf(buff, 64, "   "); //remove to always show probability
                 else snprintf(buff, 64, "%02d%%", isRole);
 
                 if (isNotRoleCertain == 0)
@@ -1492,29 +1496,32 @@ void finish()
 
     if (contradiction == 0)
     {
-        //Find contradictions in cache after updated knowledge base
-        updateCacheWithNewKB(POSSIBLE_WORLDS_FOR_PROB, KNOWLEDGE_BASE);
-        //Compute total tally after culled cache
-        resetProbKBWithCache(WORLD_TALLY, POSSIBLE_WORLDS_FOR_PROB);
-        WORLD_GENERATION++;
+        pthread_mutex_lock(&cacheworldlock);   // Lock before accessing shared data
+        pthread_mutex_lock(&problock);   // Lock before accessing shared data 
+        // Critical section 
+            WORLD_GENERATION++;
+            //Find contradictions in cache after updated knowledge base
+            updateCacheWithNewKB(POSSIBLE_WORLDS_FOR_PROB, KNOWLEDGE_BASE);
+            //Compute total tally after culled cache
+            resetProbKBWithCache(WORLD_TALLY, POSSIBLE_WORLDS_FOR_PROB);
 
-
-
-        for (int i = 0; i < MAX_SET_ELEMENTS; i++)
-        {
-            for (int j = 0; j < NUM_BOTCT_ROLES; j++)
+            for (int i = 0; i < MAX_SET_ELEMENTS; i++)
             {
-                for (int night = 0; night < NUM_DAYS; night++)
+                for (int j = 0; j < NUM_BOTCT_ROLES; j++)
                 {
-                    int index = POSSIBLE_WORLD_GENERATED[i][j][night];
-                    if (isnan(POSSIBLE_WORLDS_FOR_PROB->value[index]))
+                    for (int night = 0; night < NUM_DAYS; night++)
                     {
-                        POSSIBLE_WORLD_GENERATED[i][j][night] = -1;
+                        int index = POSSIBLE_WORLD_GENERATED[i][j][night];
+                        if (isnan(POSSIBLE_WORLDS_FOR_PROB->value[index]))
+                        {
+                            POSSIBLE_WORLD_GENERATED[i][j][night] = -1;
+                        }
                     }
+                    
                 }
-                
             }
-        }
+        pthread_mutex_unlock(&problock); // Unlock after done
+        pthread_mutex_unlock(&cacheworldlock); // Unlock after done
     }
     
     //printf("FINISHED CONFIRM!\n");

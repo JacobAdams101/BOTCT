@@ -36,10 +36,8 @@
 #include "ui.h"
 #include "util.h"
 #include "solver.h"
+#include "uitest.h"
 
-pthread_mutex_t problock; // Mutex to protect shared data
-pthread_mutex_t exampleworldlock; // Mutex to protect shared data
-pthread_mutex_t cacheworldlock;
 
 /**
  * inferImplicitFacts() - helper function to iterate inferknowledgeBaseFromRules()
@@ -469,10 +467,12 @@ static void buildWorld(
     ProbKnowledgeBase* determinedInNWorlds, 
     CachedKnowledgeBases* POSSIBLE_WORLDS_FOR_PROB, int (*POSSIBLE_WORLD_GENERATED)[MAX_SET_ELEMENTS][NUM_BOTCT_ROLES][NUM_DAYS],
     RuleSet* rs, 
+    int myGeneration, int *worldGeneration,
     int isroleIndexes[NUM_DAYS][NUM_BOTCT_ROLES], int notroleIndexes[NUM_DAYS][NUM_BOTCT_ROLES], 
     int poisonedIndexes[NUM_DAYS][MAX_SET_ELEMENTS], int notPoisonedIndexes[NUM_DAYS][MAX_SET_ELEMENTS],
     int isPoisonedIndexes[NUM_DAYS], int isNotPoisonedIndexes[NUM_DAYS],
     int killedIndexes[NUM_DAYS][MAX_SET_ELEMENTS], int notKilledIndexes[NUM_DAYS][MAX_SET_ELEMENTS]
+
 )
 {
 
@@ -541,27 +541,27 @@ static void buildWorld(
     addKBtoProbTally(possibleWorldKB, determinedInNWorlds, weight);
 
     pthread_mutex_lock(&cacheworldlock);   // Lock before accessing shared data
-    // Critical section 
-        int location = addKBToCache(POSSIBLE_WORLDS_FOR_PROB, possibleWorldKB, weight);
-    pthread_mutex_unlock(&cacheworldlock); // Unlock after done
-
-    for (int night = 0; night < NUM_DAYS; night++)
-    {
-        for (int player = 0; player < possibleWorldKB->SET_SIZES[0]; player++)
+        // Critical section 
+        if (myGeneration == *worldGeneration)
         {
-            int role = 0;
-            while (role < NUM_BOTCT_ROLES)
+            int location = addKBToCache(POSSIBLE_WORLDS_FOR_PROB, possibleWorldKB, weight);
+        
+            for (int night = 0; night < NUM_DAYS; night++)
             {
-                int isRole = isKnown(possibleWorldKB, 0, player, isroleIndexes[night][role]);
-                if (isRole) break;
-                role++;
+                for (int player = 0; player < possibleWorldKB->SET_SIZES[0]; player++)
+                {
+                    int role = 0;
+                    while (role < NUM_BOTCT_ROLES)
+                    {
+                        int isRole = isKnown(possibleWorldKB, 0, player, isroleIndexes[night][role]);
+                        if (isRole) break;
+                        role++;
+                    }
+                    if ((*POSSIBLE_WORLD_GENERATED)[player][role][night] == -1) (*POSSIBLE_WORLD_GENERATED)[player][role][night] = location;
+                }
             }
-            pthread_mutex_lock(&exampleworldlock);   // Lock before accessing shared data    
-                // Critical section
-                if ((*POSSIBLE_WORLD_GENERATED)[player][role][night] == -1) (*POSSIBLE_WORLD_GENERATED)[player][role][night] = location;
-            pthread_mutex_unlock(&exampleworldlock); // Unlock after done
         }
-    }
+    pthread_mutex_unlock(&cacheworldlock); // Unlock after done
     
 
     
@@ -646,6 +646,7 @@ void* getProbApproxContinuous(void* void_arg)
                 determinedInNWorlds, 
                 POSSIBLE_WORLDS_FOR_PROB, POSSIBLE_WORLD_GENERATED, 
                 rs, 
+                myGeneration, worldGeneration,
                 isroleIndexes, notroleIndexes, 
                 poisonedIndexes, notPoisonedIndexes, 
                 isPoisonedIndexes, isNotPoisonedIndexes,
@@ -655,10 +656,13 @@ void* getProbApproxContinuous(void* void_arg)
 
         if (myGeneration == *worldGeneration) 
         {
-            pthread_mutex_lock(&problock);   // Lock before accessing shared data                  
+            pthread_mutex_lock(&problock);   // Lock before accessing shared data 
                 // Critical section
-                mergeProbKnowledge(worldTally, determinedInNWorlds);
-                *reRenderCall = true;
+                if (myGeneration == *worldGeneration) 
+                {                 
+                    mergeProbKnowledge(worldTally, determinedInNWorlds);
+                    *reRenderCall = true;
+                }
             pthread_mutex_unlock(&problock); // Unlock after done
 
             

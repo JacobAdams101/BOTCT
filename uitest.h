@@ -29,6 +29,10 @@
 
 #include "constants.h"
 
+extern pthread_mutex_t problock; // Mutex to protect shared data
+extern pthread_mutex_t exampleworldlock; // Mutex to protect shared data
+extern pthread_mutex_t cacheworldlock;
+
 // Define a function type
 typedef void (*EventFunction)(int);
 
