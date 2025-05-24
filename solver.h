@@ -44,8 +44,8 @@ struct getProbApproxArgs
     KnowledgeBase**** possibleWorldRevertKB;
     ProbKnowledgeBase* determinedInNWorlds;
     ProbKnowledgeBase* worldTally;
-    KnowledgeBase* (*POSSIBLE_WORLDS_FOR_PROB)[MAX_SET_ELEMENTS][NUM_BOTCT_ROLES];
-    int (*POSSIBLE_WORLD_GENERATED)[MAX_SET_ELEMENTS][NUM_BOTCT_ROLES];
+    CachedKnowledgeBases* POSSIBLE_WORLDS_FOR_PROB;
+    int (*POSSIBLE_WORLD_GENERATED)[MAX_SET_ELEMENTS][NUM_BOTCT_ROLES][NUM_DAYS];
     RuleSet* rs;
     int* worldGeneration;
     bool* reRenderCall;

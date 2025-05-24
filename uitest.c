@@ -83,14 +83,20 @@ TextBox UI_ELEMENTS[MAX_UI_ZONES][MAX_UI_ELEMENTS];
 int COUNT[MAX_UI_ZONES];
 int UI_LINES[MAX_UI_ZONES][MAX_UI_ELEMENTS][7];
 int LINE_COUNT[MAX_UI_ZONES];
-int currentNight = 0;
-int soloWorldPlayer = -1;
-int soloWorldRole = -1;
+
 bool reRenderCall = false;
+
+//Viewing which night
+int currentNight = 0;
+
+//Viewing specific world
+int soloCachedWorld = -1;
+
+//Which menu is open
+const int MAX_BUTTON_OPTIONS = NUM_BOTCT_ROLES+1;
 int subMenuOpen = 0;
 int subSubMenuOpen = 0;
 int subSubSubMenuOpen = 0;
-const int MAX_BUTTON_OPTIONS = NUM_BOTCT_ROLES+1;
 int subSubSubSubMenuSelected[MAX_BUTTON_OPTIONS];
 int subSubSubSubSubMenuSelected[MAX_BUTTON_OPTIONS*3];
 
@@ -116,8 +122,8 @@ KnowledgeBase**** possibleWorldTempKB[NUM_THREADS];
 struct getProbApproxArgs* threadArgs[NUM_THREADS];
 
 
-KnowledgeBase* POSSIBLE_WORLDS_FOR_PROB[MAX_SET_ELEMENTS][NUM_BOTCT_ROLES];
-int POSSIBLE_WORLD_GENERATED[MAX_SET_ELEMENTS][NUM_BOTCT_ROLES];
+CachedKnowledgeBases* POSSIBLE_WORLDS_FOR_PROB;
+int POSSIBLE_WORLD_GENERATED[MAX_SET_ELEMENTS][NUM_BOTCT_ROLES][NUM_DAYS];
 //Thread object
 pthread_t threads[NUM_THREADS];
 
@@ -293,16 +299,23 @@ void runButtonInBounds()
 
 void viewSoloWorld(int eventID)
 {
-    soloWorldRole = eventID % NUM_BOTCT_ROLES;
+    //Convert 1 variable information into 3
+    int soloWorldNight = eventID % NUM_DAYS;
+    eventID /= NUM_DAYS;
+    int soloWorldRole = eventID % NUM_BOTCT_ROLES;
     eventID /= NUM_BOTCT_ROLES;
-    soloWorldPlayer = eventID;
+    int soloWorldPlayer = eventID;
+
+    //Find cached world
+    soloCachedWorld = POSSIBLE_WORLD_GENERATED[soloWorldPlayer][soloWorldRole][soloWorldNight];
+
+    
     reRenderCall = true;
 }
 
 void viewProbWorld(int eventID)
 {
-    soloWorldPlayer = -1;
-    soloWorldRole = -1;
+    soloCachedWorld = -1;
     reRenderCall = true;
 }
 
@@ -571,7 +584,7 @@ void makeTable(KnowledgeBase* kb, ProbKnowledgeBase* probkb, TTF_Font *FONT, int
 
                 if (isNotRoleCertain == 0)
                 {
-                    if (POSSIBLE_WORLD_GENERATED[element][role] == 1)
+                    if (POSSIBLE_WORLD_GENERATED[element][role][night] != -1)
                     {
                         addTextBox(
                             x, y, X_WIDTH, Y_WIDTH, //bb
@@ -581,7 +594,7 @@ void makeTable(KnowledgeBase* kb, ProbKnowledgeBase* probkb, TTF_Font *FONT, int
                             buff, 
                             FONT,
                             viewSoloWorld,
-                            role + (NUM_BOTCT_ROLES * element),
+                            night + (NUM_DAYS * role) + (NUM_BOTCT_ROLES * NUM_DAYS * element),
                             0
                         );
                     }
@@ -1338,13 +1351,13 @@ void updateUITable(KnowledgeBase* kb, ProbKnowledgeBase* probKB, TTF_Font *FONT,
 {
     currentNight = night;
     resetScreen(0);
-    if (soloWorldPlayer == -1 || soloWorldRole == -1)
+    if (soloCachedWorld == -1)
     {
         makeTable(kb, probKB, FONT, night);
     }
     else
     {
-        makeSingleWorldTable(POSSIBLE_WORLDS_FOR_PROB[soloWorldPlayer][soloWorldRole], FONT, night);
+        makeSingleWorldTable(POSSIBLE_WORLDS_FOR_PROB->POSSIBLE_WORLDS_FOR_PROB[soloCachedWorld], FONT, night);
     }
 }
 
@@ -1479,15 +1492,27 @@ void finish()
 
     if (contradiction == 0)
     {
-        //Compute total tally
-        resetProbKnowledgeBase(WORLD_TALLY);
+        //Find contradictions in cache after updated knowledge base
+        updateCacheWithNewKB(POSSIBLE_WORLDS_FOR_PROB, KNOWLEDGE_BASE);
+        //Compute total tally after culled cache
+        resetProbKBWithCache(WORLD_TALLY, POSSIBLE_WORLDS_FOR_PROB);
         WORLD_GENERATION++;
+
+
 
         for (int i = 0; i < MAX_SET_ELEMENTS; i++)
         {
             for (int j = 0; j < NUM_BOTCT_ROLES; j++)
             {
-                POSSIBLE_WORLD_GENERATED[i][j] = 0;
+                for (int night = 0; night < NUM_DAYS; night++)
+                {
+                    int index = POSSIBLE_WORLD_GENERATED[i][j][night];
+                    if (isnan(POSSIBLE_WORLDS_FOR_PROB->value[index]))
+                    {
+                        POSSIBLE_WORLD_GENERATED[i][j][night] = -1;
+                    }
+                }
+                
             }
         }
     }
@@ -3532,17 +3557,18 @@ int main() {
         }
     }
 
+    POSSIBLE_WORLDS_FOR_PROB = initCachedKB(KNOWLEDGE_BASE);
     //Init zone to store data
     for (int i = 0; i < MAX_SET_ELEMENTS; i++)
     {
         for (int j = 0; j < NUM_BOTCT_ROLES; j++)
         {
+            for (int night = 0; night < NUM_DAYS; night++)
+            {
+                POSSIBLE_WORLD_GENERATED[i][j][night] = -1;
+            }
             //POSSIBLE_WORLDS_FOR_PROB[i][j] = initKB(NUM_PLAYERS);
             //copyTo(POSSIBLE_WORLDS_FOR_PROB[i][j], KNOWLEDGE_BASE);
-            POSSIBLE_WORLDS_FOR_PROB[i][j] = initKBFromTemplate(KNOWLEDGE_BASE);
-
-            POSSIBLE_WORLD_GENERATED[i][j] = 0;
-            
         }
     }
 
@@ -3554,7 +3580,7 @@ int main() {
         threadArgs[i]->possibleWorldRevertKB = possibleWorldTempKB[i]; //Working block of memory
         threadArgs[i]->determinedInNWorlds = threadTallies[i]; //The output tallies
         threadArgs[i]->worldTally = WORLD_TALLY;
-        threadArgs[i]->POSSIBLE_WORLDS_FOR_PROB=&POSSIBLE_WORLDS_FOR_PROB;
+        threadArgs[i]->POSSIBLE_WORLDS_FOR_PROB=POSSIBLE_WORLDS_FOR_PROB;
         threadArgs[i]->POSSIBLE_WORLD_GENERATED=&POSSIBLE_WORLD_GENERATED;
         threadArgs[i]->worldGeneration = &WORLD_GENERATION;
         threadArgs[i]->reRenderCall = &reRenderCall;

@@ -26,6 +26,9 @@
 
 #include "constants.h"
 
+/************************************************************
+ * Knowledge base Structures
+ ************************************************************/
 typedef struct {
     long KNOWLEDGE_BASE[NUM_SETS][MAX_SET_ELEMENTS][FUNCTION_RESULT_SIZE];
     int SET_SIZES[NUM_SETS];
@@ -44,6 +47,10 @@ typedef struct {
     double KNOWLEDGE_BASE[NUM_SETS][MAX_SET_ELEMENTS][FUNCTION_RESULT_SIZE*INT_LENGTH];
     double tally;
 } ProbKnowledgeBase;
+
+/************************************************************
+ * Initialisation Functions
+ ************************************************************/
 /**
  * initKB() - allocate and initilise a knowledge base structure
  *
@@ -68,12 +75,27 @@ KnowledgeBase* initKBFromTemplate(KnowledgeBase* template);
 ProbKnowledgeBase* initProbKB();
 
 /**
+ * initCachedKB()
+ * 
+ * 
+ */
+CachedKnowledgeBases* initCachedKB(KnowledgeBase* kb);
+
+/************************************************************
+ * Copying Functions
+ ************************************************************/
+
+/**
  * copyTo() - deep copy (mostly) a knowledge base object
  * 
  * @dest - destination knowledge base
  * @src - source knowledge base
 */
 void copyTo(KnowledgeBase* dest, KnowledgeBase* src);
+
+/************************************************************
+ * Reset Functions
+ ************************************************************/
 
 /**
  * resetKnowledgeBase() - reset the knowledge in the knowledge base
@@ -89,6 +111,9 @@ void resetKnowledgeBase(KnowledgeBase* kb);
 */
 void resetProbKnowledgeBase(ProbKnowledgeBase* tally);
 
+/************************************************************
+ * String names mapping
+ ************************************************************/
 /**
  * getSetIDWithName() - finds the setID (index) given the string name identifer
  * 
@@ -124,6 +149,9 @@ int getSetFunctionIDWithName(KnowledgeBase* kb, int setID, char* function, int v
 */
 int getSetElementIDWithName(KnowledgeBase* kb, int setID, char* element, int validate);
 
+/************************************************************
+ * Data Manipulation
+ ************************************************************/
 /**
  * getIndexAndBit() - write into index and bit the location of the functionID
  * 
@@ -157,6 +185,7 @@ void mergeKnowledge(KnowledgeBase* kb, KnowledgeBase* x);
  * @x - the extra probabalistic knowledge to add into kb (inline)
 */
 void mergeProbKnowledge(ProbKnowledgeBase* probkb, ProbKnowledgeBase* x);
+
 
 /**
  * addKnowledge() - add some knowlegde to the KB (set a function to true)
@@ -202,6 +231,9 @@ int isKnown(KnowledgeBase* kb,  int set, int element, int function);
 */
 int isKnownName(KnowledgeBase* kb,  char* set, int element, char* function);
 
+/************************************************************
+ * Test for Contradictions
+ ************************************************************/
 /**
  * hasExplicitContradiction() - returns if an explict contradiction is found
  * An explicit contradiction is described is if X AND NOT(X) evaluates to true
@@ -213,6 +245,9 @@ int isKnownName(KnowledgeBase* kb,  char* set, int element, char* function);
 */
 int hasExplicitContradiction(KnowledgeBase* kb);
 
+/************************************************************
+ * Tally Functions
+ ************************************************************/
 /**
  * addKBtoProbTally() - add a tally of [+weight] to each function which evaluates to true in the knowledge base
  * 
@@ -256,6 +291,31 @@ int getProbIntPercentageName(ProbKnowledgeBase* tally, KnowledgeBase* kb, char* 
  * @return the shannon entropy in the system
 */
 double getShannonEntropy(ProbKnowledgeBase* tally, KnowledgeBase* kb, int set);
+
+
+/************************************************************
+ * Cache Functions
+ ************************************************************/
+/**
+ * addKBToCache()
+ * 
+ * 
+ */
+int addKBToCache(CachedKnowledgeBases* cache, KnowledgeBase* kb, double value);
+
+/**
+ * resetProbKBWithCache()
+ * 
+ * 
+ */
+void resetProbKBWithCache(ProbKnowledgeBase* tally, CachedKnowledgeBases* cache);
+
+/**
+ * updateCacheWithNewKB()
+ * 
+ * 
+ */
+void updateCacheWithNewKB(CachedKnowledgeBases* cache, KnowledgeBase* kb);
 
 /**
  * printKnowledgeBase() - print the knowledge base to the terminal

@@ -348,6 +348,11 @@ ProbKnowledgeBase* initProbKB()
     return tally;
 }
 
+/**
+ * initCachedKB()
+ * 
+ * 
+ */
 CachedKnowledgeBases* initCachedKB(KnowledgeBase* kb)
 {
     //Allocate memory
@@ -356,10 +361,66 @@ CachedKnowledgeBases* initCachedKB(KnowledgeBase* kb)
     for (int i = 0; i < MAX_CACHED_WORLDS; i++)
     {
         cache->POSSIBLE_WORLDS_FOR_PROB[i] = initKBFromTemplate(kb);
+        cache->value[i] = NAN;
     }
 
 
     return cache;
+}
+
+/**
+ * addKBToCache()
+ * 
+ * 
+ */
+int addKBToCache(CachedKnowledgeBases* cache, KnowledgeBase* kb, double value)
+{
+    for (int i = 0; i < MAX_CACHED_WORLDS; i++)
+    {
+        if (isnan(cache->value[i]))
+        {
+            copyTo(cache->POSSIBLE_WORLDS_FOR_PROB[i], kb);
+            cache->value[i] = value;
+            return i;
+        }
+    }
+    return -1;
+}
+
+/**
+ * resetProbKBWithCache()
+ * 
+ * 
+ */
+void resetProbKBWithCache(ProbKnowledgeBase* tally, CachedKnowledgeBases* cache)
+{
+    resetProbKnowledgeBase(tally);
+    for (int i = 0; i < MAX_CACHED_WORLDS; i++)
+    {
+        if (isnan(cache->value[i]) == 0)
+        {
+            addKBtoProbTally(cache->POSSIBLE_WORLDS_FOR_PROB[i], tally, cache->value[i]);
+        }
+    }
+}
+
+/**
+ * updateCacheWithNewKB()
+ * 
+ * 
+ */
+void updateCacheWithNewKB(CachedKnowledgeBases* cache, KnowledgeBase* kb)
+{
+    for (int i = 0; i < MAX_CACHED_WORLDS; i++)
+    {
+        if (isnan(cache->value[i]) == 0)
+        {
+            mergeKnowledge(cache->POSSIBLE_WORLDS_FOR_PROB[i], kb);
+
+            if (hasExplicitContradiction(cache->POSSIBLE_WORLDS_FOR_PROB[i])) cache->value[i] = NAN;
+            
+        }
+    }
 }
 
 /**

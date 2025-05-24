@@ -39,6 +39,7 @@
 
 pthread_mutex_t problock; // Mutex to protect shared data
 pthread_mutex_t exampleworldlock; // Mutex to protect shared data
+pthread_mutex_t cacheworldlock;
 
 /**
  * inferImplicitFacts() - helper function to iterate inferknowledgeBaseFromRules()
@@ -466,7 +467,7 @@ static int assignRoleForWorld(
 static void buildWorld(
     KnowledgeBase* possibleWorldKB, KnowledgeBase**** possibleWorldRevertKB, 
     ProbKnowledgeBase* determinedInNWorlds, 
-    KnowledgeBase* (*POSSIBLE_WORLDS_FOR_PROB)[MAX_SET_ELEMENTS][NUM_BOTCT_ROLES], int (*POSSIBLE_WORLD_GENERATED)[MAX_SET_ELEMENTS][NUM_BOTCT_ROLES],
+    CachedKnowledgeBases* POSSIBLE_WORLDS_FOR_PROB, int (*POSSIBLE_WORLD_GENERATED)[MAX_SET_ELEMENTS][NUM_BOTCT_ROLES][NUM_DAYS],
     RuleSet* rs, 
     int isroleIndexes[NUM_DAYS][NUM_BOTCT_ROLES], int notroleIndexes[NUM_DAYS][NUM_BOTCT_ROLES], 
     int poisonedIndexes[NUM_DAYS][MAX_SET_ELEMENTS], int notPoisonedIndexes[NUM_DAYS][MAX_SET_ELEMENTS],
@@ -538,23 +539,28 @@ static void buildWorld(
     printf("FOUND WORLD (Scaling Weight=%f)!\n", weight);
     //Add weighted tally
     addKBtoProbTally(possibleWorldKB, determinedInNWorlds, weight);
-    for (int player = 0; player < possibleWorldKB->SET_SIZES[0]; player++)
+
+    pthread_mutex_lock(&cacheworldlock);   // Lock before accessing shared data
+    // Critical section 
+        int location = addKBToCache(POSSIBLE_WORLDS_FOR_PROB, possibleWorldKB, weight);
+    pthread_mutex_unlock(&cacheworldlock); // Unlock after done
+
+    for (int night = 0; night < NUM_DAYS; night++)
     {
-        int role = 0;
-        while (role < NUM_BOTCT_ROLES)
+        for (int player = 0; player < possibleWorldKB->SET_SIZES[0]; player++)
         {
-            int isRole = isKnown(possibleWorldKB, 0, player, isroleIndexes[0][role]);
-            if (isRole) break;
-            role++;
-        }
-        pthread_mutex_lock(&exampleworldlock);   // Lock before accessing shared data                  
-            // Critical section
-            if ((*POSSIBLE_WORLD_GENERATED)[player][role] == 0)
+            int role = 0;
+            while (role < NUM_BOTCT_ROLES)
             {
-                copyTo((*POSSIBLE_WORLDS_FOR_PROB)[player][role], possibleWorldKB);
-                (*POSSIBLE_WORLD_GENERATED)[player][role] = 1;
+                int isRole = isKnown(possibleWorldKB, 0, player, isroleIndexes[night][role]);
+                if (isRole) break;
+                role++;
             }
-        pthread_mutex_unlock(&exampleworldlock); // Unlock after done
+            pthread_mutex_lock(&exampleworldlock);   // Lock before accessing shared data    
+                // Critical section
+                if ((*POSSIBLE_WORLD_GENERATED)[player][role][night] == -1) (*POSSIBLE_WORLD_GENERATED)[player][role][night] = location;
+            pthread_mutex_unlock(&exampleworldlock); // Unlock after done
+        }
     }
     
 
@@ -572,8 +578,8 @@ void* getProbApproxContinuous(void* void_arg)
     KnowledgeBase**** possibleWorldRevertKB = args->possibleWorldRevertKB;
     ProbKnowledgeBase* determinedInNWorlds = args->determinedInNWorlds;
     ProbKnowledgeBase* worldTally = args->worldTally;
-    KnowledgeBase* (*POSSIBLE_WORLDS_FOR_PROB)[MAX_SET_ELEMENTS][NUM_BOTCT_ROLES] = args->POSSIBLE_WORLDS_FOR_PROB;
-    int (*POSSIBLE_WORLD_GENERATED)[MAX_SET_ELEMENTS][NUM_BOTCT_ROLES] = args->POSSIBLE_WORLD_GENERATED;
+    CachedKnowledgeBases* POSSIBLE_WORLDS_FOR_PROB = args->POSSIBLE_WORLDS_FOR_PROB;
+    int (*POSSIBLE_WORLD_GENERATED)[MAX_SET_ELEMENTS][NUM_BOTCT_ROLES][NUM_DAYS] = args->POSSIBLE_WORLD_GENERATED;
     RuleSet* rs = args->rs;
     int* worldGeneration = args->worldGeneration;
     bool* reRenderCall = args->reRenderCall;
