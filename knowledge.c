@@ -25,6 +25,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <math.h>
 
 #include "knowledge.h"
 #include "constants.h"
@@ -180,6 +181,40 @@ static void writePoisonFunc(char *funcName[NUM_SETS][FUNCTION_RESULT_SIZE*INT_LE
 }
 
 /**
+ * initBlankKB() - allocate a knowledge base without any data
+ * 
+ * @return the KB
+*/
+KnowledgeBase* initBlankKB()
+{
+    //Allocate memory
+    KnowledgeBase* kb = (KnowledgeBase*) malloc(sizeof(KnowledgeBase));
+
+    //Fill knowlegde base with zeroes
+    resetKnowledgeBase(kb);
+
+    return kb;
+}
+
+/**
+ * initKBFromTemplate() - allocate a knowledge base copying from 
+ * 
+ * @return the KB
+*/
+KnowledgeBase* initKBFromTemplate(KnowledgeBase* template)
+{
+    //Allocate memory
+    KnowledgeBase* kb = (KnowledgeBase*) malloc(sizeof(KnowledgeBase));
+
+    //Fill knowlegde base with zeroes
+    resetKnowledgeBase(kb);
+
+    copyTo(kb, template);
+
+    return kb;
+}
+
+/**
  * initKB() - allocate and initilise a knowledge base structure
  *
  * @NUM_PLAYERS - num players in game
@@ -190,10 +225,7 @@ static void writePoisonFunc(char *funcName[NUM_SETS][FUNCTION_RESULT_SIZE*INT_LE
 KnowledgeBase* initKB(const int NUM_PLAYERS)
 {
     //Allocate memory
-    KnowledgeBase* kb = (KnowledgeBase*) malloc(sizeof(KnowledgeBase));
-
-    //Fill knowlegde base with zeroes
-    resetKnowledgeBase(kb);
+    KnowledgeBase* kb = initBlankKB();
 
     //Set names
     kb->SET_NAMES[0] = "PLAYERS";
@@ -314,6 +346,20 @@ ProbKnowledgeBase* initProbKB()
     resetProbKnowledgeBase(tally);
 
     return tally;
+}
+
+CachedKnowledgeBases* initCachedKB(KnowledgeBase* kb)
+{
+    //Allocate memory
+    CachedKnowledgeBases* cache = (CachedKnowledgeBases*) malloc(sizeof(CachedKnowledgeBases));
+
+    for (int i = 0; i < MAX_CACHED_WORLDS; i++)
+    {
+        cache->POSSIBLE_WORLDS_FOR_PROB[i] = initKBFromTemplate(kb);
+    }
+
+
+    return cache;
 }
 
 /**
@@ -642,20 +688,16 @@ int hasExplicitContradiction(KnowledgeBase* kb)
             {
                 long bitString = kb->KNOWLEDGE_BASE[set][element][index];
                 
-                //NOTE: thanks to J Hearn I can remove the even mask
+                //NOTE: thanks to J Hearn I have removed the even mask making this code even more insanely diabolical
                 //YAY!
-
                 //FT   FT FT
-
                 //0F   0F 0F
-                //AND
                 //FT   FT FT
                 //0F&T... 
-
-                
                 long oddBitString = bitString & ODD_MASK; //All true statements
                 //long evenBitString = bitString & EVEN_MASK; //All false statements
                 //Finding contradictions using magic bitstrings
+                //NOTE: loop unrolling with branchless statements might make this the final boss of micro optimisations
                 if ((oddBitString << 1) & bitString) return 1; //If true and false
             }
         }
@@ -727,6 +769,30 @@ int getProbIntPercentageName(ProbKnowledgeBase* tally, KnowledgeBase* kb, char* 
     int functionID = getSetFunctionIDWithName(kb, setID, function, 1);
 
     return getProbIntPercentage(tally, setID, element, functionID);
+}
+
+/**
+ * getShannonEntropy() - get an estimation of the shannon entropy of a probability table
+ * 
+ * @tally - the probablistic knowledge base to extra the percentage from
+ * @kb - the knowledge base
+ * @set - the NAME of the set of the element to get the percentage from
+ * 
+ * @return the shannon entropy in the system
+*/
+double getShannonEntropy(ProbKnowledgeBase* tally, KnowledgeBase* kb, int set)
+{
+    double entropy = 0;
+    for (int element = 0; element < kb->SET_SIZES[set]; element++)
+    {
+        for (int function = 0; function < FUNCTION_RESULT_SIZE*INT_LENGTH; function++)
+        {
+            double prob = tally->KNOWLEDGE_BASE[set][element][function] / tally->tally;
+
+            if (prob > 0.001) entropy -= prob * log2(prob); //Stop funny log 0 errors
+        }
+    }
+    return entropy;
 }
 
 /**

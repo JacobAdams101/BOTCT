@@ -22,6 +22,15 @@
         "stdexcept": "c",
         "variant": "c",
         "__debug": "c",
-        "util.h": "c"
+        "util.h": "c",
+        "__node_handle": "c",
+        "atomic": "c",
+        "__memory": "c",
+        "locale": "c",
+        "system_error": "c",
+        "tuple": "c",
+        "type_traits": "c",
+        "vector": "c",
+        "cstddef": "c"
     }
 }

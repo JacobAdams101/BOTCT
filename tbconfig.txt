@@ -1,0 +1,29 @@
+GameName(TroubleBrewing)
+Classes(GOOD){TOWNSFOLK, OUTSIDER}
+Classes(EVIL){DEMON, MINION}
+//Townsfolk
+Role(Washerwoman, TOWNSFOLK){ShownRole: T, Lies: F}
+Role(Libraian, TOWNSFOLK){ShownRole: T, Lies: F}
+Role(Investigator, TOWNSFOLK){ShownRole: T, Lies: F}
+Role(Chef, TOWNSFOLK){ShownRole: T, Lies: F}
+Role(Empath, TOWNSFOLK){ShownRole: T, Lies: F}
+Role(Fortune_Teller, TOWNSFOLK){ShownRole: T, Lies: F}
+Role(Undertaker, TOWNSFOLK){ShownRole: T, Lies: F}
+Role(Monk, TOWNSFOLK){ShownRole: T, Lies: F}
+Role(Ravenkeeper, TOWNSFOLK){ShownRole: T, Lies: F}
+Role(Virgin, TOWNSFOLK){ShownRole: T, Lies: F}
+Role(Slayer, TOWNSFOLK){ShownRole: T, Lies: F}
+Role(Soldier, TOWNSFOLK){ShownRole: T, Lies: F}
+Role(Mayor, TOWNSFOLK){ShownRole: T, Lies: F}
+//Outsiders
+Role(Butler, OUTSIDER){ShownRole: T, Lies: F}
+Role(Drunk, OUTSIDER){ShownRole: F, Lies: T}
+Role(Recluse, OUTSIDER){ShownRole: T, Lies: F}
+Role(Saint, OUTSIDER){ShownRole: T, Lies: F}
+//Minions
+Role(Poisoner, OUTSIDER){ShownRole: T, Lies: T}
+Role(Spy, OUTSIDER){ShownRole: T, Lies: T}
+Role(Scarlet_Woman, OUTSIDER){ShownRole: T, Lies: T}
+Role(Baron, OUTSIDER){ShownRole: T, Lies: T}
+//Demons
+Role(Imp, DEMON){ShownRole: T, Lies: T}

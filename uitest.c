@@ -115,6 +115,7 @@ KnowledgeBase* possibleWorldKB[NUM_THREADS];
 KnowledgeBase**** possibleWorldTempKB[NUM_THREADS];
 struct getProbApproxArgs* threadArgs[NUM_THREADS];
 
+
 KnowledgeBase* POSSIBLE_WORLDS_FOR_PROB[MAX_SET_ELEMENTS][NUM_BOTCT_ROLES];
 int POSSIBLE_WORLD_GENERATED[MAX_SET_ELEMENTS][NUM_BOTCT_ROLES];
 //Thread object
@@ -358,6 +359,24 @@ void makeTable(KnowledgeBase* kb, ProbKnowledgeBase* probkb, TTF_Font *FONT, int
         0,
         0
     );
+    x += X_STEP*2;
+
+    double entropy = getShannonEntropy(probkb, kb, 0);
+    snprintf(buff, STRING_BUFF_SIZE, "ENTROPY = %f", entropy);
+    
+    addTextBox(
+        x, y, X_WIDTH*6, Y_WIDTH, //bb
+        50, 50, 50, //Box colour
+        100, 100, 100, //Highlighted Box colour
+        255, 255, 255, //Text colour
+        buff, 
+        FONT,
+        NULL,
+        0,
+        0
+    );
+
+    
     x = X_START;
     y += Y_STEP;
 
@@ -3449,8 +3468,7 @@ int main() {
     int SCRIPT;
 
     setup(&NUM_PLAYERS, &NUM_MINIONS, &NUM_DEMONS, &BASE_OUTSIDERS, &SCRIPT);
-
-    printHeading("CREATING GAME..."); //UI HEADING
+    printHeading("CREATING GAME RULE BASE..."); //UI HEADING
     printf("There are %d players in the game\n", NUM_PLAYERS);
     printf("There are %d minions in the game\n", NUM_MINIONS);
     printf("There are %d demons in the game\n", NUM_DEMONS);
@@ -3471,7 +3489,7 @@ int main() {
     //Init threads
     for (int i = 0; i < NUM_THREADS; i++)
     {
-        possibleWorldKB[i] = initKB(NUM_PLAYERS);
+        possibleWorldKB[i] = initKBFromTemplate(KNOWLEDGE_BASE);
         threadTallies[i] = initProbKB();
         possibleWorldTempKB[i] = (KnowledgeBase****)malloc(NUM_DAYS * sizeof(KnowledgeBase****));
         //Create arguments in strctures to pass into new thread
@@ -3502,7 +3520,8 @@ int main() {
                 }
                 for (int l = 0; l < 3; l++)
                 {
-                    possibleWorldTempKB[i][j][k][l] = initKB(NUM_PLAYERS);
+                    //possibleWorldTempKB[i][j][k][l] = initKB(NUM_PLAYERS);
+                    possibleWorldTempKB[i][j][k][l] = initKBFromTemplate(KNOWLEDGE_BASE);
                     if (possibleWorldTempKB[i][j][k][l] == NULL)
                     {
                         printf("MALLOC FAILED!\n");
@@ -3518,9 +3537,12 @@ int main() {
     {
         for (int j = 0; j < NUM_BOTCT_ROLES; j++)
         {
-            POSSIBLE_WORLDS_FOR_PROB[i][j] = initKB(NUM_PLAYERS);
-            copyTo(POSSIBLE_WORLDS_FOR_PROB[i][j], KNOWLEDGE_BASE);
+            //POSSIBLE_WORLDS_FOR_PROB[i][j] = initKB(NUM_PLAYERS);
+            //copyTo(POSSIBLE_WORLDS_FOR_PROB[i][j], KNOWLEDGE_BASE);
+            POSSIBLE_WORLDS_FOR_PROB[i][j] = initKBFromTemplate(KNOWLEDGE_BASE);
+
             POSSIBLE_WORLD_GENERATED[i][j] = 0;
+            
         }
     }
 

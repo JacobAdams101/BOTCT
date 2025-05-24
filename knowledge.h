@@ -36,6 +36,11 @@ typedef struct {
 } KnowledgeBase;
 
 typedef struct {
+    KnowledgeBase* POSSIBLE_WORLDS_FOR_PROB[MAX_CACHED_WORLDS];
+    double value[MAX_CACHED_WORLDS];
+} CachedKnowledgeBases;
+
+typedef struct {
     double KNOWLEDGE_BASE[NUM_SETS][MAX_SET_ELEMENTS][FUNCTION_RESULT_SIZE*INT_LENGTH];
     double tally;
 } ProbKnowledgeBase;
@@ -48,6 +53,12 @@ typedef struct {
  * @return the KB
 */
 KnowledgeBase* initKB(const int NUM_PLAYERS);
+/**
+ * initKBFromTemplate() - allocate a knowledge base copying from 
+ * 
+ * @return the KB
+*/
+KnowledgeBase* initKBFromTemplate(KnowledgeBase* template);
 
 /**
  * initProbKB() - allocate and initilise a probabalistic knowledge base structure
@@ -234,6 +245,17 @@ int getProbIntPercentage(ProbKnowledgeBase* tally, int set, int element, int fun
  * @return as a percentage P(ELEMENT in SET F(ELEMENT) = TRUE) * 100
 */
 int getProbIntPercentageName(ProbKnowledgeBase* tally, KnowledgeBase* kb, char* set, int element, char* function);
+
+/**
+ * getShannonEntropy() - get an estimation of the shannon entropy of a probability table
+ * 
+ * @tally - the probablistic knowledge base to extra the percentage from
+ * @kb - the knowledge base
+ * @set - the NAME of the set of the element to get the percentage from
+ * 
+ * @return the shannon entropy in the system
+*/
+double getShannonEntropy(ProbKnowledgeBase* tally, KnowledgeBase* kb, int set);
 
 /**
  * printKnowledgeBase() - print the knowledge base to the terminal
