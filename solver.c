@@ -675,3 +675,24 @@ void* getProbApproxContinuous(void* void_arg)
 
     return NULL;
 }
+
+/**
+ * updateCacheWithNewKB()
+ * 
+ * 
+ */
+void updateCacheWithNewKB(CachedKnowledgeBases* cache, KnowledgeBase* kb, RuleSet* rs)
+{
+    for (int i = 0; i < MAX_CACHED_WORLDS; i++)
+    {
+        if (isnan(cache->value[i]) == 0)
+        {
+            mergeKnowledge(cache->POSSIBLE_WORLDS_FOR_PROB[i], kb);
+
+            if(inferImplicitFacts(cache->POSSIBLE_WORLDS_FOR_PROB[i], rs, 5, 0)) cache->value[i] = NAN;
+            //NOTE: replace with some level of inference to catch more contradictions
+            //if (hasExplicitContradiction(cache->POSSIBLE_WORLDS_FOR_PROB[i])) 
+            
+        }
+    }
+}

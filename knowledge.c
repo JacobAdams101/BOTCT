@@ -405,25 +405,6 @@ void resetProbKBWithCache(ProbKnowledgeBase* tally, CachedKnowledgeBases* cache)
 }
 
 /**
- * updateCacheWithNewKB()
- * 
- * 
- */
-void updateCacheWithNewKB(CachedKnowledgeBases* cache, KnowledgeBase* kb)
-{
-    for (int i = 0; i < MAX_CACHED_WORLDS; i++)
-    {
-        if (isnan(cache->value[i]) == 0)
-        {
-            mergeKnowledge(cache->POSSIBLE_WORLDS_FOR_PROB[i], kb);
-
-            if (hasExplicitContradiction(cache->POSSIBLE_WORLDS_FOR_PROB[i])) cache->value[i] = NAN;
-            
-        }
-    }
-}
-
-/**
  * copyTo() - deep copy (mostly) a knowledge base object
  * 
  * @dest - destination knowledge base

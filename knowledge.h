@@ -311,13 +311,6 @@ int addKBToCache(CachedKnowledgeBases* cache, KnowledgeBase* kb, double value);
 void resetProbKBWithCache(ProbKnowledgeBase* tally, CachedKnowledgeBases* cache);
 
 /**
- * updateCacheWithNewKB()
- * 
- * 
- */
-void updateCacheWithNewKB(CachedKnowledgeBases* cache, KnowledgeBase* kb);
-
-/**
  * printKnowledgeBase() - print the knowledge base to the terminal
  * 
  * @kb - the knowledge base to print to the termial

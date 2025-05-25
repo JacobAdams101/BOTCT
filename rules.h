@@ -24,8 +24,8 @@
 
 #pragma once
 
-#include "knowledge.h"
 #include "constants.h"
+#include "knowledge.h"
 
 typedef struct
 {

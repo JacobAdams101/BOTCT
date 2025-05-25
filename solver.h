@@ -51,3 +51,10 @@ struct getProbApproxArgs
     bool* reRenderCall;
     int numIterations;
 };
+
+/**
+ * updateCacheWithNewKB()
+ * 
+ * 
+ */
+void updateCacheWithNewKB(CachedKnowledgeBases* cache, KnowledgeBase* kb, RuleSet* rs);

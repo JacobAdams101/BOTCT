@@ -1501,7 +1501,7 @@ void finish()
         // Critical section 
             WORLD_GENERATION++;
             //Find contradictions in cache after updated knowledge base
-            updateCacheWithNewKB(POSSIBLE_WORLDS_FOR_PROB, KNOWLEDGE_BASE);
+            updateCacheWithNewKB(POSSIBLE_WORLDS_FOR_PROB, KNOWLEDGE_BASE, RULE_SET);
             //Compute total tally after culled cache
             resetProbKBWithCache(WORLD_TALLY, POSSIBLE_WORLDS_FOR_PROB);
 
